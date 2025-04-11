@@ -19,7 +19,7 @@ const MainLayout = ({ children }) => {
         <aside className="w-64 h-screen bg-gray-800 text-white p-4">
           <h2 className="text-xl font-bold mb-4">LOGO</h2><br />
           <ul>
-            <li><a href="/">Dashboard</a></li><br /><br />
+            <li><a href="/">apa kek</a></li><br /><br />
             <li><a href="/profile">Penjadwalan</a></li><br />
             <li><a href="/settings">Daftar Jeep</a></li>
           </ul>
