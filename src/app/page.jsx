@@ -116,20 +116,11 @@
 // }
 
 import React from "react";
-import MainLayout from "/components/MainLayout.jsx";
+import LoginPage from "/components/LoginPage.jsx";
 
 const Page = () => {
   return (
-    <MainLayout>
-      <h1 className="text-6xl">Jeep Tlogo Putri</h1>
-      <br />
-      <p>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Aliquam, sed
-        animi vero recusandae ratione maxime doloremque dolor voluptatum, eos
-        possimus inventore fugiat vitae blanditiis sunt adipisci, placeat modi
-        accusamus impedit!
-      </p>
-    </MainLayout>
+    <LoginPage></LoginPage>
   );
 };
 
