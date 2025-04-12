@@ -4,9 +4,15 @@ export default {
     "./app/**/*.{js,jsx,ts,tsx}",
     "./pages/**/*.{js,jsx,ts,tsx}",
     "./components/**/*.{js,jsx,ts,tsx}",
+    './src/pages/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        inter: ['Inter', 'sans-serif'],
+        kreon: ['Kreon', 'serif'],
+      },
+    },
   },
   plugins: [],
 };

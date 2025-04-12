@@ -1,6 +1,6 @@
 import React from "react";
 
-const MainLayout = ({ children }) => {
+const Sidebar = ({ children }) => {
   return (
     <div>
       {
@@ -9,12 +9,16 @@ const MainLayout = ({ children }) => {
           <br />
           <ul>
             <li>
-              <a href="/">apa kek</a>
+              <a href="/">Dashboard</a>
             </li>
             <br />
             <br />
             <li>
               <a href="/profile">Penjadwalan</a>
+            </li>
+            <br />
+            <li>
+              <a href="/settings">Daftar Anggota</a>
             </li>
             <br />
             <li>
@@ -29,4 +33,4 @@ const MainLayout = ({ children }) => {
   );
 };
 
-export default MainLayout;
+export default Sidebar;
