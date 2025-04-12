@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import '../src/app/globals.css';
 
-const LoginPage = () => {
+const LoginForm = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
@@ -27,7 +27,12 @@ const LoginPage = () => {
       const data = await res.json();
 
       if (res.ok) {
+        const now = new Date().getTime();
+        const expireTime = now + 2 * 60 * 60 * 1000; //2 jam
+
         localStorage.setItem("token", data.token);
+        localStorage.setItem("token_exp", expireTime);
+
         router.push("/dashboard");
       } else {
         alert(data.message || "Login gagal!");
@@ -42,7 +47,7 @@ const LoginPage = () => {
     <div className="flex flex-col items-center justify-center min-h-screen font-inter bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg w-[360px]">
         <div className="relative flex items-center mb-6">
-          <h1 className="text-4xl font-bold font-kreon">Login</h1><br /><br /><br /><br />
+          <h1 className="text-4xl font-bold font-kreon">Login</h1>
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
           <div className="relative">
@@ -70,15 +75,14 @@ const LoginPage = () => {
 
           <button
             type="submit"
-            className="relative bg-[#03A9F4] text-white py-2 rounded-md font-inter mt-6 w-[300px] h-[40px]"
+            className="bg-[#03A9F4] text-white py-2 rounded-md font-inter mt-6 w-[300px] h-[40px]"
           >
             Login
           </button>
-          <br />
         </form>
       </div>
     </div>
   );
 };
 
-export default LoginPage;
+export default LoginForm;

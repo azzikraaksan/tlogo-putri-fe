@@ -1,36 +1,55 @@
-import React from "react";
+"use client";
 
-const Sidebar = ({ children }) => {
+import React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+const Sidebar = () => {
+  const pathname = usePathname();
+
   return (
     <div>
-      {
-        <aside className="w-64 h-screen bg-gray-800 text-white p-4">
-          <h2 className="text-xl font-bold mb-4">LOGO</h2>
-          <br />
-          <ul>
-            <li>
-              <a href="/">Dashboard</a>
-            </li>
-            <br />
-            <br />
-            <li>
-              <a href="/profile">Penjadwalan</a>
-            </li>
-            <br />
-            <li>
-              <a href="/settings">Daftar Anggota</a>
-            </li>
-            <br />
-            <li>
-              <a href="/settings">Daftar Jeep</a>
-            </li>
-          </ul>
-        </aside>
-      }
-      {<main className="flex-1 p-6 bg-gray-100">{children}</main>}
-      //{" "}
+      <aside className="w-50 h-screen bg-gray-800 text-white p-4">
+        <h2 className="text-xl font-bold mb-4">LOGO</h2><br />
+        <ul>
+          <li>
+            <Link
+              href="/dashboard"
+              className={pathname === "/dashboard" ? "font-bold" : ""}
+            >
+              Dashboard
+            </Link>
+          </li><br /><br />
+          <li>
+            <Link
+              href="/profile"
+              className={pathname === "/profile" ? "font-bold" : ""}
+            >
+              Penjadwalan
+            </Link>
+          </li><br />
+          <li>
+            <Link
+              href="/settings"
+              className={pathname === "/settings" ? "font-bold" : ""}
+            >
+              Daftar Anggota
+            </Link>
+          </li><br />
+          <li>
+            <Link
+              href="/settings"
+              className={pathname === "/settings" ? "font-bold" : ""}
+            >
+              Daftar Jeep
+            </Link>
+          </li><br />
+        </ul>
+      </aside>
     </div>
   );
 };
 
 export default Sidebar;
+
+
