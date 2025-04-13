@@ -14,7 +14,7 @@ const withAuth = (WrappedComponent) => {
         if (!token || !expireTime || new Date().getTime() > parseInt(expireTime)) {
           localStorage.removeItem("token");
           localStorage.removeItem("token_exp");
-          router.push("/login");
+          router.push("/");
         }
       };
 

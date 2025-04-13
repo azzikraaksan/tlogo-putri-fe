@@ -28,7 +28,8 @@ const LoginForm = () => {
 
       if (res.ok) {
         const now = new Date().getTime();
-        const expireTime = now + 2 * 60 * 60 * 1000; //2 jam
+        // const expireTime = now + 2 * 60 * 60 * 1000; //2 jam
+        const expireTime = now + 1 * 15 * 1000; //15 detik
 
         localStorage.setItem("token", data.token);
         localStorage.setItem("token_exp", expireTime);
@@ -75,7 +76,7 @@ const LoginForm = () => {
 
           <button
             type="submit"
-            className="bg-[#03A9F4] text-white py-2 rounded-md font-inter mt-6 w-[300px] h-[40px]"
+            className="bg-[#03A9F4] text-white py-2 rounded-md font-inter mt-6 w-[300px] h-[40px] cursor-pointer"
           >
             Login
           </button>

@@ -23,7 +23,7 @@ const Sidebar = () => {
           <li>
             <Link
               href="/profile"
-              className={pathname === "/profile" ? "font-bold" : ""}
+              className={pathname === "/penjadwalan" ? "font-bold" : ""}
             >
               Penjadwalan
             </Link>
@@ -31,7 +31,7 @@ const Sidebar = () => {
           <li>
             <Link
               href="/settings"
-              className={pathname === "/settings" ? "font-bold" : ""}
+              className={pathname === "/daftar_anggota" ? "font-bold" : ""}
             >
               Daftar Anggota
             </Link>
