@@ -116,7 +116,7 @@
 // }
 
 import React from "react";
-import LoginPage from "/src/app/login/page.jsx";
+import LoginPage from "/components/LoginPage.jsx";
 
 const Page = () => {
   return (

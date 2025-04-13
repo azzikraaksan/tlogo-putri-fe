@@ -14,23 +14,23 @@ const Sidebar = () => {
         <ul>
           <li>
             <Link
-              href="/dashboard"
-              className={pathname === "/dashboard" ? "font-bold" : ""}
+              href="/dashboard_fo"
+              className={pathname === "/dashboard_fo" ? "font-bold" : ""}
             >
               Dashboard
             </Link>
           </li><br /><br />
           <li>
             <Link
-              href="/profile"
-              className={pathname === "/penjadwalan" ? "font-bold" : ""}
+              href="/dashboard_fo/penjadwalan"
+              className={pathname === "/dashboard_fo/penjadwalan" ? "font-bold" : ""}
             >
               Penjadwalan
             </Link>
           </li><br />
           <li>
             <Link
-              href="/settings"
+              href="/daftar_anggota"
               className={pathname === "/daftar_anggota" ? "font-bold" : ""}
             >
               Daftar Anggota
@@ -38,8 +38,8 @@ const Sidebar = () => {
           </li><br />
           <li>
             <Link
-              href="/settings"
-              className={pathname === "/settings" ? "font-bold" : ""}
+              href="/daftar_jeep"
+              className={pathname === "/daftar_jeep" ? "font-bold" : ""}
             >
               Daftar Jeep
             </Link>

@@ -28,13 +28,13 @@ const LoginForm = () => {
 
       if (res.ok) {
         const now = new Date().getTime();
-        // const expireTime = now + 2 * 60 * 60 * 1000; //2 jam
-        const expireTime = now + 1 * 15 * 1000; //15 detik
+        const expireTime = now + 1 * 60 * 60 * 1000; //1 jam
+        // const expireTime = now + 1 * 30 * 1000; //15 detik
 
         localStorage.setItem("token", data.token);
         localStorage.setItem("token_exp", expireTime);
 
-        router.push("/dashboard");
+        router.push("/dashboard_fo");
       } else {
         alert(data.message || "Login gagal!");
       }

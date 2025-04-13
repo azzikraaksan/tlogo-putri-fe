@@ -1,10 +1,12 @@
 "use client";
 import Sidebar from "/components/Sidebar.jsx";
+import UserMenu from "/components/Pengguna.jsx";
 import withAuth from "/src/app/lib/withAuth.jsx";
 
 const DashboardPage = () => {
   return (
-    <div className="flex">
+    <div className="flex h-screen relative">
+      <UserMenu />
       <Sidebar />
       <div className="p-4 flex-1">
         <h1 className="text-6xl text-center font-semibold mt-4 mb-2 text-teal-600">
