@@ -31,7 +31,7 @@ const LoginForm = () => {
         const expireTime = now + 1 * 60 * 60 * 1000; //1 jam
         // const expireTime = now + 1 * 30 * 1000; //15 detik
 
-        localStorage.setItem("token", data.token);
+        localStorage.setItem("access_token", data.access_token);
         localStorage.setItem("token_exp", expireTime);
 
         router.push("/dashboard_fo");

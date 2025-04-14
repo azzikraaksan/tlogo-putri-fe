@@ -8,7 +8,7 @@ const withAuth = (WrappedComponent) => {
 
     useEffect(() => {
       const checkToken = () => {
-        const token = localStorage.getItem("token");
+        const token = localStorage.getItem("access_token");
         const expireTime = localStorage.getItem("token_exp");
 
         if (!token || !expireTime || new Date().getTime() > parseInt(expireTime)) {
