@@ -1,5 +1,25 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Kreon:wght@400;700&display=swap');
+/* @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Kreon:wght@400;700&display=swap'); */
+/* @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
 @import "tailwindcss";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+body {
+    @apply font-poppins text-gray-900;
+} */
+
+/* globals.css */
+
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html {
+      font-family: 'Poppins', sans-serif;
+    }
+}

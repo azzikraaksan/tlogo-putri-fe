@@ -9,7 +9,7 @@ const DashboardPage = () => {
       <UserMenu />
       <Sidebar />
       <div className="p-4 flex-1">
-        <h1 className="text-6xl text-center font-semibold mt-4 mb-2 text-teal-600">
+        <h1 className="text-6xl text-center font-semibold mt-4 mb-2 text-[#3D6CB9]">
           Jeep Tlogo Putri
         </h1>
         <p className="text-center max-w-xl mx-auto">

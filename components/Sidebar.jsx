@@ -9,8 +9,15 @@ const Sidebar = () => {
 
   return (
     <div>
-      <aside className="w-50 h-screen bg-gray-800 text-white p-4">
-        <h2 className="text-xl font-bold mb-4">LOGO</h2><br />
+      <aside className="w-[240px] h-screen bg-[#3D6CB9] text-white p-4">
+        {/* <h2 className="text-xl font-bold mb-4">LOGO</h2><br /> */}
+        <div className="flex justify-center mt-10">
+          <img
+            src="/images/logo.png"
+            alt="Logo"
+            className="w-30 h-auto"
+          />
+        </div><br />
         <ul>
           <li>
             <Link
@@ -19,15 +26,22 @@ const Sidebar = () => {
             >
               Dashboard
             </Link>
-          </li><br /><br />
+          </li>
+          <br />
+          <br />
           <li>
             <Link
               href="/dashboard_fo/penjadwalan"
-              className={pathname === "/dashboard_fo/penjadwalan" ? "font-bold" : ""}
+              className={
+                pathname.startsWith("/dashboard_fo/penjadwalan")
+                  ? "font-bold"
+                  : ""
+              }
             >
               Penjadwalan
             </Link>
-          </li><br />
+          </li>
+          <br />
           <li>
             <Link
               href="/daftar_anggota"
@@ -35,7 +49,8 @@ const Sidebar = () => {
             >
               Daftar Anggota
             </Link>
-          </li><br />
+          </li>
+          <br />
           <li>
             <Link
               href="/daftar_jeep"
@@ -43,7 +58,8 @@ const Sidebar = () => {
             >
               Daftar Jeep
             </Link>
-          </li><br />
+          </li>
+          <br />
         </ul>
       </aside>
     </div>
@@ -51,5 +67,3 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
-
-
