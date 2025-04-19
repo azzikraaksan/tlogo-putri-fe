@@ -57,7 +57,7 @@ const PenjadwalanPage = () => {
   );
 
   const handleAturJadwal = (id) => {
-    router.push(`/dashboard_fo/penjadwalan/rolling-driver`);
+    router.push(`/dashboard_fo/anggota`);
   };
 
   return (

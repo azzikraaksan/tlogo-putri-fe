@@ -113,7 +113,7 @@ const LoginForm = () => {
               className="bg-[#03A9F4] text-white py-2 rounded-[7px] mt-6 w-[300px] h-[40px] cursor-pointer disabled:opacity-50"
               disabled={loading}
             >
-              {loading ? "Logging in..." : "Login"}
+              {loading ? "Logging in..." : "Masuk"}
             </button><br /><br />
           </form>
         </div>

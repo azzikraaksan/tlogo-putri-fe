@@ -198,7 +198,7 @@ const initialData = [
     phone: "081234567890",
     email: "bundee@gmail.com",
     lambung: "001",
-    driver: "Sobray Kabeh",
+    driver: "Sobray A",
   },
   {
     bookingCode: "JTP002",
@@ -206,7 +206,7 @@ const initialData = [
     phone: "089876543210",
     email: "zimut@gmail.com",
     lambung: "002",
-    driver: "Sobray Kabeh",
+    driver: "Sobray B",
   },
   {
     bookingCode: "JTP003",
@@ -214,7 +214,7 @@ const initialData = [
     phone: "081234567890",
     email: "naon@gmail.com",
     lambung: "003",
-    driver: "Sobray Kabeh",
+    driver: "Sobray 1",
   },
   {
     bookingCode: "JTP004",
@@ -222,7 +222,7 @@ const initialData = [
     phone: "089876543210",
     email: "saha@gmail.com",
     lambung: "004",
-    driver: "Sobray Kabeh",
+    driver: "Sobray 2",
   },
 ];
 
@@ -264,9 +264,12 @@ const PenjadwalanPage = () => {
       item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAturJadwal = (id) => {
-    router.push(`/dashboard_fo/penjadwalan/rolling-driver`);
-  };
+  const handleAturJadwal = (bookingCode, selectedDriver) => {
+    const newData = data.map((item) =>
+      item.bookingCode === bookingCode ? { ...item, driver: selectedDriver } : item
+    );
+    setData(newData);
+  };  
 
   return (
     <div className="flex">
@@ -323,16 +326,16 @@ const PenjadwalanPage = () => {
                     <td className="p-2 text-center text-gray-750">
                       <div className="relative inline-block w-[140px]">
                         <select
-                          value={item.ubah_driver}
+                          value={item.driver}
                           onChange={(e) =>
                             handleAturJadwal(item.bookingCode, e.target.value)
                           }
                           className="w-full bg-[#1C7AC8] text-white rounded-[10px] cursor-pointer appearance-none py-1 pl-3 pr-8"
                         >
                           <option value="">Pilih Driver</option>
-                          <option value="Driver A">Driver A</option>
-                          <option value="Driver B">Driver B</option>
-                          <option value="Driver C">Driver C</option>
+                          <option value="Zimut">Zimut</option>
+                          <option value="Bunde">Bunde</option>
+                          <option value="Lis">Lis</option>
                         </select>
                         <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-white">
                           <svg
