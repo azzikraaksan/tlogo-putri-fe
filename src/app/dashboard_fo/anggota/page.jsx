@@ -5,7 +5,7 @@ import UserMenu from "/components/Pengguna.jsx";
 import SearchInput from "/components/Search.jsx";
 import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { Trash2, Plus, ListFilter } from "lucide-react";
 
 const dummyData = [
   {
@@ -60,6 +60,10 @@ const PenjadwalanPage = () => {
     router.push(`/dashboard_fo/anggota`);
   };
 
+  const handleTambahAnggota = (id) => {
+    router.push(`/dashboard_fo/anggota/tambah-anggota`);
+  };
+
   return (
     <div className="flex">
       <UserMenu />
@@ -68,6 +72,25 @@ const PenjadwalanPage = () => {
         <h1 className="text-5xl font-semibold mb-6 text-black">
           Daftar Anggota
         </h1>
+
+        <div className="flex justify-end">
+          <button
+            onClick={() => handleTambahAnggota(item.id)}
+            className="w-[100px] bg-[#1C7AC8] rounded-[10px] text-white py-1 px-3 cursor-pointer hover:bg-[#7ba2d0] transition"
+          >
+            <ListFilter size={18} />
+            Filter
+          </button>
+        </div><br />
+        <div className="flex justify-end">
+          <button
+            onClick={() => handleTambahAnggota(item.id)}
+            className="w-[190px] bg-[#1C7AC8] rounded-[10px] text-white py-1 px-3 cursor-pointer hover:bg-[#7ba2d0] transition"
+          >
+            {/* <Plus size={18} /> */}
+            + Tambah Anggota
+          </button>
+        </div><br />
 
         <div className="flex justify-end mb-7">
           <SearchInput

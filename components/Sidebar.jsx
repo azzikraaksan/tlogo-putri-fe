@@ -103,10 +103,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboardIcon,
+  Compass,
   CalendarClock,
   Ticket,
   Users,
   LogOut,
+  Settings
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -136,7 +138,7 @@ const Sidebar = () => {
                   : "text-white"
               }`}
             >
-              <LayoutDashboardIcon size={20} className="mr-2" />
+              <Compass size={20} className="mr-2" />
               Dashboard
             </Link>
           </li>
@@ -152,6 +154,20 @@ const Sidebar = () => {
             >
               <CalendarClock size={20} className="mr-2" />
               Penjadwalan
+            </Link>
+          </li>
+          <br />
+          <li>
+            <Link
+              href="/dashboard_fo/kelola-driver"
+              className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
+                pathname.startsWith("/dashboard_fo/kelola-driver")
+                  ? "bg-blue-300 text-white"
+                  : "text-white"
+              }`}
+            >
+              <Settings size={20} className="mr-2" />
+              Kelola Driver
             </Link>
           </li>
           <br />
