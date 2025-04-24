@@ -212,6 +212,132 @@ const Sidebar = () => {
               Daftar Jeep
             </Link>
           </li>
+          <br />
+          <li>
+            <Link
+              href="/dashboard_fo/draft"
+              className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
+                pathname === "/dashboard_fo/draft"
+                  ? "bg-blue-300 text-white" 
+                  : "text-white"
+              }`}
+            >
+              <img src="/images/jeep.png" className="w-[20px] h-auto mr-2" />
+              Draft
+            </Link>
+          </li>
+          <br />
+          <li>
+            <Link
+              href="/dashboard_fo/generate"
+              className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
+                pathname === "/dashboard_fo/generate"
+                  ? "bg-blue-300 text-white" 
+                  : "text-white"
+              }`}
+            >
+              <img src="/images/jeep.png" className="w-[20px] h-auto mr-2" />
+              Generate
+            </Link>
+          </li>
+          <br />
+          <li>
+            <Link
+              href="/dashboard_fo/pemasukan"
+              className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
+                pathname === "/dashboard_fo/pemasukan"
+                  ? "bg-blue-300 text-white" 
+                  : "text-white"
+              }`}
+            >
+              <img src="/images/jeep.png" className="w-[20px] h-auto mr-2" />
+              Pemasukan
+            </Link>
+          </li>
+          <br />
+          <li>
+            <Link
+              href="/dashboard_fo/pengeluaran"
+              className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
+                pathname === "/dashboard_fo/pengeluaran"
+                  ? "bg-blue-300 text-white" 
+                  : "text-white"
+              }`}
+            >
+              <img src="/images/jeep.png" className="w-[20px] h-auto mr-2" />
+              Pengeluaran
+            </Link>
+          </li>
+          <br />
+          <li>
+            <Link
+              href="/dashboard_fo/laporankeuangan"
+              className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
+                pathname === "/dashboard_fo/laporankeuangan"
+                  ? "bg-blue-300 text-white" 
+                  : "text-white"
+              }`}
+            >
+              <img src="/images/jeep.png" className="w-[20px] h-auto mr-2" />
+              Laporan Keuangan
+            </Link>
+          </li>
+          <br />
+          <li>
+            <Link
+              href="/dashboard_fo/datadriver"
+              className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
+                pathname === "/dashboard_fo/datadriver"
+                  ? "bg-blue-300 text-white" 
+                  : "text-white"
+              }`}
+            >
+              <img src="/images/jeep.png" className="w-[20px] h-auto mr-2" />
+              Data Driver
+            </Link>
+          </li>
+          <br />
+          <li>
+            <Link
+              href="/dashboard_fo/daftarpesanan"
+              className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
+                pathname === "/dashboard_fo/daftarpesanan"
+                  ? "bg-blue-300 text-white" 
+                  : "text-white"
+              }`}
+            >
+              <img src="/images/jeep.png" className="w-[20px] h-auto mr-2" />
+              Daftar Pesanan
+            </Link>
+          </li>
+          <br />
+          <li>
+            <Link
+              href="/dashboard_fo/penggajian"
+              className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
+                pathname === "/dashboard_fo/penggajian"
+                  ? "bg-blue-300 text-white" 
+                  : "text-white"
+              }`}
+            >
+              <img src="/images/jeep.png" className="w-[20px] h-auto mr-2" />
+              Penggajian
+            </Link>
+          </li>
+          <br />
+          <li>
+            <Link
+              href="/dashboard_fo/laporangaji"
+              className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
+                pathname === "/dashboard_fo/laporangaji"
+                  ? "bg-blue-300 text-white" 
+                  : "text-white"
+              }`}
+            >
+              <img src="/images/jeep.png" className="w-[20px] h-auto mr-2" />
+              Laporan Gaji
+            </Link>
+          </li>
         </ul>
       </div>
 
