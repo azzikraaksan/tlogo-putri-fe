@@ -73,16 +73,16 @@ const PenjadwalanPage = () => {
           Daftar Anggota
         </h1>
 
-        <div className="flex justify-end">
+        <div className="flex">
           <button
             onClick={() => handleTambahAnggota(item.id)}
             className="w-[100px] bg-[#1C7AC8] rounded-[10px] text-white py-1 px-3 cursor-pointer hover:bg-[#7ba2d0] transition"
           >
-            <ListFilter size={18} />
+            {/* <ListFilter size={18} /> */}
             Filter
           </button>
         </div><br />
-        <div className="flex justify-end">
+        <div className="flex">
           <button
             onClick={() => handleTambahAnggota(item.id)}
             className="w-[190px] bg-[#1C7AC8] rounded-[10px] text-white py-1 px-3 cursor-pointer hover:bg-[#7ba2d0] transition"
