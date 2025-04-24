@@ -122,7 +122,7 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="w-[270px] h-screen bg-[#3D6CB9] text-white p-4 flex flex-col justify-between">
+    <aside className="w-[270px] h-auto bg-[#3D6CB9] text-white p-4 flex flex-col justify-between">
       <div>
         <div className="flex justify-center mt-10 mb-6">
           <img src="/images/logo.png" alt="Logo" className="w-[100px] h-auto" />
