@@ -100,9 +100,18 @@ const PemasukanPage = () => {
 
         {/* Tabel Data Pemasukan */}
         <div className="mt-8">
-          <h2 className="text-2xl font-semibold mb-4 text-blue-600">
-            Data Pemasukan
-          </h2>
+          <div className="flex justify-between items-center mb-4">
+            {/* Judul Daftar Pemasukan */}
+            <h2 className="text-2xl font-semibold text-blue-600">
+              Daftar Pemasukan
+            </h2>
+
+            {/* Tautan Lihat Semua */}
+            <button className="text-blue-600 hover:text-blue-800 text-base font-medium">
+              Lihat Semua
+            </button>
+          </div>
+
           <table className="min-w-full table-auto border-collapse bg-blue-100 rounded-lg overflow-hidden">
             <thead>
               <tr className="bg-blue-600 text-white">
