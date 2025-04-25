@@ -5,35 +5,42 @@ import UserMenu from "/components/Pengguna.jsx";
 import SearchInput from "/components/Search.jsx";
 import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
-import { Trash2 } from "lucide-react";
+import { Trash2, Plus, ListFilter } from "lucide-react";
 
 const dummyData = [
   {
-    lambung: "01",
-    plat: "AB1",
-    kapasitas: "4 Orang",
-    status: "Tersedia",
+    fo_id: 1,
+    email: "bundee@gmail.com",
+    peran: "Front Office",
+    status: "Aktif",
     action: "Lihat Detail",
   },
   {
-    lambung: "02",
-    plat: "AB2",
-    kapasitas: "4 Orang",
-    status: "Tersedia",
+    owner_id: 2,
+    email: "zimut@gmail.com",
+    peran: "Owner",
+    status: "Aktif",
     action: "Lihat Detail",
   },
   {
-    lambung: "03",
-    plat: "AB3",
-    kapasitas: "4 Orang",
-    status: "Tersedia",
+    driver_id: 3,
+    email: "naon@gmail.com",
+    peran: "Driver",
+    status: "Aktif",
     action: "Lihat Detail",
   },
   {
-    lambung: "04",
-    plat: "AB4",
-    kapasitas: "4 Orang",
-    status: "Tersedia",
+    bendahara_id: 4,
+    email: "saha@gmail.com",
+    peran: "Bendahara",
+    status: "Aktif",
+    action: "Lihat Detail",
+  },
+  {
+    pengurus_id: 5,
+    email: "maneh@gmail.com",
+    peran: "Pengurus",
+    status: "Aktif",
     action: "Lihat Detail",
   },
 ];
@@ -44,13 +51,17 @@ const PenjadwalanPage = () => {
 
   const filteredData = dummyData.filter(
     (item) =>
-      item.plat.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.kapasitas.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.peran.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleAturJadwal = (id) => {
-    router.push(`/dashboard_fo/anggota`);
+    router.push(`/dashboard/anggota`);
+  };
+
+  const handleTambahAnggota = (id) => {
+    router.push(`/dashboard/anggota/tambah-anggota`);
   };
 
   return (
@@ -59,8 +70,27 @@ const PenjadwalanPage = () => {
       <Sidebar />
       <div className="flex-1 p-6">
         <h1 className="text-5xl font-semibold mb-6 text-black">
-          Daftar Jeep
+          Daftar Anggota
         </h1>
+
+        <div className="flex">
+          <button
+            onClick={() => handleTambahAnggota(item.id)}
+            className="w-[100px] bg-[#1C7AC8] rounded-[10px] text-white py-1 px-3 cursor-pointer hover:bg-[#7ba2d0] transition"
+          >
+            {/* <ListFilter size={18} /> */}
+            Filter
+          </button>
+        </div><br />
+        <div className="flex">
+          <button
+            onClick={() => handleTambahAnggota(item.id)}
+            className="w-[190px] bg-[#1C7AC8] rounded-[10px] text-white py-1 px-3 cursor-pointer hover:bg-[#7ba2d0] transition"
+          >
+            {/* <Plus size={18} /> */}
+            + Tambah Anggota
+          </button>
+        </div><br />
 
         <div className="flex justify-end mb-7">
           <SearchInput
@@ -75,29 +105,32 @@ const PenjadwalanPage = () => {
           <table className="w-full table-auto">
             <thead className="text-gray-500">
               <tr>
-                <th className="p-2 text-center font-normal">No. Lambung</th>
-                <th className="p-2 text-center font-normal">Plat</th>
-                <th className="p-2 text-center font-normal">Kapasitas</th>
+                <th className="p-2 text-center font-normal">Email</th>
+                <th className="p-2 text-center font-normal">Peran</th>
                 <th className="p-2 text-center font-normal">Status</th>
                 <th className="p-2 text-center font-normal">Aksi</th>
-                <th className="p-2 text-center font-normal">Hapus Jeep</th>
+                <th className="p-2 text-center font-normal">Hapus Anggota</th>
               </tr>
             </thead>
             <tbody>
               {filteredData.length > 0 ? (
                 filteredData.map((item) => (
                   <tr
-                    key={item.lambung}
+                    key={
+                      item.driver_id ||
+                      item.fo_id ||
+                      item.owner_id ||
+                      item.jeep_id ||
+                      item.pengurus_id ||
+                      item.bendahara_id
+                    }
                     className="border-t border-[#808080] hover:bg-gray-50 transition-colors"
                   >
                     <td className="p-2 text-center text-gray-750">
-                      {item.lambung}
+                      {item.email}
                     </td>
                     <td className="p-2 text-center text-gray-750">
-                      {item.plat}
-                    </td>
-                    <td className="p-2 text-center text-gray-750">
-                      {item.kapasitas}
+                      {item.peran}
                     </td>
                     <td className="p-2 text-center text-gray-750">
                       {item.status}

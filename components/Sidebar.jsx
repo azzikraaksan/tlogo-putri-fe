@@ -19,9 +19,9 @@
 //         <ul>
 //           <li>
 //             <Link
-//               href="/dashboard_fo"
+//               href="/dashboard"
 //               className={
-//                 pathname === "/dashboard_fo"
+//                 pathname === "/dashboard"
 //                   ? "flex items-center bg-blue-300 rounded-[6px] text-white pl-4 py-2"
 //                   : "flex items-center text-white pl-4 py-2"
 //               }
@@ -34,9 +34,9 @@
 //           <br />
 //           <li>
 //             <Link
-//               href="/dashboard_fo/penjadwalan"
+//               href="/dashboard/penjadwalan"
 //               className={
-//                 pathname.startsWith("/dashboard_fo/penjadwalan")
+//                 pathname.startsWith("/dashboard/penjadwalan")
 //                   ? "flex items-center bg-blue-300 rounded-[6px] text-white pl-4 py-2"
 //                   : "flex items-center text-white pl-4 py-2"
 //               }
@@ -48,9 +48,9 @@
 //           <br />
 //           <li>
 //             <Link
-//               href="/dashboard_fo/ticketing"
+//               href="/dashboard/ticketing"
 //               className={
-//                 pathname.startsWith("/dashboard_fo/ticketing")
+//                 pathname.startsWith("/dashboard/ticketing")
 //                   ? "flex items-center bg-blue-300 rounded-[6px] text-white pl-4 py-2"
 //                   : "flex items-center text-white pl-4 py-2"
 //               }
@@ -62,9 +62,9 @@
 //           <br />
 //           <li>
 //             <Link
-//               href="/dashboard_fo/anggota"
+//               href="/dashboard/anggota"
 //               className={
-//                 pathname === "/dashboard_fo/anggota"
+//                 pathname === "/dashboard/anggota"
 //                   ? "flex items-center bg-blue-300 rounded-[6px] text-white pl-4 py-2"
 //                   : "flex items-center text-white pl-4 py-2"
 //               }
@@ -76,9 +76,9 @@
 //           <br />
 //           <li>
 //             <Link
-//               href="/dashboard_fo/jeep"
+//               href="/dashboard/jeep"
 //               className={
-//                 pathname === "/dashboard_fo/jeep"
+//                 pathname === "/dashboard/jeep"
 //                   ? "flex items-center bg-blue-300 rounded-[6px] text-white pl-4 py-2"
 //                   : "flex items-center text-white pl-4 py-2"
 //               }
@@ -131,9 +131,9 @@ const Sidebar = () => {
         <ul>
           <li>
             <Link
-              href="/dashboard_fo"
+              href="/dashboard"
               className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
-                pathname === "/dashboard_fo"
+                pathname === "/dashboard"
                   ? "bg-blue-300 text-white"
                   : "text-white"
               }`}
@@ -145,9 +145,9 @@ const Sidebar = () => {
           <br />
           <li>
             <Link
-              href="/dashboard_fo/penjadwalan"
+              href="/dashboard/penjadwalan"
               className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
-                pathname.startsWith("/dashboard_fo/penjadwalan")
+                pathname.startsWith("/dashboard/penjadwalan")
                   ? "bg-blue-300 text-white"
                   : "text-white"
               }`}
@@ -159,9 +159,9 @@ const Sidebar = () => {
           <br />
           <li>
             <Link
-              href="/dashboard_fo/kelola-driver"
+              href="/dashboard/kelola-driver"
               className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
-                pathname.startsWith("/dashboard_fo/kelola-driver")
+                pathname.startsWith("/dashboard/kelola-driver")
                   ? "bg-blue-300 text-white"
                   : "text-white"
               }`}
@@ -173,9 +173,9 @@ const Sidebar = () => {
           <br />
           <li>
             <Link
-              href="/dashboard_fo/ticketing"
+              href="/dashboard/ticketing"
               className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
-                pathname.startsWith("/dashboard_fo/ticketing")
+                pathname.startsWith("/dashboard/ticketing")
                   ? "bg-blue-300 text-white"
                   : "text-white"
               }`}
@@ -187,9 +187,9 @@ const Sidebar = () => {
           <br />
           <li>
             <Link
-              href="/dashboard_fo/anggota"
+              href="/dashboard/anggota"
               className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
-                pathname === "/dashboard_fo/anggota"
+                pathname === "/dashboard/anggota"
                   ? "bg-blue-300 text-white"
                   : "text-white"
               }`}
@@ -201,9 +201,9 @@ const Sidebar = () => {
           <br />
           <li>
             <Link
-              href="/dashboard_fo/jeep"
+              href="/dashboard/jeep"
               className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
-                pathname === "/dashboard_fo/jeep"
+                pathname === "/dashboard/jeep"
                   ? "bg-blue-300 text-white" 
                   : "text-white"
               }`}
@@ -215,9 +215,9 @@ const Sidebar = () => {
           <br />
           <li>
             <Link
-              href="/dashboard_fo/draft"
+              href="/dashboard/draft"
               className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
-                pathname === "/dashboard_fo/draft"
+                pathname === "/dashboard/draft"
                   ? "bg-blue-300 text-white" 
                   : "text-white"
               }`}
@@ -229,9 +229,9 @@ const Sidebar = () => {
           <br />
           <li>
             <Link
-              href="/dashboard_fo/generate"
+              href="/dashboard/generate"
               className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
-                pathname === "/dashboard_fo/generate"
+                pathname === "/dashboard/generate"
                   ? "bg-blue-300 text-white" 
                   : "text-white"
               }`}
@@ -243,9 +243,9 @@ const Sidebar = () => {
           <br />
           <li>
             <Link
-              href="/dashboard_fo/pemasukan"
+              href="/dashboard/pemasukan"
               className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
-                pathname === "/dashboard_fo/pemasukan"
+                pathname === "/dashboard/pemasukan"
                   ? "bg-blue-300 text-white" 
                   : "text-white"
               }`}
@@ -257,9 +257,9 @@ const Sidebar = () => {
           <br />
           <li>
             <Link
-              href="/dashboard_fo/pengeluaran"
+              href="/dashboard/pengeluaran"
               className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
-                pathname === "/dashboard_fo/pengeluaran"
+                pathname === "/dashboard/pengeluaran"
                   ? "bg-blue-300 text-white" 
                   : "text-white"
               }`}
@@ -271,9 +271,9 @@ const Sidebar = () => {
           <br />
           <li>
             <Link
-              href="/dashboard_fo/laporankeuangan"
+              href="/dashboard/laporankeuangan"
               className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
-                pathname === "/dashboard_fo/laporankeuangan"
+                pathname === "/dashboard/laporankeuangan"
                   ? "bg-blue-300 text-white" 
                   : "text-white"
               }`}
@@ -285,9 +285,9 @@ const Sidebar = () => {
           <br />
           <li>
             <Link
-              href="/dashboard_fo/datadriver"
+              href="/dashboard/datadriver"
               className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
-                pathname === "/dashboard_fo/datadriver"
+                pathname === "/dashboard/datadriver"
                   ? "bg-blue-300 text-white" 
                   : "text-white"
               }`}
@@ -299,9 +299,9 @@ const Sidebar = () => {
           <br />
           <li>
             <Link
-              href="/dashboard_fo/daftarpesanan"
+              href="/dashboard/daftarpesanan"
               className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
-                pathname === "/dashboard_fo/daftarpesanan"
+                pathname === "/dashboard/daftarpesanan"
                   ? "bg-blue-300 text-white" 
                   : "text-white"
               }`}
@@ -313,9 +313,9 @@ const Sidebar = () => {
           <br />
           <li>
             <Link
-              href="/dashboard_fo/penggajian"
+              href="/dashboard/penggajian"
               className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
-                pathname === "/dashboard_fo/penggajian"
+                pathname === "/dashboard/penggajian"
                   ? "bg-blue-300 text-white" 
                   : "text-white"
               }`}
@@ -327,9 +327,9 @@ const Sidebar = () => {
           <br />
           <li>
             <Link
-              href="/dashboard_fo/laporangaji"
+              href="/dashboard/laporangaji"
               className={`flex items-center pl-4 py-2 rounded-[6px] hover:bg-blue-400 ${
-                pathname === "/dashboard_fo/laporangaji"
+                pathname === "/dashboard/laporangaji"
                   ? "bg-blue-300 text-white" 
                   : "text-white"
               }`}
