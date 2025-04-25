@@ -15,6 +15,7 @@ import {
   Wallet,
   FileBarChart,
   Sparkles,
+  PersonStanding,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -29,9 +30,7 @@ const Sidebar = () => {
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
 
   useEffect(() => {
-    if (
-      pathname.startsWith("/dashboard/pemesanan/daftar-pesanan")
-    ) {
+    if (pathname.startsWith("/dashboard/pemesanan/daftar-pesanan")) {
       setIsPemesananOpen(true);
     } else {
       setIsPemesananOpen(false);
@@ -115,7 +114,11 @@ const Sidebar = () => {
                 <CalendarCheck size={20} className="mr-2" />
                 Pemesanan
               </div>
-              {isPemesananOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              {isPemesananOpen ? (
+                <ChevronDown size={16} />
+              ) : (
+                <ChevronRight size={16} />
+              )}
             </button>
 
             {isPemesananOpen && (
@@ -124,16 +127,23 @@ const Sidebar = () => {
                   <Link
                     href="/dashboard/pemesanan/daftar-pesanan"
                     className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                      pathname.startsWith("/dashboard/pemesanan/daftar-pesanan") ? "bg-blue-300" : ""
+                      pathname.startsWith("/dashboard/pemesanan/daftar-pesanan")
+                        ? "bg-blue-300"
+                        : ""
                     }`}
                   >
-                    <img src="/images/daftar-pesanan.png" alt="daftar-pesanan" className="w-auto h-auto mr-2" />
+                    <img
+                      src="/images/daftar-pesanan.png"
+                      alt="daftar-pesanan"
+                      className="w-[20px] h-auto mr-2"
+                    />
                     Daftar Pesanan
                   </Link>
                 </li>
               </ul>
             )}
-          </li><br />
+          </li>
+          <br />
           <li>
             <button
               onClick={() => setIsOperasionalOpen(!isOperasionalOpen)}
@@ -143,7 +153,11 @@ const Sidebar = () => {
                 <ClipboardList size={20} className="mr-2" />
                 Operasional
               </div>
-              {isOperasionalOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              {isOperasionalOpen ? (
+                <ChevronDown size={16} />
+              ) : (
+                <ChevronRight size={16} />
+              )}
             </button>
 
             {isOperasionalOpen && (
@@ -152,10 +166,16 @@ const Sidebar = () => {
                   <Link
                     href="/dashboard/operasional/penjadwalan"
                     className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                      pathname.startsWith("/dashboard/operasional/penjadwalan") ? "bg-blue-300" : ""
+                      pathname.startsWith("/dashboard/operasional/penjadwalan")
+                        ? "bg-blue-300"
+                        : ""
                     }`}
                   >
-                    <img src="/images/penjadwalan.png" alt="penjadwalan" className="w-auto h-auto mr-2" />
+                    <img
+                      src="/images/penjadwalan.png"
+                      alt="penjadwalan"
+                      className="w-[20px] h-auto mr-2"
+                    />
                     Penjadwalan
                   </Link>
                 </li>
@@ -163,10 +183,18 @@ const Sidebar = () => {
                   <Link
                     href="/dashboard/operasional/kelola-driver"
                     className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                      pathname.startsWith("/dashboard/operasional/kelola-driver") ? "bg-blue-300" : ""
+                      pathname.startsWith(
+                        "/dashboard/operasional/kelola-driver"
+                      )
+                        ? "bg-blue-300"
+                        : ""
                     }`}
                   >
-                    <img src="/images/kelola-driver.png" alt="kelola-driver" className="w-auto h-auto mr-2" />
+                    <img
+                      src="/images/kelola-driver.png"
+                      alt="kelola-driver"
+                      className="w-[20px] h-auto mr-2"
+                    />
                     Kelola Driver
                   </Link>
                 </li>
@@ -174,10 +202,16 @@ const Sidebar = () => {
                   <Link
                     href="/dashboard/operasional/ticketing"
                     className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                      pathname.startsWith("/dashboard/operasional/ticketing") ? "bg-blue-300" : ""
+                      pathname.startsWith("/dashboard/operasional/ticketing")
+                        ? "bg-blue-300"
+                        : ""
                     }`}
                   >
-                    <img src="/images/ticketing.png" alt="ticketing" className="w-auto h-auto mr-2" />
+                    <img
+                      src="/images/ticketing.png"
+                      alt="ticketing"
+                      className="w-[20px] h-auto mr-2"
+                    />
                     Ticketing
                   </Link>
                 </li>
@@ -185,10 +219,16 @@ const Sidebar = () => {
                   <Link
                     href="/dashboard/operasional/anggota"
                     className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                      pathname.startsWith("/dashboard/operasional/anggota") ? "bg-blue-300" : ""
+                      pathname.startsWith("/dashboard/operasional/anggota")
+                        ? "bg-blue-300"
+                        : ""
                     }`}
                   >
-                    <img src="/images/daftar-anggota.png" alt="daftar-anggota" className="w-auto h-auto mr-2" />
+                    {/* <img src="/images/daftar-anggota.png" alt="daftar-anggota" className="w-[20px] h-auto mr-2" /> */}
+                    <PersonStanding
+                      size={20}
+                      className="mr-2 w-[20px] h-auto"
+                    />
                     Daftar Anggota
                   </Link>
                 </li>
@@ -196,16 +236,23 @@ const Sidebar = () => {
                   <Link
                     href="/dashboard/operasional/jeep"
                     className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                      pathname.startsWith("/dashboard/operasional/jeep") ? "bg-blue-300" : ""
+                      pathname.startsWith("/dashboard/operasional/jeep")
+                        ? "bg-blue-300"
+                        : ""
                     }`}
                   >
-                    <img src="/images/daftar-jeep.png" alt="daftar-jeep" className="w-auto h-auto mr-2" />
+                    <img
+                      src="/images/daftar-jeep.png"
+                      alt="daftar-jeep"
+                      className="w-[20px] h-auto mr-2"
+                    />
                     Daftar Jeep
                   </Link>
                 </li>
               </ul>
             )}
-          </li><br />
+          </li>
+          <br />
           <li>
             <button
               onClick={() => setIsAkuntansiOpen(!isAkuntansiOpen)}
@@ -215,7 +262,11 @@ const Sidebar = () => {
                 <FileBarChart size={20} className="mr-2" />
                 Akuntansi
               </div>
-              {isAkuntansiOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              {isAkuntansiOpen ? (
+                <ChevronDown size={16} />
+              ) : (
+                <ChevronRight size={16} />
+              )}
             </button>
 
             {isAkuntansiOpen && (
@@ -224,10 +275,16 @@ const Sidebar = () => {
                   <Link
                     href="/dashboard/akuntansi/pemasukan"
                     className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                      pathname.startsWith("/dashboard/akuntansi/pemasukan") ? "bg-blue-300" : ""
+                      pathname.startsWith("/dashboard/akuntansi/pemasukan")
+                        ? "bg-blue-300"
+                        : ""
                     }`}
                   >
-                    <img src="/images/pemasukan.png" alt="pemasukan" className="w-auto h-auto mr-2" />
+                    <img
+                      src="/images/pemasukan.png"
+                      alt="pemasukan"
+                      className="w-[20px] h-auto mr-2"
+                    />
                     Pemasukan
                   </Link>
                 </li>
@@ -235,38 +292,74 @@ const Sidebar = () => {
                   <Link
                     href="/dashboard/akuntansi/pengeluaran"
                     className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                      pathname.startsWith("/dashboard/akuntansi/pengeluaran") ? "bg-blue-300" : ""
+                      pathname.startsWith("/dashboard/akuntansi/pengeluaran")
+                        ? "bg-blue-300"
+                        : ""
                     }`}
                   >
-                    <img src="/images/pengeluaran.png" alt="pengeluaran" className="w-auto h-auto mr-2" />
+                    <img
+                      src="/images/pengeluaran.png"
+                      alt="pengeluaran"
+                      className="w-[20px] h-auto mr-2"
+                    />
                     Pengeluaran
                   </Link>
                 </li>
-                <li>
+                {/* <li>
                   <Link
                     href="/dashboard/akuntansi/laporan-keuangan"
                     className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                      pathname.startsWith("/dashboard/akuntansi/laporan-keuangan") ? "bg-blue-300" : ""
+                      pathname.startsWith(
+                        "/dashboard/akuntansi/laporan-keuangan"
+                      )
+                        ? "bg-blue-300"
+                        : ""
                     }`}
                   >
-                    <img src="/images/laporan-keuangan.png" alt="laporan-keuangan" className="w-auto h-auto mr-2" />
+                    <img
+                      src="/images/laporan-keuangan.png"
+                      alt="laporan-keuangan"
+                      className="w-[20px] h-auto mr-2"
+                    />
                     Laporan Keuangan
                   </Link>
-                </li>
+                </li> */}
+                {/*  PERBAIKIII  */}
+                <button
+                  onClick={() => setIsAkuntansiOpen(!isAkuntansiOpen)}
+                  className="flex items-center justify-between w-full pl-4 py-2 rounded-[6px] hover:bg-blue-400 cursor-pointer"
+                >
+                  <div className="flex items-center">
+                    <FileBarChart size={20} className="mr-2" />
+                    Laporan Keuangan
+                  </div>
+                  {isAkuntansiOpen ? (
+                    <ChevronDown size={16} />
+                  ) : (
+                    <ChevronRight size={16} />
+                  )}
+                </button>
                 <li>
                   <Link
                     href="/dashboard/akuntansi/data-driver"
                     className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                      pathname.startsWith("/dashboard/akuntansi/data-driver") ? "bg-blue-300" : ""
+                      pathname.startsWith("/dashboard/akuntansi/data-driver")
+                        ? "bg-blue-300"
+                        : ""
                     }`}
                   >
-                    <img src="/images/data-driver.png" alt="data-driver" className="w-auto h-auto mr-2" />
+                    <img
+                      src="/images/data-driver.png"
+                      alt="data-driver"
+                      className="w-[20px] h-auto mr-2"
+                    />
                     Data Driver
                   </Link>
                 </li>
               </ul>
             )}
-          </li><br />
+          </li>
+          <br />
           <li>
             <button
               onClick={() => setIsPenggajianOpen(!isPenggajianOpen)}
@@ -276,7 +369,11 @@ const Sidebar = () => {
                 <Wallet size={20} className="mr-2" />
                 Penggajian
               </div>
-              {isPenggajianOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              {isPenggajianOpen ? (
+                <ChevronDown size={16} />
+              ) : (
+                <ChevronRight size={16} />
+              )}
             </button>
 
             {isPenggajianOpen && (
@@ -285,10 +382,18 @@ const Sidebar = () => {
                   <Link
                     href="/dashboard/penggajian/penggajian-utama"
                     className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                      pathname.startsWith("/dashboard/penggajian/penggajian-utama") ? "bg-blue-300" : ""
+                      pathname.startsWith(
+                        "/dashboard/penggajian/penggajian-utama"
+                      )
+                        ? "bg-blue-300"
+                        : ""
                     }`}
                   >
-                    <img src="/images/gaji.png" alt="gaji" className="w-auto h-auto mr-2" />
+                    <img
+                      src="/images/gaji.png"
+                      alt="gaji"
+                      className="w-[20px] h-auto mr-2"
+                    />
                     Gaji
                   </Link>
                 </li>
@@ -296,16 +401,23 @@ const Sidebar = () => {
                   <Link
                     href="/dashboard/penggajian/laporan-gaji"
                     className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                      pathname.startsWith("/dashboard/penggajian/laporan-gaji") ? "bg-blue-300" : ""
+                      pathname.startsWith("/dashboard/penggajian/laporan-gaji")
+                        ? "bg-blue-300"
+                        : ""
                     }`}
                   >
-                    <img src="/images/laporan-penggajian.png" alt="laporan-penggajian" className="w-auto h-auto mr-2" />
+                    <img
+                      src="/images/laporan-penggajian.png"
+                      alt="laporan-penggajian"
+                      className="w-[20px] h-auto mr-2"
+                    />
                     Laporan Gaji
                   </Link>
                 </li>
               </ul>
             )}
-          </li><br />
+          </li>
+          <br />
           <li>
             <button
               onClick={() => setIsGenerateOpen(!isGenerateOpen)}
@@ -315,7 +427,11 @@ const Sidebar = () => {
                 <Sparkles size={20} className="mr-2" />
                 AI Generate Content
               </div>
-              {isGenerateOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+              {isGenerateOpen ? (
+                <ChevronDown size={16} />
+              ) : (
+                <ChevronRight size={16} />
+              )}
             </button>
 
             {isGenerateOpen && (
@@ -324,10 +440,16 @@ const Sidebar = () => {
                   <Link
                     href="/dashboard/ai-generate/generate"
                     className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                      pathname.startsWith("/dashboard/ai-generate/generate") ? "bg-blue-300" : ""
+                      pathname.startsWith("/dashboard/ai-generate/generate")
+                        ? "bg-blue-300"
+                        : ""
                     }`}
                   >
-                    <img src="/images/generate.png" alt="generate" className="w-auto h-auto mr-2" />
+                    <img
+                      src="/images/generate.png"
+                      alt="generate"
+                      className="w-[20px] h-auto mr-2"
+                    />
                     AI Generate Content
                   </Link>
                 </li>
@@ -335,16 +457,19 @@ const Sidebar = () => {
                   <Link
                     href="/dashboard/ai-generate/draft"
                     className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                      pathname.startsWith("/dashboard/ai-generate/draft") ? "bg-blue-300" : ""
+                      pathname.startsWith("/dashboard/ai-generate/draft")
+                        ? "bg-blue-300"
+                        : ""
                     }`}
                   >
-                    <Archive size={20} className="mr-2" />
+                    <Archive size={20} className="mr-2 w-[20px] h-auto" />
                     Draft
                   </Link>
                 </li>
               </ul>
             )}
-          </li><br />
+          </li>
+          <br />
         </ul>
       </div>
 

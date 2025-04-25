@@ -2,8 +2,9 @@
 import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
 import withAuth from "/src/app/lib/withAuth.jsx";
+import React, { useState, useEffect, useRef } from "react";
 import { Bar } from "react-chartjs-2";
-import { FaUsers, FaCar, FaRegListAlt, FaPeopleCarry } from "react-icons/fa"; // Import FaPeopleCarry untuk Daftar Driver
+import { FaUsers, FaCar, FaRegListAlt, FaPeopleCarry } from "react-icons/fa";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,6 +14,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import label from "daisyui/components/label";
 
 ChartJS.register(
   CategoryScale,
@@ -29,101 +31,114 @@ const data = {
     "Feb",
     "Mar",
     "Apr",
-    "May",
+    "Mei",
     "Jun",
     "Jul",
-    "Aug",
+    "Agu",
     "Sep",
-    "Oct",
+    "Okt",
     "Nov",
-    "Dec",
+    "Des",
   ],
   datasets: [
     {
-      label: "Pendapatan",
+      label: "pemesanan",
       data: [
         1000, 1200, 800, 1500, 1300, 1700, 1600, 1400, 1800, 1900, 2000, 2100,
       ],
-      backgroundColor: "rgba(0, 123, 255, 0.2)", // Warna biru cerah dengan transparansi
-      borderColor: "rgba(0, 123, 255, 1)", // Warna biru cerah untuk border
+      backgroundColor: "rgba(0, 123, 255, 0.2)",
+      borderColor: "rgba(0, 123, 255, 1)",
       borderWidth: 1,
     },
   ],
 };
 
 const DashboardPage = () => {
+  const [userName, setUserName] = useState("");
+  const [userRole, setUserRole] = useState("");
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) return;
+
+      try {
+        const res = await fetch("http://localhost:8000/api/fo/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        if (data.success && data.data?.name) {
+          setUserName(data.data.name);
+          setUserRole(data.data.role);
+        }
+      } catch (error) {
+        console.error("Gagal ambil profil user:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
   return (
     <div className="flex">
       <UserMenu />
       <Sidebar />
-      <div className="p-6 pl-16 ml-16 flex-1">
-        {/* Header horizontal */}
+      <div className="flex-1 p-6 pl-10 ml-10">
         <div className="mb-16 flex items-center gap-4 mt-8">
-          <h1 className="text-lg font-normal lowercase text-gray-700">
-            selamat datang,
+          <h1 className="text-[32px] font-normal text-gray-700">
+            Selamat datang,
           </h1>
-          <p className="text-2xl font-bold uppercase text-[#3D6CB9]">
-            Front Office
-          </p>
+          <p className="text-[32px] font-bold text-[#3D6CB9]">{userRole}</p>
         </div>
-        {/* Grafik dan Kolom */}
         <div className="flex flex-row gap-16 items-start">
-          {/* Grafik */}
-          <div className="w-[700px] bg-white p-6 rounded-2xl shadow-lg">
+          <div className="w-[700px] h-110 bg-white p-6 rounded-2xl shadow-lg">
             <h2 className="text-xl font-semibold mb-4 text-[#3D6CB9]">
-              Grafik Pendapatan Bulanan
+              Grafik Pemesanan
             </h2>
             <div style={{ height: "400px" }}>
               <Bar data={data} />
             </div>
           </div>
 
-          {/* Kolom dengan Icon dan Angka */}
-          <div className="flex flex-col gap-8 ml-16">
+          <div className="flex flex-col gap-14 mt-10 ml-6">
             {" "}
-            {/* Memindahkan kolom sedikit ke kanan */}
-            {/* Kolom Daftar Anggota */}
-            <div className="flex items-center gap-4 p-6 bg-white rounded-xl shadow-lg">
+            <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-lg">
               <div className="p-4 bg-[#21ad11] rounded-lg">
                 {" "}
-                {/* Ganti rounded-full menjadi rounded-lg */}
-                <FaUsers className="text-4xl text-white" />
+                <FaUsers className="text-2xl text-white" />
               </div>
               <div>
-                <p className="text-xl font-semibold text-[#3D6CB9]">
+                <p className="text-[16px] font-semibold text-[#3D6CB9]">
                   Daftar Anggota
                 </p>
-                <p className="text-2xl font-bold text-[#3D6CB9]">32</p>
+                <p className="text-[24px] font-bold text-[#3D6CB9]">32</p>
               </div>
             </div>
-            {/* Kolom Daftar Driver */}
-            <div className="flex items-center gap-4 p-6 bg-white rounded-xl shadow-lg">
+            <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-lg">
               <div className="p-4 bg-[#3D6CB9] rounded-lg">
                 {" "}
-                {/* Ganti rounded-full menjadi rounded-lg */}
-                <FaPeopleCarry className="text-4xl text-white" />{" "}
-                {/* Ganti dengan FaPeopleCarry */}
+                <FaPeopleCarry className="text-2xl text-white" />{" "}
               </div>
               <div>
-                <p className="text-xl font-semibold text-[#3D6CB9]">
+                <p className="text-[16px] font-semibold text-[#3D6CB9]">
                   Daftar Driver
                 </p>
-                <p className="text-2xl font-bold text-[#3D6CB9]">12</p>
+                <p className="text-[24px] font-bold text-[#3D6CB9]">12</p>
               </div>
             </div>
-            {/* Kolom Daftar Jeep */}
-            <div className="flex items-center gap-4 p-6 bg-white rounded-xl shadow-lg">
+            <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-lg">
               <div className="p-4 bg-[#c7b70c] rounded-lg">
                 {" "}
-                {/* Ganti rounded-full menjadi rounded-lg */}
-                <FaCar className="text-4xl text-white" />{" "}
-                {/* Ganti dengan FaCar */}
+                <FaCar className="text-2xl text-white" />{" "}
               </div>
               <div>
-                <p className="text-xl font-semibold text-[#3D6CB9]">
+                <p className="text-[16px] font-semibold text-[#3D6CB9]">
                   Daftar Jeep
                 </p>
-                <p className="text-2xl font-bold text-[#3D6CB9]">16</p>
+                <p className="text-[24px] font-bold text-[#3D6CB9]">16</p>
               </div>
             </div>
           </div>

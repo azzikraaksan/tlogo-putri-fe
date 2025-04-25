@@ -66,7 +66,7 @@ const PenjadwalanPage = () => {
       <UserMenu />
       <Sidebar />
       <div className="flex-1 p-6">
-        <h1 className="text-5xl font-semibold mb-6 text-black">
+        <h1 className="text-[32px] font-semibold mb-6 text-black">
           Data Pemesanan
         </h1>
 

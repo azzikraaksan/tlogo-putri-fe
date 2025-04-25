@@ -7,22 +7,6 @@ import withAuth from "/src/app/lib/withAuth";
 
 const initialData = [
   {
-    lambung: "01",
-    name: "Bunde",
-    status: "Tersedia",
-    kontak: "WhatsApp",
-    konfirmasi: "Bisa",
-    departure: "Pilih Driver",
-  },
-  {
-    lambung: "02",
-    name: "Utari",
-    status: "Tersedia",
-    kontak: "WhatsApp",
-    konfirmasi: "Bisa",
-    departure: "Pilih Driver",
-  },
-  {
     lambung: "03",
     name: "Zimut",
     status: "On Track",
@@ -169,7 +153,7 @@ const PenjadwalanPage = () => {
       <UserMenu />
       <Sidebar />
       <div className="flex-1 p-6">
-        <h1 className="text-5xl font-semibold mb-6 text-black">Atur Driver</h1>
+        <h1 className="text-[32px] font-semibold mb-6 text-black">Atur Driver</h1>
 
         <div className="flex justify-end mb-7">
           <SearchInput

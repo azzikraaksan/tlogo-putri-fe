@@ -69,28 +69,29 @@ const PenjadwalanPage = () => {
       <UserMenu />
       <Sidebar />
       <div className="flex-1 p-6">
-        <h1 className="text-5xl font-semibold mb-6 text-black">
+        <h1 className="text-[32px] font-semibold mb-6 text-black">
           Daftar Anggota
         </h1>
 
         <div className="flex">
           <button
             onClick={() => handleTambahAnggota(item.id)}
-            className="w-[100px] bg-[#1C7AC8] rounded-[10px] text-white py-1 px-3 cursor-pointer hover:bg-[#7ba2d0] transition"
+            className="bg-[#1C7AC8] rounded-[10px] text-white py-1 px-3 cursor-pointer hover:bg-[#7ba2d0] transition flex items-center"
           >
             {/* <ListFilter size={18} /> */}
+            <ListFilter size={20} className="mr-2 w-[20px] h-auto" />
             Filter
           </button>
-        </div><br />
+        </div>
         <div className="flex">
           <button
             onClick={() => handleTambahAnggota(item.id)}
-            className="w-[190px] bg-[#1C7AC8] rounded-[10px] text-white py-1 px-3 cursor-pointer hover:bg-[#7ba2d0] transition"
+            className="bg-[#1C7AC8] rounded-[10px] text-white py-1 px-3 mt-2 cursor-pointer hover:bg-[#7ba2d0] transition flex items-center"
           >
-            {/* <Plus size={18} /> */}
-            + Tambah Anggota
+            <Plus size={18} className="mr-2 w-[20px] h-auto"/>
+            Tambah Anggota
           </button>
-        </div><br />
+        </div>
 
         <div className="flex justify-end mb-7">
           <SearchInput

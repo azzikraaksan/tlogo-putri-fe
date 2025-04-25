@@ -22,38 +22,6 @@ const initialData = [
     konfirmasi: "Bisa",
     departure: "Pilih Driver",
   },
-  {
-    lambung: "03",
-    name: "Zimut",
-    status: "On Track",
-    kontak: "WhatsApp",
-    konfirmasi: "-",
-    departure: "Pilih Driver",
-  },
-  {
-    lambung: "04",
-    name: "Peh",
-    status: "Tertunda",
-    kontak: "WhatsApp",
-    konfirmasi: "Tidak Bisa",
-    departure: "Pilih Driver",
-  },
-  {
-    lambung: "05",
-    name: "Naon Maneh",
-    status: "Selesai",
-    kontak: "WhatsApp",
-    konfirmasi: "-",
-    departure: "Pilih Driver",
-  },
-  {
-    lambung: "06",
-    name: "Maneh Saha",
-    status: "Selesai",
-    kontak: "WhatsApp",
-    konfirmasi: "-",
-    departure: "Pilih Driver",
-  },
 ];
 
 const PenjadwalanPage = () => {
@@ -169,7 +137,7 @@ const PenjadwalanPage = () => {
       <UserMenu />
       <Sidebar />
       <div className="flex-1 p-6">
-        <h1 className="text-5xl font-semibold mb-6 text-black">Atur Driver</h1>
+        <h1 className="text-[32px] font-semibold mb-6 text-black">Atur Driver</h1>
 
         <div className="flex justify-end mb-7">
           <SearchInput
