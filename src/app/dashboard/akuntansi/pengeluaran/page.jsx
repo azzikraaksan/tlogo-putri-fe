@@ -1,4 +1,4 @@
-// app/dashboard/pengeluaran/page.jsx
+// app/dashboard/operasional/pengeluaran/page.jsx
 'use client'
 
 import { useState } from 'react'

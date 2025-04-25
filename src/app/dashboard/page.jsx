@@ -53,7 +53,7 @@ const data = {
 
 const DashboardPage = () => {
   return (
-    <div className="flex h-screen relative">
+    <div className="flex">
       <UserMenu />
       <Sidebar />
       <div className="p-6 pl-16 ml-16 flex-1">
