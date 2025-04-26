@@ -15,7 +15,7 @@ import {
   Wallet,
   FileBarChart,
   Sparkles,
-  PersonStanding,
+  Users,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -26,6 +26,7 @@ const Sidebar = () => {
   const [isPemesananOpen, setIsPemesananOpen] = useState(false);
   const [isOperasionalOpen, setIsOperasionalOpen] = useState(false);
   const [isAkuntansiOpen, setIsAkuntansiOpen] = useState(false);
+  const [isAkuntansi2Open, setIsAkuntansi2Open] = useState(false);
   const [isPenggajianOpen, setIsPenggajianOpen] = useState(false);
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
 
@@ -57,6 +58,17 @@ const Sidebar = () => {
       setIsAkuntansiOpen(true);
     } else {
       setIsAkuntansiOpen(false);
+    }
+
+    if (
+      pathname.startsWith("/dashboard/akuntansi/harian") ||
+      pathname.startsWith("/dashboard/akuntansi/bulanan") ||
+      pathname.startsWith("/dashboard/akuntansi/triwulan") ||
+      pathname.startsWith("/dashboard/akuntansi/tahunan")
+    ) {
+      setIsAkuntansi2Open(true);
+    } else {
+      setIsAkuntansi2Open(false);
     }
 
     if (
@@ -225,10 +237,7 @@ const Sidebar = () => {
                     }`}
                   >
                     {/* <img src="/images/daftar-anggota.png" alt="daftar-anggota" className="w-[20px] h-auto mr-2" /> */}
-                    <PersonStanding
-                      size={20}
-                      className="mr-2 w-[20px] h-auto"
-                    />
+                    <Users size={20} className="mr-2 w-[20px] h-auto" />
                     Daftar Anggota
                   </Link>
                 </li>
@@ -305,40 +314,84 @@ const Sidebar = () => {
                     Pengeluaran
                   </Link>
                 </li>
-                {/* <li>
-                  <Link
-                    href="/dashboard/akuntansi/laporan-keuangan"
-                    className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                      pathname.startsWith(
-                        "/dashboard/akuntansi/laporan-keuangan"
-                      )
-                        ? "bg-blue-300"
-                        : ""
-                    }`}
-                  >
+                <button
+                  onClick={() => setIsAkuntansi2Open(!isAkuntansi2Open)}
+                  className="flex items-center justify-between w-full pl-2 py-1 rounded-[6px] hover:bg-blue-400 cursor-pointer"
+                >
+                  <div className="flex items-center">
                     <img
                       src="/images/laporan-keuangan.png"
                       alt="laporan-keuangan"
                       className="w-[20px] h-auto mr-2"
                     />
                     Laporan Keuangan
-                  </Link>
-                </li> */}
-                {/*  PERBAIKIII  */}
-                <button
-                  onClick={() => setIsAkuntansiOpen(!isAkuntansiOpen)}
-                  className="flex items-center justify-between w-full pl-4 py-2 rounded-[6px] hover:bg-blue-400 cursor-pointer"
-                >
-                  <div className="flex items-center">
-                    <FileBarChart size={20} className="mr-2" />
-                    Laporan Keuangan
                   </div>
-                  {isAkuntansiOpen ? (
-                    <ChevronDown size={16} />
+                  {isAkuntansi2Open ? (
+                    <ChevronDown size={12} />
                   ) : (
-                    <ChevronRight size={16} />
+                    <ChevronRight size={12} />
                   )}
                 </button>
+                {isAkuntansi2Open && (
+                  <ul className="pl-8 mt-2 space-y-2">
+                    <li>
+                      <Link
+                        href="/dashboard/akuntansi/laporan-keuangan/harian"
+                        className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
+                          pathname.startsWith(
+                            "/dashboard/akuntansi/laporan-keuangan/harian"
+                          )
+                            ? "bg-blue-300"
+                            : ""
+                        }`}
+                      >
+                        Harian
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/dashboard/akuntansi/laporan-keuangan/bulanan"
+                        className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
+                          pathname.startsWith(
+                            "/dashboard/akuntansi/laporan-keuangan/bulanan"
+                          )
+                            ? "bg-blue-300"
+                            : ""
+                        }`}
+                      >
+                        Bulanan
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/dashboard/akuntansi/laporan-keuangan/triwulan"
+                        className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
+                          pathname.startsWith(
+                            "/dashboard/akuntansi/laporan-keuangan/triwulan"
+                          )
+                            ? "bg-blue-300"
+                            : ""
+                        }`}
+                      >
+                        Triwulan
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        href="/dashboard/akuntansi/laporan-keuangan/tahunan"
+                        className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
+                          pathname.startsWith(
+                            "/dashboard/akuntansi/laporan-keuangan/tahunan"
+                          )
+                            ? "bg-blue-300"
+                            : ""
+                        }`}
+                      >
+                        Tahunan
+                      </Link>
+                    </li>
+                  </ul>
+                )}
                 <li>
                   <Link
                     href="/dashboard/akuntansi/data-driver"
