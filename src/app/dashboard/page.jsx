@@ -63,7 +63,7 @@ const DashboardPage = () => {
       if (!token) return;
 
       try {
-        const res = await fetch("http://localhost:8000/api/fo/profile", {
+        const res = await fetch("http://localhost:8000/api/users/me", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
