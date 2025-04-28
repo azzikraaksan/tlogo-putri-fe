@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "/components/Sidebar";
 import UserMenu from "/components/Pengguna";
 import TambahAnggota from "/components/TambahAnggota";
+import DetailAnggota from "/components/LihatDetail";
 import SearchInput from "/components/Search";
 import withAuth from "/src/app/lib/withAuth";
 import { Trash2, Plus, ListFilter } from "lucide-react";
@@ -12,6 +13,7 @@ const AnggotaPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [modeTambah, setModeTambah] = useState(false);
   const [users, setUsers] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -56,27 +58,35 @@ const AnggotaPage = () => {
     setModeTambah(false);
   };
 
-  const LihatDetailPage  = (id) => {
-    router.push(`/dashboard/penjadwalan/lihat-detail/${id}`);
+  const handleLihatDetail = (user) => {
+    setSelectedUser(user);
   };
+
+  const handleKembaliDariDetail = () => {
+    setSelectedUser(null);
+  };
+
+  // const LihatDetailPage  = (id) => {
+  //   router.push(`/dashboard/penjadwalan/lihat-detail/${id}`);
+  // };
 
   const handleHapusUser = async (id) => {
     if (!id) return;
-  
+
     const konfirmasi = window.confirm("Yakin mau hapus user ini?");
     if (!konfirmasi) return;
-  
+
     try {
       const token = localStorage.getItem("access_token");
       if (!token) return;
-  
+
       const res = await fetch(`http://localhost:8000/api/users/delete/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-  
+
       if (res.ok) {
         setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
         alert("User berhasil dihapus!");
@@ -89,7 +99,6 @@ const AnggotaPage = () => {
       alert("Terjadi kesalahan saat menghapus.");
     }
   };
-  
 
   return (
     <div className="flex">
@@ -99,6 +108,11 @@ const AnggotaPage = () => {
       <div className="flex-1 p-6">
         {modeTambah ? (
           <TambahAnggota onKembali={handleKembali} />
+        ) : selectedUser ? (
+          <DetailAnggota
+            user={selectedUser}
+            onKembali={handleKembaliDariDetail}
+          />
         ) : (
           <>
             <h1 className="text-[32px] font-semibold mb-6 text-black">
@@ -171,9 +185,7 @@ const AnggotaPage = () => {
                         </td>
                         <td className="p-2 text-center">
                           <button
-                            onClick={() =>
-                              item?.id && LihatDetailPage (item.id)
-                            }
+                            onClick={() => handleLihatDetail(item)}
                             className="w-[120px] bg-[#B8D4F9] rounded-[10px] text-[#1C7AC8] py-1 px-3 hover:bg-[#7ba2d0] transition cursor-pointer"
                           >
                             Lihat Detail

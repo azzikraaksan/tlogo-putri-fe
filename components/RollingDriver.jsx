@@ -42,7 +42,7 @@ const RollingDriverPage = () => {
 
   return (
     <div className="flex">
-      <div className="flex-1 p-6">
+      <div className="flex-1">
         <h1 className="text-[32px] font-semibold mb-6 text-black">
           Rolling Driver
         </h1>

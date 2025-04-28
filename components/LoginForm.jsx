@@ -16,9 +16,9 @@ const LoginForm = () => {
     const role = localStorage.getItem("role");
   
     if (token && role) {
-      if (role === "FO") {
+      if (role === "Front Office") {
         router.push("/dashboard");
-      } else if (role === "ADMIN") {
+      } else if (role === "Admin") {
         router.push("/dashboard_admin");
       } else {
         router.push("/dashboard2");
