@@ -17,11 +17,11 @@ const LoginForm = () => {
   
     if (token && role) {
       if (role === "FO") {
-        router.push("/dashboard_fo");
+        router.push("/dashboard");
       } else if (role === "ADMIN") {
         router.push("/dashboard_admin");
       } else {
-        router.push("/dashboard");
+        router.push("/dashboard2");
       }
     }
   }, []);
@@ -58,11 +58,11 @@ const LoginForm = () => {
         localStorage.setItem('user_role', role)
 
         if (role === 'FO') {
-          router.push('/dashboard_fo')
+          router.push('/dashboard')
         } else if (role === 'ADMIN') {
           router.push('/dashboard_admin')
         } else {
-          router.push('/dashboard')
+          router.push('/dashboard2')
         }
       } else {
         setError(data.message || 'Login gagal, cek email & password')
