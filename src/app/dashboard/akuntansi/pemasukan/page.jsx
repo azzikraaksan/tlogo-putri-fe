@@ -1,4 +1,5 @@
 "use client";
+
 import { useState, useRef, useEffect } from "react";
 import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
@@ -10,9 +11,9 @@ import "react-datepicker/dist/react-datepicker.css";
 const PemasukanPage = () => {
   const [dataPemasukan, setDataPemasukan] = useState([]);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
   const calendarRef = useRef(null);
 
-  // Populating the table with example data
   const exampleData = [
     {
       idPemasukan: 1,
@@ -38,7 +39,11 @@ const PemasukanPage = () => {
     setDataPemasukan(exampleData);
   }, []);
 
-  // Tutup kalender saat klik di luar elemen
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+    setIsDatePickerOpen(false);
+  };
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (calendarRef.current && !calendarRef.current.contains(event.target)) {
@@ -58,28 +63,36 @@ const PemasukanPage = () => {
       <div className="flex-1 p-6 relative">
         <h1 className="text-4xl font-semibold mb-6 text-blue-600">Pemasukan</h1>
 
-        {/* Toolbar atas */}
-        <div className="flex items-center justify-between mb-6 bg-white p-4 rounded-lg shadow relative">
-          {/* Kolom Kalender */}
-          <div className="flex-1 flex items-center gap-4 justify-start">
+        {/* Toolbar */}
+        <div className="flex items-center justify-between mb-6 p-0 relative">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+              className="flex items-center gap-2 bg-blue-100 text-blue-600 hover:bg-blue-200 px-3 py-2 rounded-lg shadow"
             >
               <CalendarDays size={24} />
-              <span className="text-base font-medium">Kalender</span>
+              <span className="text-base font-medium">
+                {selectedDate
+                  ? selectedDate.toLocaleDateString("id-ID", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric",
+                    })
+                  : "Pilih Tanggal"}
+              </span>
             </button>
+
             {isDatePickerOpen && (
               <div
                 ref={calendarRef}
-                className="absolute z-50 mt-2 ml-6 bg-white border rounded shadow-lg"
-                style={{ top: "100px", left: "200px" }} // Atur posisi sesuai keinginan
+                className="absolute z-50 mt-2 p-4 top-16 bg-white border rounded-lg shadow-lg"
               >
                 <DatePicker
-                  selected={new Date()}
-                  onChange={(date) => console.log(date)}
+                  selected={selectedDate}
+                  onChange={handleDateChange}
                   inline
                   dateFormat="dd/MM/yyyy"
+                  showPopperArrow={false}
                 />
               </div>
             )}
@@ -87,11 +100,11 @@ const PemasukanPage = () => {
 
           {/* Kolom Tombol Export */}
           <div className="flex gap-4 justify-end">
-            <button className="flex items-center gap-2 bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700">
+            <button className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700">
               <FileSpreadsheet size={18} />
               Export Excel
             </button>
-            <button className="flex items-center gap-2 bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700">
+            <button className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700">
               <FileText size={18} />
               Export PDF
             </button>
@@ -101,12 +114,10 @@ const PemasukanPage = () => {
         {/* Tabel Data Pemasukan */}
         <div className="mt-8">
           <div className="flex justify-between items-center mb-4">
-            {/* Judul Daftar Pemasukan */}
             <h2 className="text-2xl font-semibold text-blue-600">
               Daftar Pemasukan
             </h2>
 
-            {/* Tautan Lihat Semua */}
             <button className="text-blue-600 hover:text-blue-800 text-base font-medium">
               Lihat Semua
             </button>
@@ -125,8 +136,11 @@ const PemasukanPage = () => {
               </tr>
             </thead>
             <tbody>
-              {dataPemasukan.map((item, index) => (
-                <tr key={index} className="border-b hover:bg-blue-50">
+              {dataPemasukan.map((item) => (
+                <tr
+                  key={item.idPemasukan}
+                  className="border-b hover:bg-blue-50"
+                >
                   <td className="p-3">{item.idPemasukan}</td>
                   <td className="p-3">{item.idPengeluaran}</td>
                   <td className="p-3">{item.idTicketing}</td>

@@ -9,7 +9,10 @@ const poppins = Poppins({
 
 export const metadata = {
   title: "Operational Jeep Tlogo Putri",
-  description: "Website untuk mengelola operasional Komunitas Jeep Tlogo Putri",
+  description: "Website untuk mengelola Komunitas Jeep Tlogo Putri",
+  icons: {
+    icon: "/images/logo.png",
+  },
 };
 
 export default function RootLayout({ children }) {
