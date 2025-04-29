@@ -68,7 +68,7 @@ const PemasukanPage = () => {
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-              className="flex items-center gap-2 bg-blue-100 text-blue-600 hover:bg-blue-200 px-3 py-2 rounded-lg shadow"
+              className="flex items-center gap-2 bg-blue-600 text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow"
             >
               <CalendarDays size={24} />
               <span className="text-base font-medium">
@@ -98,15 +98,19 @@ const PemasukanPage = () => {
             )}
           </div>
 
-          {/* Kolom Tombol Export */}
+          {/* Tombol Export */}
           <div className="flex gap-4 justify-end">
-            <button className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700">
-              <FileSpreadsheet size={18} />
-              Export Excel
+            <button className="flex items-center gap-2 bg-white text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow">
+              <FileSpreadsheet size={18} color="green" />
+              <span className="text-base font-medium text-black">
+                Export Excel
+              </span>
             </button>
-            <button className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg shadow hover:bg-red-700">
-              <FileText size={18} />
-              Export PDF
+            <button className="flex items-center gap-2 bg-white text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow">
+              <FileText size={18} color="red" />
+              <span className="text-base font-medium text-black">
+                Export PDF
+              </span>
             </button>
           </div>
         </div>

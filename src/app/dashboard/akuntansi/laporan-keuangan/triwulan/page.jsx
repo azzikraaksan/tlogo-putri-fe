@@ -18,49 +18,40 @@ const TriwulanPage = () => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
   const [formData, setFormData] = useState({
-    idLaporanHarian: "",
-    idPemesanan: "",
-    idGaji: "",
-    noLB: "",
-    paket: "",
-    keterangan: "",
-    kode: "",
-    marketing: "",
+    idLaporan: "",
+    idPemasukan: "",
+    idPengeluaran: "",
+    pengeluaran: "",
+    jumlahJeep: "",
+    hariTanggal: "",
+    operasional: "",
+    operasionalBersih: "",
     kas: "",
-    opp: "",
-    driverBayar: "",
-    totalKas: "",
   });
   const calendarRef = useRef(null);
 
   const exampleData = [
     {
-      idLaporanHarian: 5,
-      idPemesanan: 105,
-      idGaji: 205,
-      noLB: "LB005",
-      paket: "Paket E",
-      keterangan: "Laporan triwulan 1",
-      kode: "K005",
-      marketing: "Marketing 5",
-      kas: "Rp 1.000.000",
-      opp: "OPP005",
-      driverBayar: "Driver 5",
-      totalKas: "Rp 1.500.000",
+      idLaporan: 1,
+      idPemasukan: 101,
+      idPengeluaran: 201,
+      pengeluaran: "Rp 500.000",
+      jumlahJeep: 5,
+      hariTanggal: "12/01/2025",
+      operasional: "Rp 2.000.000",
+      operasionalBersih: "Rp 1.500.000",
+      kas: "Rp 1.200.000",
     },
     {
-      idLaporanHarian: 6,
-      idPemesanan: 106,
-      idGaji: 206,
-      noLB: "LB006",
-      paket: "Paket F",
-      keterangan: "Laporan triwulan 2",
-      kode: "K006",
-      marketing: "Marketing 6",
-      kas: "Rp 800.000",
-      opp: "OPP006",
-      driverBayar: "Driver 6",
-      totalKas: "Rp 1.200.000",
+      idLaporan: 2,
+      idPemasukan: 102,
+      idPengeluaran: 202,
+      pengeluaran: "Rp 700.000",
+      jumlahJeep: 6,
+      hariTanggal: "12/02/2025",
+      operasional: "Rp 2.500.000",
+      operasionalBersih: "Rp 1.800.000",
+      kas: "Rp 1.500.000",
     },
   ];
 
@@ -98,18 +89,15 @@ const TriwulanPage = () => {
     setDataTriwulan([...dataTriwulan, formData]);
     setShowFormModal(false);
     setFormData({
-      idLaporanHarian: "",
-      idPemesanan: "",
-      idGaji: "",
-      noLB: "",
-      paket: "",
-      keterangan: "",
-      kode: "",
-      marketing: "",
+      idLaporan: "",
+      idPemasukan: "",
+      idPengeluaran: "",
+      pengeluaran: "",
+      jumlahJeep: "",
+      hariTanggal: "",
+      operasional: "",
+      operasionalBersih: "",
       kas: "",
-      opp: "",
-      driverBayar: "",
-      totalKas: "",
     });
   };
 
@@ -126,7 +114,7 @@ const TriwulanPage = () => {
             {/* Tombol Pilih Tanggal */}
             <button
               onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-              className="flex items-center gap-2 bg-blue-100 text-blue-600 hover:bg-blue-200 px-4 py-2 rounded-lg shadow"
+              className="flex items-center gap-2 bg-blue-600 text-black-600 hover:bg-blue-200 px-4 py-2 rounded-lg shadow"
             >
               <CalendarDays size={24} />
               <span className="text-base font-medium">
@@ -159,7 +147,7 @@ const TriwulanPage = () => {
             {/* Tombol Tambah */}
             <button
               onClick={() => setShowFormModal(true)}
-              className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg shadow"
+              className="flex items-center gap-2 bg-blue-600 text-black hover:bg-blue-700 px-4 py-2 rounded-lg shadow"
             >
               <PlusCircle size={20} />
               Tambah
@@ -168,13 +156,17 @@ const TriwulanPage = () => {
 
           {/* Tombol Export */}
           <div className="flex gap-4 justify-end">
-            <button className="flex items-center gap-2 bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-lg shadow">
-              <FileSpreadsheet size={18} />
-              Export Excel
+            <button className="flex items-center gap-2 bg-white text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow">
+              <FileSpreadsheet size={18} color="green" />
+              <span className="text-base font-medium text-black">
+                Export Excel
+              </span>
             </button>
-            <button className="flex items-center gap-2 bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-lg shadow">
-              <FileText size={18} />
-              Export PDF
+            <button className="flex items-center gap-2 bg-white text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow">
+              <FileText size={18} color="red" />
+              <span className="text-base font-medium text-black">
+                Export PDF
+              </span>
             </button>
           </div>
         </div>
@@ -190,38 +182,32 @@ const TriwulanPage = () => {
             </button>
           </div>
 
-          <table className="min-w-full table-auto border-collapse bg-blue-100 rounded-lg overflow-hidden">
+          <table className="min-w-full table-auto border-collapse bg-white rounded-lg shadow text-sm">
             <thead>
               <tr className="bg-blue-600 text-white">
-                <th className="p-3 text-left">ID Laporan Harian (FK)</th>
-                <th className="p-3 text-left">ID Pemesanan</th>
-                <th className="p-3 text-left">ID Gaji</th>
-                <th className="p-3 text-left">No LB</th>
-                <th className="p-3 text-left">Paket</th>
-                <th className="p-3 text-left">Keterangan</th>
-                <th className="p-3 text-left">Kode</th>
-                <th className="p-3 text-left">Marketing</th>
+                <th className="p-3 text-left">ID Laporan</th>
+                <th className="p-3 text-left">ID Pemasukan (PK)</th>
+                <th className="p-3 text-left">ID Pengeluaran</th>
+                <th className="p-3 text-left">Pengeluaran</th>
+                <th className="p-3 text-left">Jumlah Jeep</th>
+                <th className="p-3 text-left">Hari / Tanggal</th>
+                <th className="p-3 text-left">Operasional</th>
+                <th className="p-3 text-left">Operasional Bersih</th>
                 <th className="p-3 text-left">Kas</th>
-                <th className="p-3 text-left">OPP</th>
-                <th className="p-3 text-left">Driver Bayar</th>
-                <th className="p-3 text-left">Total Kas</th>
               </tr>
             </thead>
             <tbody>
               {dataTriwulan.map((item, index) => (
                 <tr key={index} className="border-b hover:bg-blue-50">
-                  <td className="p-3">{item.idLaporanHarian}</td>
-                  <td className="p-3">{item.idPemesanan}</td>
-                  <td className="p-3">{item.idGaji}</td>
-                  <td className="p-3">{item.noLB}</td>
-                  <td className="p-3">{item.paket}</td>
-                  <td className="p-3">{item.keterangan}</td>
-                  <td className="p-3">{item.kode}</td>
-                  <td className="p-3">{item.marketing}</td>
+                  <td className="p-3">{item.idLaporan}</td>
+                  <td className="p-3">{item.idPemasukan}</td>
+                  <td className="p-3">{item.idPengeluaran}</td>
+                  <td className="p-3">{item.pengeluaran}</td>
+                  <td className="p-3">{item.jumlahJeep}</td>
+                  <td className="p-3">{item.hariTanggal}</td>
+                  <td className="p-3">{item.operasional}</td>
+                  <td className="p-3">{item.operasionalBersih}</td>
                   <td className="p-3">{item.kas}</td>
-                  <td className="p-3">{item.opp}</td>
-                  <td className="p-3">{item.driverBayar}</td>
-                  <td className="p-3">{item.totalKas}</td>
                 </tr>
               ))}
             </tbody>
