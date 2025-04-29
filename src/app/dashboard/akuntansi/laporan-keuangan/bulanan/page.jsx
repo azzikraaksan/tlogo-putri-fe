@@ -20,48 +20,39 @@ const BulananPage = () => {
 
   const [showFormModal, setShowFormModal] = useState(false);
   const [formData, setFormData] = useState({
-    idLaporanHarian: "",
-    idPemesanan: "",
-    idGaji: "",
-    noLB: "",
-    paket: "",
-    keterangan: "",
-    kode: "",
-    marketing: "",
+    idLaporan: "",
+    idPemasukan: "",
+    idPengeluaran: "",
+    pengeluaran: "",
+    jumlahJeep: "",
+    hariTanggal: "",
+    operasional: "",
+    operasionalBersih: "",
     kas: "",
-    opp: "",
-    driverBayar: "",
-    totalKas: "",
   });
 
   const exampleData = [
     {
-      idLaporanHarian: 3,
-      idPemesanan: 103,
-      idGaji: 203,
-      noLB: "LB003",
-      paket: "Paket C",
-      keterangan: "Laporan bulanan 1",
-      kode: "K003",
-      marketing: "Marketing 3",
+      idLaporan: 3,
+      idPemasukan: 103,
+      idPengeluaran: 203,
+      pengeluaran: "Rp 500.000",
+      jumlahJeep: 5,
+      hariTanggal: "10 Januari 2025",
+      operasional: "Rp 700.000",
+      operasionalBersih: "Rp 300.000",
       kas: "Rp 900.000",
-      opp: "OPP003",
-      driverBayar: "Driver 3",
-      totalKas: "Rp 1.300.000",
     },
     {
-      idLaporanHarian: 4,
-      idPemesanan: 104,
-      idGaji: 204,
-      noLB: "LB004",
-      paket: "Paket D",
-      keterangan: "Laporan bulanan 2",
-      kode: "K004",
-      marketing: "Marketing 4",
-      kas: "Rp 700.000",
-      opp: "OPP004",
-      driverBayar: "Driver 4",
-      totalKas: "Rp 1.100.000",
+      idLaporan: 4,
+      idPemasukan: 104,
+      idPengeluaran: 204,
+      pengeluaran: "Rp 400.000",
+      jumlahJeep: 4,
+      hariTanggal: "15 Januari 2025",
+      operasional: "Rp 600.000",
+      operasionalBersih: "Rp 200.000",
+      kas: "Rp 800.000",
     },
   ];
 
@@ -95,18 +86,15 @@ const BulananPage = () => {
     e.preventDefault();
     setDataBulanan([...dataBulanan, formData]);
     setFormData({
-      idLaporanHarian: "",
-      idPemesanan: "",
-      idGaji: "",
-      noLB: "",
-      paket: "",
-      keterangan: "",
-      kode: "",
-      marketing: "",
+      idLaporan: "",
+      idPemasukan: "",
+      idPengeluaran: "",
+      pengeluaran: "",
+      jumlahJeep: "",
+      hariTanggal: "",
+      operasional: "",
+      operasionalBersih: "",
       kas: "",
-      opp: "",
-      driverBayar: "",
-      totalKas: "",
     });
     setShowFormModal(false);
   };
@@ -118,16 +106,16 @@ const BulananPage = () => {
       <div className="flex-1 p-6 relative">
         <h1 className="text-4xl font-semibold mb-6 text-blue-600">Bulanan</h1>
 
-        {/* Toolbar atas */}
+        {/* Toolbar atas dengan ikon dan tulisan berwarna hitam */}
         <div className="flex items-center justify-between mb-6 p-0 relative">
           <div className="flex-1 flex items-center gap-4 justify-start relative">
             {/* Tombol Pilih Tanggal */}
             <button
               onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-              className="flex items-center gap-2 bg-blue-100 text-blue-600 hover:bg-blue-200 px-4 py-2 rounded-lg shadow"
+              className="flex items-center gap-2 bg-blue-600 text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow"
             >
-              <CalendarDays size={24} />
-              <span className="text-base font-medium">
+              <CalendarDays size={24} color="black" />
+              <span className="text-base font-medium text-black">
                 {selectedDate
                   ? selectedDate.toLocaleDateString("id-ID", {
                       day: "2-digit",
@@ -157,22 +145,26 @@ const BulananPage = () => {
             {/* Tombol Tambah */}
             <button
               onClick={() => setShowFormModal(true)}
-              className="flex items-center gap-2 bg-blue-600 text-white hover:bg-blue-700 px-4 py-2 rounded-lg shadow"
+              className="flex items-center gap-2 bg-blue-600 text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow"
             >
-              <PlusCircle size={20} />
-              Tambah
+              <PlusCircle size={20} color="black" />
+              <span className="text-base font-medium text-black">Tambah</span>
             </button>
           </div>
 
           {/* Tombol Export */}
           <div className="flex gap-4 justify-end">
-            <button className="flex items-center gap-2 bg-green-600 text-white hover:bg-green-700 px-4 py-2 rounded-lg shadow">
-              <FileSpreadsheet size={18} />
-              Export Excel
+            <button className="flex items-center gap-2 bg-white text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow">
+              <FileSpreadsheet size={18} color="green" />
+              <span className="text-base font-medium text-black">
+                Export Excel
+              </span>
             </button>
-            <button className="flex items-center gap-2 bg-red-600 text-white hover:bg-red-700 px-4 py-2 rounded-lg shadow">
-              <FileText size={18} />
-              Export PDF
+            <button className="flex items-center gap-2 bg-white text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow">
+              <FileText size={18} color="red" />
+              <span className="text-base font-medium text-black">
+                Export PDF
+              </span>
             </button>
           </div>
         </div>
@@ -182,38 +174,32 @@ const BulananPage = () => {
           <h2 className="text-2xl font-semibold text-blue-600 mb-4">
             Laporan Bulanan
           </h2>
-          <table className="min-w-full table-auto border-collapse bg-blue-100 rounded-lg overflow-hidden">
+          <table className="min-w-full table-auto border-collapse bg-white rounded-lg shadow text-sm">
             <thead>
               <tr className="bg-blue-600 text-white">
-                <th className="p-3 text-left">ID Laporan Harian</th>
-                <th className="p-3 text-left">ID Pemesanan</th>
-                <th className="p-3 text-left">ID Gaji</th>
-                <th className="p-3 text-left">No LB</th>
-                <th className="p-3 text-left">Paket</th>
-                <th className="p-3 text-left">Keterangan</th>
-                <th className="p-3 text-left">Kode</th>
-                <th className="p-3 text-left">Marketing</th>
+                <th className="p-3 text-left">ID Laporan</th>
+                <th className="p-3 text-left">ID Pemasukan</th>
+                <th className="p-3 text-left">ID Pengeluaran</th>
+                <th className="p-3 text-left">Pengeluaran</th>
+                <th className="p-3 text-left">Jumlah Jeep</th>
+                <th className="p-3 text-left">Hari / Tanggal</th>
+                <th className="p-3 text-left">Operasional</th>
+                <th className="p-3 text-left">Operasional Bersih</th>
                 <th className="p-3 text-left">Kas</th>
-                <th className="p-3 text-left">OPP</th>
-                <th className="p-3 text-left">Driver Bayar</th>
-                <th className="p-3 text-left">Total Kas</th>
               </tr>
             </thead>
             <tbody>
               {dataBulanan.map((item, index) => (
                 <tr key={index} className="border-b hover:bg-blue-50">
-                  <td className="p-3">{item.idLaporanHarian}</td>
-                  <td className="p-3">{item.idPemesanan}</td>
-                  <td className="p-3">{item.idGaji}</td>
-                  <td className="p-3">{item.noLB}</td>
-                  <td className="p-3">{item.paket}</td>
-                  <td className="p-3">{item.keterangan}</td>
-                  <td className="p-3">{item.kode}</td>
-                  <td className="p-3">{item.marketing}</td>
+                  <td className="p-3">{item.idLaporan}</td>
+                  <td className="p-3">{item.idPemasukan}</td>
+                  <td className="p-3">{item.idPengeluaran}</td>
+                  <td className="p-3">{item.pengeluaran}</td>
+                  <td className="p-3">{item.jumlahJeep}</td>
+                  <td className="p-3">{item.hariTanggal}</td>
+                  <td className="p-3">{item.operasional}</td>
+                  <td className="p-3">{item.operasionalBersih}</td>
                   <td className="p-3">{item.kas}</td>
-                  <td className="p-3">{item.opp}</td>
-                  <td className="p-3">{item.driverBayar}</td>
-                  <td className="p-3">{item.totalKas}</td>
                 </tr>
               ))}
             </tbody>
