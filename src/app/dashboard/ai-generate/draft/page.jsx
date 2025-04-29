@@ -65,7 +65,7 @@ export default function Home() {
       <main className="flex-1 flex-col px-8 md:px-10 py-6 space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-[32px] font-semibold mb-6 text-black">Draft</h1>
+          <h1 className="text-[32px] font-bold mb-6 text-black">Draft</h1>
         </div>
 
         {/* Tabs + Search + UserMenu */}
