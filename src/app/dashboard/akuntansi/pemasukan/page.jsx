@@ -14,6 +14,7 @@ const PemasukanPage = () => {
   const [selectedDate, setSelectedDate] = useState(null);
   const calendarRef = useRef(null);
 
+  // Example data for the table
   const exampleData = [
     {
       idPemasukan: 1,
@@ -39,11 +40,13 @@ const PemasukanPage = () => {
     setDataPemasukan(exampleData);
   }, []);
 
+  // Handle Date Change
   const handleDateChange = (date) => {
     setSelectedDate(date);
     setIsDatePickerOpen(false);
   };
 
+  // Close calendar if clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (calendarRef.current && !calendarRef.current.contains(event.target)) {
@@ -56,6 +59,17 @@ const PemasukanPage = () => {
     };
   }, []);
 
+  // Mock function for export actions
+  const handleExportExcel = () => {
+    alert("Export Excel clicked!");
+    // Logic for exporting data to Excel
+  };
+
+  const handleExportPDF = () => {
+    alert("Export PDF clicked!");
+    // Logic for exporting data to PDF
+  };
+
   return (
     <div className="flex relative bg-blue-50">
       <UserMenu />
@@ -64,49 +78,72 @@ const PemasukanPage = () => {
         <h1 className="text-4xl font-semibold mb-6 text-blue-600">Pemasukan</h1>
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between mb-6 p-0 relative">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-              className="flex items-center gap-2 bg-blue-600 text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow"
-            >
-              <CalendarDays size={24} />
-              <span className="text-base font-medium">
-                {selectedDate
-                  ? selectedDate.toLocaleDateString("id-ID", {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                    })
-                  : "Pilih Tanggal"}
-              </span>
-            </button>
-
-            {isDatePickerOpen && (
-              <div
-                ref={calendarRef}
-                className="absolute z-50 mt-2 p-4 top-16 bg-white border rounded-lg shadow-lg"
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex gap-4 items-center">
+            {/* Pilih Tanggal */}
+            <div className="relative">
+              <button
+                onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+                className="flex items-center gap-2 bg-blue-600 text-black-600 hover:bg-blue-200 px-4 py-2 rounded-lg shadow"
               >
-                <DatePicker
-                  selected={selectedDate}
-                  onChange={handleDateChange}
-                  inline
-                  dateFormat="dd/MM/yyyy"
-                  showPopperArrow={false}
-                />
-              </div>
-            )}
+                <CalendarDays size={24} />
+                <span className="text-base font-medium">
+                  {selectedDate
+                    ? selectedDate.toLocaleDateString("id-ID", {
+                        day: "2-digit",
+                        month: "long",
+                        year: "numeric",
+                      })
+                    : "Pilih Tanggal"}
+                </span>
+              </button>
+              {isDatePickerOpen && (
+                <div
+                  ref={calendarRef}
+                  className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-12"
+                >
+                  <DatePicker
+                    selected={selectedDate}
+                    onChange={handleDateChange}
+                    inline
+                    dateFormat="dd/MM/yyyy"
+                    showPopperArrow={false}
+                  />
+                  {/* Button Pilih dan Batal */}
+                  <div className="mt-4 flex justify-between">
+                    <button
+                      onClick={() => setIsDatePickerOpen(false)}
+                      className="px-4 py-2 bg-gray-300 text-white rounded hover:bg-gray-400"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      onClick={() => handleDateChange(selectedDate)}
+                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Pilih Tanggal
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Tombol Export */}
           <div className="flex gap-4 justify-end">
-            <button className="flex items-center gap-2 bg-white text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow">
+            <button
+              onClick={handleExportExcel}
+              className="flex items-center gap-2 bg-white text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow"
+            >
               <FileSpreadsheet size={18} color="green" />
               <span className="text-base font-medium text-black">
                 Export Excel
               </span>
             </button>
-            <button className="flex items-center gap-2 bg-white text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow">
+            <button
+              onClick={handleExportPDF}
+              className="flex items-center gap-2 bg-white text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow"
+            >
               <FileText size={18} color="red" />
               <span className="text-base font-medium text-black">
                 Export PDF
@@ -127,7 +164,7 @@ const PemasukanPage = () => {
             </button>
           </div>
 
-          <table className="min-w-full table-auto border-collapse bg-blue-100 rounded-lg overflow-hidden">
+          <table className="min-w-full table-auto border-collapse bg-white rounded-lg shadow text-sm">
             <thead>
               <tr className="bg-blue-600 text-white">
                 <th className="p-3 text-left">ID Pemasukan</th>
