@@ -151,6 +151,21 @@ const DriverDataPage = () => {
                   dateFormat="dd/MM/yyyy"
                   showPopperArrow={false}
                 />
+                {/* Tombol Batal dan Pilih Tanggal */}
+                <div className="flex justify-between mt-4">
+                  <button
+                    onClick={() => setIsDatePickerOpen(false)}
+                    className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={() => handleDateChange(selectedDate)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  >
+                    Pilih Tanggal
+                  </button>
+                </div>
               </div>
             )}
 

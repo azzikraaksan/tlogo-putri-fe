@@ -109,41 +109,55 @@ const TahunanPage = () => {
         <h1 className="text-4xl font-semibold mb-6 text-blue-600">Tahunan</h1>
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-4 items-center">
-            {/* Tombol Pilih Tanggal */}
-            <div className="relative">
-              <button
-                onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                className="flex items-center gap-2 bg-blue-600 text-black-600 hover:bg-blue-200 px-4 py-2 rounded-lg shadow"
-              >
-                <CalendarDays size={24} />
-                <span className="text-base font-medium">
-                  {selectedDate
-                    ? selectedDate.toLocaleDateString("id-ID", {
-                        day: "2-digit",
-                        month: "long",
-                        year: "numeric",
-                      })
-                    : "Pilih Tanggal"}
-                </span>
-              </button>
-
-              {isDatePickerOpen && (
-                <div
-                  ref={calendarRef}
-                  className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-12"
-                >
-                  <DatePicker
-                    selected={selectedDate}
-                    onChange={handleDateChange}
-                    inline
-                    dateFormat="dd/MM/yyyy"
-                    showPopperArrow={false}
-                  />
-                </div>
-              )}
-            </div>
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex gap-4 items-center">
+                            {/* Pilih Tanggal */}
+                            <div className="relative">
+                              <button
+                                onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+                                className="flex items-center gap-2 bg-blue-600 text-black-600 hover:bg-blue-200 px-4 py-2 rounded-lg shadow"
+                              >
+                                <CalendarDays size={24} />
+                                <span className="text-base font-medium">
+                                  {selectedDate
+                                    ? selectedDate.toLocaleDateString("id-ID", {
+                                        day: "2-digit",
+                                        month: "long",
+                                        year: "numeric",
+                                      })
+                                    : "Pilih Tanggal"}
+                                </span>
+                              </button>
+                              {isDatePickerOpen && (
+                                <div
+                                  ref={calendarRef}
+                                  className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-12"
+                                >
+                                  <DatePicker
+                                    selected={selectedDate}
+                                    onChange={handleDateChange}
+                                    inline
+                                    dateFormat="dd/MM/yyyy"
+                                    showPopperArrow={false}
+                                  />
+                                  {/* Button Pilih dan Batal */}
+                                  <div className="mt-4 flex justify-between">
+                                    <button
+                                      onClick={() => setIsDatePickerOpen(false)}
+                                      className="px-4 py-2 bg-gray-300 text-white rounded hover:bg-gray-400"
+                                    >
+                                      Batal
+                                    </button>
+                                    <button
+                                      onClick={() => handleDateChange(selectedDate)}
+                                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                    >
+                                      Pilih Tanggal
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
 
             {/* Tombol Tambah */}
             <button
