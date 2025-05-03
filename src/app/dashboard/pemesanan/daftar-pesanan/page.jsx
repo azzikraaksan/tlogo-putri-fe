@@ -5,44 +5,58 @@ import UserMenu from "/components/Pengguna.jsx";
 import SearchInput from "/components/Search.jsx";
 import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
-import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { Pencil, Trash } from "lucide-react";
+
 
 const dummyData = [
   {
     id: 1,
     bookingCode: "JTP001",
-    name: "Bunde",
+    nama: "Bunde",
+    email: "baragajul@gmail.com",
     phone: "081234567890",
     waktupemesanan: "12 Januari 2025",
-    note: "Paket 2",
-    status: "Sudah Bayar",
+    jenispaket: "Paket 2",
+    statuspembayaran: "Sudah Bayar",
+    tanggaltour: "18 Januari 2025",
+    jumlahpesanan: 1,
+
   },
   {
     id: 2,
     bookingCode: "JTP002",
-    name: "Zimut",
+    nama: "Zimut",
+    email: "zimut@gmail.com",
     phone: "089876543210",
     waktupemesanan: "12 Januari 2025",
-    note: "Paket 1",
-    status: "Sudah Bayar",
+    jenispaket: "Paket 1",
+    statuspembayaran: "Sudah Bayar",
+    tanggaltour: "25 Januari 2025",
+    jumlahpesanan: 2,
   },
   {
     id: 3,
     bookingCode: "JTP003",
-    name: "Naon Maneh",
+    nama: "Naon Maneh",
+    email: "manehnaon@gmail.com",
     phone: "081234567890",
     waktupemesanan: "15 Januari 2025",
-    note: "Paket 3",
-    status: "DP 50%",
+    jenispaket: "Paket 3",
+    statuspembayaran: "DP 50%",
+    tanggaltour: "25 Januari 2025",
+    jumlahpesanan: 1,
   },
   {
     id: 4,
     bookingCode: "JTP004",
-    name: "Maneh Saha",
+    nama: "Maneh Saha",
+    email: "sahamaneh@gmail.com",
     phone: "089876543210",
     waktupemesanan: "15 Januari 2025",
-    note: "Paket 1",
-    status: "DP 50%",
+    jenispaket: "Paket 1",
+    statuspembayaran: "DP 50%",
+    tanggaltour: "27 Januari 2025",
+    jumlahpesanan: 1,
   },
 ];
 
@@ -56,11 +70,11 @@ const DaftarPesanan = () => {
       item.bookingCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.waktupemesanan.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.name.toLowerCase().includes(searchTerm.toLowerCase());
+      item.nama.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === "Semua" ||
       (statusFilter === "Sudah Bayar" && item.status === "Sudah Bayar") ||
-      (statusFilter === "Belum Bayar" && item.status === "DP 50%");
+      (statusFilter === "Belum Lunas" && item.status === "DP 50%");
 
     return matchesSearch && matchesStatus;
   });
@@ -76,7 +90,7 @@ const DaftarPesanan = () => {
 
         {/* Filter Status */}
         <div className="flex gap-2 mb-6">
-          {['Semua', 'Sudah Bayar', 'Belum Bayar'].map((status) => (
+          {['Semua', 'Sudah Bayar', 'Belum Lunas'].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
@@ -110,7 +124,7 @@ const DaftarPesanan = () => {
                 <th className="p-3 text-center font-semibold">No. HP</th>
                 <th className="p-3 text-center font-semibold">Waktu Pemesanan</th>
                 <th className="p-3 text-center font-semibold">Paket</th>
-                <th className="p-3 text-center font-semibold">Status</th>
+                <th className="p-3 text-center font-semibold">Status Pembayaran</th>
                 <th className="p-3 text-center font-semibold">Aksi</th>
               </tr>
             </thead>
@@ -119,31 +133,44 @@ const DaftarPesanan = () => {
                 filteredData.map((item, index) => (
                   <tr
                     key={item.id}
+                    onClick={() => router.push(`/dashboard/pemesanan/daftar-pesanan/${item.id}`)}
                     className="border-t text-center hover:bg-gray-50"
                   >
                     <td className="p-2">{index + 1}</td>
                     <td className="p-2">{item.bookingCode}</td>
-                    <td className="p-2">{item.name}</td>
+                    <td className="p-2">{item.nama}</td>
                     <td className="p-2">{item.phone}</td>
                     <td className="p-2">{item.waktupemesanan}</td>
-                    <td className="p-2">{item.note}</td>
+                    <td className="p-2">{item.jenispaket}</td>
                     <td className="p-2">
+                      {/* Status Pembayaran */}
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          item.status === "Sudah Bayar"
+                          item.statuspembayaran === "Sudah Bayar"
                             ? "bg-green-100 text-green-800"
                             : "bg-yellow-100 text-yellow-800"
                         }`}
                       >
-                        {item.status}
+                        {item.statuspembayaran}
                       </span>
                     </td>
                     <td className="p-2 flex justify-center gap-2">
-                      <button className="text-blue-600 hover:text-blue-800">
-                        <PencilIcon className="w-5 h-5" />
+                      <button className="text-blue-600 hover:text-blue-800"
+                        onClick={(e) => {
+                        e.stopPropagation(); // agar tidak ikut trigger ke halaman detail
+                        // aksi edit nantinya
+                        }}
+                      >
+                        <Pencil size={16} />
                       </button>
-                      <button className="text-red-600 hover:text-red-800">
-                        <TrashIcon className="w-5 h-5" />
+                      <button className="text-red-600 hover:text-red-800"
+                        onClick={(e) => {
+                        e.stopPropagation(); // agar tidak ikut trigger ke halaman detail
+                        // aksi hapus nantinya
+                        }}
+                      >
+                        {/* Hapus */}
+                        <Trash size={16}  />
                       </button>
                     </td>
                   </tr>
