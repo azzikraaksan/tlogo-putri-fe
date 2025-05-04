@@ -35,6 +35,78 @@ export default function Home() {
         deskripsi: "Menikmati suasana sejuk dan wahana menarik di Kaliurang."
       }
     },
+    {
+      id: 3,
+      status: "Konsep",
+      date: "27/01/2025",
+      title: "Daya Tarik Tlogo Putri Kaliurang",
+      owner: "Mita Aprilia D",
+      category: "Daya Tarik",
+      detail: {
+        judul: "Tlogo Putri Kaliurang: Daya Tarik, Ha...",
+        deskripsi: "Wisata Alam dengan panorama indah di Kaliurang"
+      }
+    },
+    {
+      id: 4,
+      status: "Diterbitkan",
+      date: "15/01/2025",
+      title: "Nyalimu Seberapa? Uji di Medan Ekstrem Jeep Kaliurang",
+      owner: "Deviana Dyah",
+      category: "Medan Ekstrem",
+      detail: {
+        judul: "Nyalimu Seberapa? Uji di Medan Eks...",
+        deskripsi: "Kamu pecinta tantangan dan p..."
+      }
+    },
+    {
+      id: 5,
+      status: "Diterbitkan",
+      date: "10/01/2025",
+      title: "Alasan Untuk Berkunjung ke Tlogo Putri Kaliurang",
+      owner: "Irene Jeny",
+      category: "Pesona Alam",
+      detail: {
+        judul: "Tlogo Putri Kaliurang 2: Alasan Untuk...",
+        deskripsi: "Banyak alasan buat balik lagi, su..."
+      }
+    },
+    {
+      id: 6,
+      status: "Diterbitkan",
+      date: "05/01/2025",
+      title: "Tlogo Putri Kaliurang - Tiket Masuk, Lokas...",
+      owner: "Aldo Susilo",
+      category: "Tiket Masuk",
+      detail: {
+        judul: "Tlogo Putri Kaliurang - Tiket Masuk...",
+        deskripsi: "Sebelum ke sana, cek dulu harg..."
+      }
+    }, 
+    {
+      id: 7,
+      status: "Diterbitkan",
+      date: "05/01/2025",
+      title: "Rekomendasi Wisata Alam di Tlogo Putri K-",
+      owner: "Endin Syamsul",
+      category: "Telaga",
+      detail: {
+        judul: "Rekomendasi Wisata Alam di Tlogo P...",
+        deskripsi: "Pilihan Wisata alam terbaik untuk..."
+      }
+    },
+    {
+      id: 8,
+      status: "Diterbitkan",
+      date: "01/01/2025",
+      title: "Keajaiban Tlogo Putri Kaliurang",
+      owner: "Ajeng Yunia",
+      category: "Keajaiban Alam",
+      detail: {
+        judul: "Tlogo Putri Kaliurang Yogyakarta: Ke...",
+        deskripsi: "Destinasi eksotis yang memaduk..."
+      }
+    }
   ]);
 
   const tabs = [
@@ -88,7 +160,7 @@ export default function Home() {
           </div>
 
           {/* Search */}
-          <div className="flex justify-end mb-4 w-full max-w-md">
+          <div className="flex justify-end">
             <SearchInput
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
