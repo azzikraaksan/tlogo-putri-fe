@@ -15,15 +15,15 @@ const LoginForm = () => {
     const token = localStorage.getItem("access_token");
     const role = localStorage.getItem("role");
   
-    if (token && role) {
-      if (role === "Front Office") {
-        router.push("/dashboard");
-      } else if (role === "Admin") {
-        router.push("/dashboard_admin");
-      } else {
-        router.push("/dashboard2");
-      }
-    }
+    // if (token && role) {
+    //   if (role === "Front Office") {
+    //     router.push("/dashboard");
+    //   } else if (role === "Admin") {
+    //     router.push("/dashboard_admin");
+    //   } else {
+    //     router.push("/dashboard2");
+    //   }
+    // }
   }, []);
 
   const handleSubmit = async (e) => {

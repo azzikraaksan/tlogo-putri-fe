@@ -283,8 +283,8 @@ const TicketingPage = () => {
             onClick={handleClickArsip}
             className="flex items-center gap-2 border border-gray-300 rounded-[13px] px-3 py-2 hover:bg-gray-100 transition-colors cursor-pointer"
           >
-            <ArchiveRestore input="text" />
-            <div className="text-gray-700 font-medium">Arsip</div>
+            <ArchiveRestore input="text" className="text-gray-800 size-[18px]" />
+            <div className="text-gray-800">Arsip</div>
           </button>
         </div>
 

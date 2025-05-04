@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleArrowLeft } from "lucide-react";
 
-const TambahAnggota = ({ onKembali }) => {
+const TambahJeep = ({ onKembali }) => {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
@@ -66,7 +66,7 @@ const TambahAnggota = ({ onKembali }) => {
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <CircleArrowLeft onClick={onKembali} className="cursor-pointer" />
-          <h1 className="text-[32px] font-semibold">Tambah Anggota</h1>
+          <h1 className="text-[32px] font-semibold">Tambah Jeep</h1>
         </div>
         <form
           onSubmit={handleSubmit}
@@ -80,7 +80,7 @@ const TambahAnggota = ({ onKembali }) => {
               name="role"
               value={formData.role}
               onChange={handleChange}
-              className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+              className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-black-100 text-[14px]"
             >
               <option value="">Pilih Peran</option>
               <option value="Front Office">Front Office</option>
@@ -119,7 +119,7 @@ const TambahAnggota = ({ onKembali }) => {
             },
           ].map(({ label, name, type = "text", placeholder }) => (
             <div key={name}>
-              <label className="block text-sm font-bold text-gray-700">
+              <label className="block text-sm font-medium text-gray-700">
                 {label}
               </label>
               <input
@@ -128,7 +128,7 @@ const TambahAnggota = ({ onKembali }) => {
                 value={formData[name]}
                 onChange={handleChange}
                 placeholder={placeholder}
-                className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-black-100 text-[14px]"
               />
             </div>
           ))}
@@ -145,7 +145,7 @@ const TambahAnggota = ({ onKembali }) => {
                   value={formData.telepon}
                   onChange={handleChange}
                   placeholder="Masukkan No Telepon"
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-black-100 text-[14px]"
                 />
               </div>
 
@@ -159,7 +159,7 @@ const TambahAnggota = ({ onKembali }) => {
                   value={formData.alamat}
                   onChange={handleChange}
                   placeholder="Masukkan Alamat"
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-black-100 text-[14px]"
                 />
               </div>
 
@@ -173,19 +173,19 @@ const TambahAnggota = ({ onKembali }) => {
                   value={formData.jumlah_jeep}
                   onChange={handleChange}
                   placeholder="Masukkan Jumlah Jeep"
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-black-100 text-[14px]"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  Foto Jeep
+                  Foto Jeep (opsional)
                 </label>
                 <input
                   type="file"
                   name="foto_jeep"
                   onChange={handleFileChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-black-100 text-[14px]"
                 />
               </div>
 
@@ -197,34 +197,7 @@ const TambahAnggota = ({ onKembali }) => {
                   type="file"
                   name="foto_profil"
                   onChange={handleFileChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Tanggal Bergabung
-                </label>
-                <input
-                  type="date"
-                  name="tanggal_bergabung"
-                  value={formData.tanggal_bergabung}
-                  onChange={handleChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Status
-                </label>
-                <input
-                  type="text"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  placeholder="Masukkan Status"
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-black-100 text-[14px]"
                 />
               </div>
             </>
@@ -242,7 +215,7 @@ const TambahAnggota = ({ onKembali }) => {
                   value={formData.telepon}
                   onChange={handleChange}
                   placeholder="Masukkan No Telepon"
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-black-100 text-[14px]"
                 />
               </div>
 
@@ -256,7 +229,7 @@ const TambahAnggota = ({ onKembali }) => {
                   value={formData.alamat}
                   onChange={handleChange}
                   placeholder="Masukkan Alamat"
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-black-100 text-[14px]"
                 />
               </div>
 
@@ -268,60 +241,7 @@ const TambahAnggota = ({ onKembali }) => {
                   type="file"
                   name="foto_profil"
                   onChange={handleFileChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Foto Jeep (opsional)
-                </label>
-                <input
-                  type="file"
-                  name="foto_jeep"
-                  onChange={handleFileChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Plat Jeep
-                </label>
-                <input
-                  type="text"
-                  name="plat_jeep"
-                  value={formData.plat_jeep}
-                  onChange={handleChange}
-                  placeholder="Masukkan Plat Jeep"
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Tanggal Bergabung
-                </label>
-                <input
-                  type="date"
-                  name="tanggal_bergabung"
-                  value={formData.tanggal_bergabung}
-                  onChange={handleChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Status
-                </label>
-                <input
-                  type="text"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  placeholder="Masukkan Status"
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-black-100 text-[14px]"
                 />
               </div>
             </>
@@ -339,7 +259,7 @@ const TambahAnggota = ({ onKembali }) => {
                   value={formData.telepon}
                   onChange={handleChange}
                   placeholder="Masukkan No Telepon"
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-black-100 text-[14px]"
                 />
               </div>
 
@@ -353,7 +273,7 @@ const TambahAnggota = ({ onKembali }) => {
                   value={formData.alamat}
                   onChange={handleChange}
                   placeholder="Masukkan Alamat"
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-black-100 text-[14px]"
                 />
               </div>
 
@@ -365,34 +285,7 @@ const TambahAnggota = ({ onKembali }) => {
                   type="file"
                   name="foto_profil"
                   onChange={handleFileChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Tanggal Bergabung
-                </label>
-                <input
-                  type="date"
-                  name="tanggal_bergabung"
-                  value={formData.tanggal_bergabung}
-                  onChange={handleChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Status
-                </label>
-                <input
-                  type="text"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  placeholder="Masukkan Status"
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-black-100 text-[14px]"
                 />
               </div>
             </>
@@ -408,13 +301,13 @@ const TambahAnggota = ({ onKembali }) => {
                   type="file"
                   name="foto_profil"
                   onChange={handleFileChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-black-100 text-[14px]"
                 />
               </div>
             </>
           )} */}
 
-          {/* <div>
+          <div>
             <label className="block text-sm font-bold text-gray-700">
               Tanggal Bergabung
             </label>
@@ -423,7 +316,7 @@ const TambahAnggota = ({ onKembali }) => {
               name="tanggal_bergabung"
               value={formData.tanggal_bergabung}
               onChange={handleChange}
-              className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+              className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-black-100 text-[14px]"
             />
           </div>
 
@@ -437,9 +330,9 @@ const TambahAnggota = ({ onKembali }) => {
               value={formData.status}
               onChange={handleChange}
               placeholder="Masukkan Status"
-              className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+              className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-2 focus:ring-black-100 text-[14px]"
             />
-          </div> */}
+          </div>
 
           <div className="flex justify-end">
             {" "}
@@ -456,4 +349,4 @@ const TambahAnggota = ({ onKembali }) => {
   );
 };
 
-export default TambahAnggota;
+export default TambahJeep;
