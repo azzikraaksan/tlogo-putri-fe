@@ -69,7 +69,7 @@ const DetailAnggota = () => {
         </button> */}
         <div className="flex items-center gap-2">
           <CircleArrowLeft
-            onClick={() => router.back()}
+            onClick={() => router.push("/dashboard/operasional/anggota")}
             className="cursor-pointer"
           />
           <h1 className="text-[32px] font-semibold">Detail Anggota</h1>
@@ -101,6 +101,10 @@ const DetailAnggota = () => {
               <div className="font-semibold text-[#1C7AC8]">Username</div>
               <div className="text-[#808080]">:</div>
               <div className="text-[#808080]">{userDetails?.username || "-"}</div>
+
+              <div className="font-semibold text-[#1C7AC8]">Role</div>
+              <div className="text-[#808080]">:</div>
+              <div className="text-[#808080]">{userDetails?.role || "-"}</div>
 
               <div className="font-semibold text-[#1C7AC8]">Email</div>
               <div className="text-[#808080]">:</div>

@@ -140,7 +140,7 @@ const TambahAnggota = ({ onKembali }) => {
                   No Telepon
                 </label>
                 <input
-                  type="tel"
+                  type="number"
                   name="telepon"
                   value={formData.telepon}
                   onChange={handleChange}
@@ -237,7 +237,7 @@ const TambahAnggota = ({ onKembali }) => {
                   No Telepon
                 </label>
                 <input
-                  type="tel"
+                  type="number"
                   name="telepon"
                   value={formData.telepon}
                   onChange={handleChange}
@@ -334,7 +334,7 @@ const TambahAnggota = ({ onKembali }) => {
                   No Telepon
                 </label>
                 <input
-                  type="tel"
+                  type="number"
                   name="telepon"
                   value={formData.telepon}
                   onChange={handleChange}
@@ -382,7 +382,7 @@ const TambahAnggota = ({ onKembali }) => {
                 />
               </div>
 
-              <div>
+              {/* <div>
                 <label className="block text-sm font-bold text-gray-700">
                   Status
                 </label>
@@ -394,6 +394,20 @@ const TambahAnggota = ({ onKembali }) => {
                   placeholder="Masukkan Status"
                   className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                 />
+              </div> */}
+              <div>
+                <label className="block text-sm font-bold text-gray-700">
+                  Status
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                >
+                  <option value="Aktif">Aktif</option>
+                  <option value="Tidak Aktif">Tidak Aktif</option>
+                </select>
               </div>
             </>
           )}
@@ -445,7 +459,7 @@ const TambahAnggota = ({ onKembali }) => {
             {" "}
             <button
               type="submit"
-              className="bg-[#1C7AC8] text-white py-2 px-4 rounded-[15px] hover:bg-[#6CAEE5] transition cursor-pointer"
+              className="bg-[#1C7AC8] text-[13px] text-white py-1 px-3 rounded-[12px] hover:bg-[#6CAEE5] transition cursor-pointer"
             >
               Simpan
             </button>

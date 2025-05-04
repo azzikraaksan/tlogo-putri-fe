@@ -2,6 +2,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import withAuth from "/src/app/lib/withAuth";
+import Sidebar from "/components/Sidebar";
+import UserMenu from "/components/Pengguna";
+import { CircleArrowLeft } from "lucide-react";
 
 const EditAnggota = () => {
   const router = useRouter();
@@ -14,8 +17,8 @@ const EditAnggota = () => {
     alamat: "",
     telepon: "",
     plat_jeep: "",
-    foto_profil: null, 
-    foto_jeep: null, 
+    foto_profil: null,
+    foto_jeep: null,
   });
 
   useEffect(() => {
@@ -78,107 +81,177 @@ const EditAnggota = () => {
   };
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Edit Anggota</h1>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          name="name"
-          value={formData.name || ""}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-          placeholder="Nama"
-        />
-        <input
-          name="email"
-          value={formData.email || ""}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-          placeholder="Email"
-        />
-        {/* Conditional rendering based on role */}
-        {formData.role === "Owner" && (
-          <>
-            <input
-              name="telepon"
-              value={formData.telepon || ""}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              placeholder="No Telepon"
-            />
-            <input
-              name="alamat"
-              value={formData.alamat || ""}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              placeholder="Alamat"
-            />
-            <input
-              name="jumlah_jeep"
-              value={formData.jumlah_jeep || ""}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              placeholder="Jumlah Jeep"
-            />
-            <input
-              type="file"
-              name="foto_jeep"
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-            />
-          </>
-        )}
-
-        {formData.role === "Driver" && (
-          <>
-            <input
-              name="plat_jeep"
-              value={formData.plat_jeep || ""}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              placeholder="Plat Jeep"
-            />
-            <input
-              type="file"
-              name="foto_profil"
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-            />
-          </>
-        )}
-
-        {formData.role === "Pengurus" && (
-          <>
-            <input
-              name="telepon"
-              value={formData.telepon || ""}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              placeholder="No Telepon"
-            />
-            <input
-              name="alamat"
-              value={formData.alamat || ""}
-              onChange={handleChange}
-              className="w-full p-2 border rounded"
-              placeholder="Alamat"
-            />
-          </>
-        )}
-
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+    <div className="flex">
+      <UserMenu />
+      <Sidebar />
+      <div className="flex-1 p-6">
+        <div className="flex items-center gap-2">
+          <CircleArrowLeft
+            onClick={() => router.back()}
+            className="cursor-pointer"
+          />
+          <h1 className="text-[32px] font-semibold">Edit Anggota</h1>
+        </div>
+        <form
+          onSubmit={handleSubmit}
+          className="w-[650px] mx-auto mt-8 p-6 bg-white shadow-md rounded-xl space-y-4"
         >
-          Simpan Perubahan
-        </button>
-      </form>
+          <div className="text-[16px] font-semibold text-[#1C7AC8]">Role : {formData.role || "-"}</div>
+          <div className="text-[16px] font-semibold text-[#1C7AC8]">Username : {formData.username || "-"}</div>
+          <input
+            name="name"
+            value={formData.name || ""}
+            onChange={handleChange}
+            className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+            placeholder="Nama"
+          />
+          <input
+            name="email"
+            value={formData.email || ""}
+            onChange={handleChange}
+            className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+            placeholder="Email"
+          />
+          {formData.role === "Owner" && (
+            <>
+              <input
+                name="telepon"
+                type="number"
+                value={formData.telepon || ""}
+                onChange={handleChange}
+                className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                placeholder="No Telepon"
+                style={{
+                  appearance: "textfield",
+                  MozAppearance: "textfield",
+                }}
+              />
+              <input
+                name="alamat"
+                value={formData.alamat || ""}
+                onChange={handleChange}
+                className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                placeholder="Alamat"
+              />
+              <input
+                name="jumlah_jeep"
+                value={formData.jumlah_jeep || ""}
+                onChange={handleChange}
+                className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                placeholder="Jumlah Jeep"
+              />
+              <input
+                type="file"
+                name="foto_jeep"
+                onChange={handleChange}
+                className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+              />
+              <div>
+                <label className="block text-sm text-gray-700">
+                  Status
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                >
+                  <option value="Aktif">Aktif</option>
+                  <option value="Tidak Aktif">Tidak Aktif</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          {formData.role === "Driver" && (
+            <>
+              <input
+                name="plat_jeep"
+                value={formData.plat_jeep || ""}
+                onChange={handleChange}
+                className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                placeholder="Plat Jeep"
+              />
+              <input
+                name="alamat"
+                value={formData.alamat || ""}
+                onChange={handleChange}
+                className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                placeholder="Alamat"
+              />
+              <input
+                type="file"
+                name="foto_profil"
+                onChange={handleChange}
+                className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+              />
+              <input
+                name="telepon"
+                type="number"
+                value={formData.telepon || ""}
+                onChange={handleChange}
+                className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                placeholder="No Telepon"
+                style={{
+                  appearance: "textfield",
+                  MozAppearance: "textfield",
+                }}
+              />
+              <div>
+                <label className="block text-sm text-gray-700">
+                  Status
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                >
+                  <option value="Aktif">Aktif</option>
+                  <option value="Tidak Aktif">Tidak Aktif</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          {formData.role === "Pengurus" && (
+            <>
+              <input
+                name="telepon"
+                type="number"
+                value={formData.telepon || ""}
+                onChange={handleChange}
+                className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                placeholder="No Telepon"
+                style={{
+                  appearance: "textfield",
+                  MozAppearance: "textfield",
+                }}
+              />
+              <input
+                name="alamat"
+                value={formData.alamat || ""}
+                onChange={handleChange}
+                className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                placeholder="Alamat"
+              />
+            </>
+          )}
+          <div className="flex justify-end">
+            <button
+              type="submit"
+              className="bg-[#1C7AC8] text-[13px] text-white py-1 px-3 rounded-[12px] hover:bg-[#6CAEE5] transition cursor-pointer"
+            >
+              Simpan Perubahan
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
 
 export default withAuth(EditAnggota);
-
-
 
 // "use client";
 // import { useEffect, useState } from "react";
@@ -196,8 +269,8 @@ export default withAuth(EditAnggota);
 //     alamat: "",
 //     telepon: "",
 //     plat_jeep: "",
-//     foto_profil: null, 
-//     foto_jeep: null, 
+//     foto_profil: null,
+//     foto_jeep: null,
 //   });
 
 //   useEffect(() => {
@@ -233,7 +306,7 @@ export default withAuth(EditAnggota);
 //     e.preventDefault();
 //     const token = localStorage.getItem("access_token");
 //     if (!token) return;
-  
+
 //     try {
 //       const res = await fetch(`http://localhost:8000/api/users/update/${id}`, {
 //         method: "PUT",
@@ -243,7 +316,7 @@ export default withAuth(EditAnggota);
 //         },
 //         body: JSON.stringify(formData),
 //       });
-  
+
 //       const result = await res.json();
 //       console.log("Server Response:", result);
 //       if (result.success) {
@@ -256,7 +329,6 @@ export default withAuth(EditAnggota);
 //       console.error("Update error:", error);
 //     }
 //   };
-  
 
 //   // const handleSubmit = async (e) => {
 //   //   e.preventDefault();
