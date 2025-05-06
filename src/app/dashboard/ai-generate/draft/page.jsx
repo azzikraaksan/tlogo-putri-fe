@@ -15,26 +15,98 @@ export default function Home() {
       id: 1,
       status: "Konsep",
       date: "02/02/2025",
-      title: "Weekend Santai di Tlogo",
+      title: "Weekend Santai? Ke Tlogo Putri Aja, Udara Segar dan Alam Terbuka",
       owner: "Aisyah Dwi A",
       category: "Udara Segar",
       detail: {
-        judul: "Weekend Santai di Tlogo Putri...",
-        deskripsi: "Libur-libur enaknya merefresh otak dan pikiran di kawasan Tlogo Putri, Kaliurang..."
+        judul: "Weekend Santai? Ke Tlogo Putri Aja, Udara Segar...",
+        deskripsi: "Libur-libur enaknya merefresh otak..."
       }
     },
     {
       id: 2,
       status: "Diterbitkan",
       date: "27/01/2025",
-      title: "Seru di Kaliurang",
+      title: "Weekend Seru di Tlogo Putri Kaliurang, Wisata Alam Plus Hiburan Lengkap",
       owner: "Rekanita Yunia",
       category: "Wisata Alam",
       detail: {
-        judul: "Seru di Kaliurang...",
-        deskripsi: "Menikmati suasana sejuk dan wahana menarik di Kaliurang."
+        judul: "Weekend Seru di Tlogo Putri Kaliurang, Wisata Alam...",
+        deskripsi: "Menikmati suasana sejuk..."
       }
     },
+    {
+      id: 3,
+      status: "Konsep",
+      date: "27/01/2025",
+      title: "Tlogo Putri Kaliurang : Daya Tarik, Harga Tiket, Jam Buka, dan Rute",
+      owner: "Mita Aprilia D",
+      category: "Daya Tarik",
+      detail: {
+        judul: "Tlogo Putri Kaliurang: Daya Tarik, Harga Tiket, Jam...",
+        deskripsi: "Wisata Alam dengan panorama indah di..."
+      }
+    },
+    {
+      id: 4,
+      status: "Diterbitkan",
+      date: "15/01/2025",
+      title: "Nyalimu Seberapa? Uji di Medan Ekstrem Jeep Tlogo Putri Kaliurang!",
+      owner: "Deviana Dyah",
+      category: "Medan Ekstrem",
+      detail: {
+        judul: "Nyalimu Seberapa? Uji di Medan Ekstrem Jeep T...",
+        deskripsi: "Kamu pecinta tantangan dan p..."
+      }
+    },
+    {
+      id: 5,
+      status: "Diterbitkan",
+      date: "10/01/2025",
+      title: "Tlogo Putri Kaliurang: 2 Alasan Untuk Berkunjung, Info Tiket, dan Jam Buka",
+      owner: "Irene Jeny",
+      category: "Pesona Alam",
+      detail: {
+        judul: "Tlogo Putri Kaliurang 2: Alasan Untuk Berkunjung, In...",
+        deskripsi: "Banyak alasan buat balik lagi, su..."
+      }
+    },
+    {
+      id: 6,
+      status: "Diterbitkan",
+      date: "05/01/2025",
+      title: "Tlogo Putri Kaliurang - Tiket Masuk, Lokasi, dan Rutenya",
+      owner: "Aldo Susilo",
+      category: "Tiket Masuk",
+      detail: {
+        judul: "Tlogo Putri Kaliurang - Tiket Masuk, Lokasi, dan Rut...",
+        deskripsi: "Sebelum ke sana, cek dulu harg..."
+      }
+    }, 
+    {
+      id: 7,
+      status: "Diterbitkan",
+      date: "05/01/2025",
+      title: "Rekomendasi Wisata Alam di Tlogo Putri Kaliurang: Telaga Para Bidadari",
+      owner: "Endin Syamsul",
+      category: "Telaga",
+      detail: {
+        judul: "Rekomendasi Wisata Alam di Tlogo Putri Kaliuran...",
+        deskripsi: "Pilihan Wisata alam terbaik untuk..."
+      }
+    },
+    {
+      id: 8,
+      status: "Diterbitkan",
+      date: "01/01/2025",
+      title: "Tlogo Putri Kaliurang Yogyakarta: Keajaiban Alam Tersembunyi Di Kaki Gunung",
+      owner: "Ajeng Yunia",
+      category: "Keajaiban Alam",
+      detail: {
+        judul: "Tlogo Putri Kaliurang Yogyakarta: Keajaiban Alam Terse...",
+        deskripsi: "Destinasi eksotis yang memaduk..."
+      }
+    }
   ]);
 
   const tabs = [
@@ -88,7 +160,7 @@ export default function Home() {
           </div>
 
           {/* Search */}
-          <div className="flex justify-end mb-4 w-full max-w-md">
+          <div className="flex justify-end">
             <SearchInput
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
