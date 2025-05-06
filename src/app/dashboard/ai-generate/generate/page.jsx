@@ -16,14 +16,14 @@ export default function Home() {
         <Sidebar />
       </div>
 
-          <UserMenu />
+      <UserMenu />
       {/* User Menu */}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col items-center justify-start p-4 pt-20">
         {/* Logo */}
         <div className="absolute top-4 left-72">
-          <h1 className="text-[#3D6CB9] font-bold text-[32px]">Tlogo Generate Content</h1>
+          <h1 className="text-[#000000] font-bold text-[32px]">Tlogo Generate Content</h1>
         </div>
 
         {/* Centered Prompt and Input */}
@@ -43,7 +43,10 @@ export default function Home() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="Masukkan kata kunci konten yang ingin dibuat"
-              className="w-full px-6 py-4 border border-blue-200 rounded-lg shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700 placeholder-gray-400 pr-12 transition-all duration-300"
+              className="w-full px-6 py-4 border border-blue-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700 placeholder-gray-400 pr-12 transition-all duration-300 focus:border-blue-400"
+              style={{
+                boxShadow: "0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.1)"
+              }}
             />
             {inputValue && (
               <motion.button

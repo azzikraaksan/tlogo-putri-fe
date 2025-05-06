@@ -63,7 +63,7 @@ const DashboardPage = () => {
       if (!token) return;
 
       try {
-        const res = await fetch("http://localhost:8000/api/fo/profile", {
+        const res = await fetch("http://localhost:8000/api/users/me", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -103,7 +103,7 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          <div className="flex flex-col gap-14 mt-10 ml-6">
+          <div className="flex flex-col gap-14 mt-10 ml-12">
             {" "}
             <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-lg">
               <div className="p-4 bg-[#21ad11] rounded-lg">
@@ -111,10 +111,10 @@ const DashboardPage = () => {
                 <FaUsers className="text-2xl text-white" />
               </div>
               <div>
-                <p className="text-[16px] font-semibold text-[#3D6CB9]">
+                <p className="text-[12px] font-semibold text-[#3D6CB9]">
                   Daftar Anggota
                 </p>
-                <p className="text-[24px] font-bold text-[#3D6CB9]">32</p>
+                <p className="text-[18px] font-bold text-[#3D6CB9]">32</p>
               </div>
             </div>
             <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-lg">
@@ -123,10 +123,10 @@ const DashboardPage = () => {
                 <FaPeopleCarry className="text-2xl text-white" />{" "}
               </div>
               <div>
-                <p className="text-[16px] font-semibold text-[#3D6CB9]">
+                <p className="text-[12px] font-semibold text-[#3D6CB9]">
                   Daftar Driver
                 </p>
-                <p className="text-[24px] font-bold text-[#3D6CB9]">12</p>
+                <p className="text-[18px] font-bold text-[#3D6CB9]">12</p>
               </div>
             </div>
             <div className="flex items-center gap-4 p-4 bg-white rounded-xl shadow-lg">
@@ -135,10 +135,10 @@ const DashboardPage = () => {
                 <FaCar className="text-2xl text-white" />{" "}
               </div>
               <div>
-                <p className="text-[16px] font-semibold text-[#3D6CB9]">
+                <p className="text-[12px] font-semibold text-[#3D6CB9]">
                   Daftar Jeep
                 </p>
-                <p className="text-[24px] font-bold text-[#3D6CB9]">16</p>
+                <p className="text-[18px] font-bold text-[#3D6CB9]">16</p>
               </div>
             </div>
           </div>

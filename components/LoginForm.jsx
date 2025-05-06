@@ -15,15 +15,15 @@ const LoginForm = () => {
     const token = localStorage.getItem("access_token");
     const role = localStorage.getItem("role");
   
-    if (token && role) {
-      if (role === "FO") {
-        router.push("/dashboard");
-      } else if (role === "ADMIN") {
-        router.push("/dashboard_admin");
-      } else {
-        router.push("/dashboard2");
-      }
-    }
+    // if (token && role) {
+    //   if (role === "Front Office") {
+    //     router.push("/dashboard");
+    //   } else if (role === "Admin") {
+    //     router.push("/dashboard_admin");
+    //   } else {
+    //     router.push("/dashboard2");
+    //   }
+    // }
   }, []);
 
   const handleSubmit = async (e) => {
@@ -36,7 +36,7 @@ const LoginForm = () => {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:8000/api/login', {
+      const res = await fetch('http://localhost:8000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,10 +57,12 @@ const LoginForm = () => {
         localStorage.setItem('token_exp', expireTime)
         localStorage.setItem('user_role', role)
 
-        if (role === 'FO') {
+        if (role === 'Front Office') {
           router.push('/dashboard')
-        } else if (role === 'ADMIN') {
-          router.push('/dashboard_admin')
+        } else if (role === 'Admin') {
+          router.push('/dashboard')
+        } else if (role === 'Owner') {
+          router.push('/dashboard')
         } else {
           router.push('/dashboard2')
         }
