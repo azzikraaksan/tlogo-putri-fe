@@ -17,7 +17,6 @@ const BulananPage = () => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const calendarRef = useRef(null);
-
   const [showFormModal, setShowFormModal] = useState(false);
   const [formData, setFormData] = useState({
     idLaporan: "",
@@ -72,14 +71,12 @@ const BulananPage = () => {
     };
   }, []);
 
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
-    setIsDatePickerOpen(false); // Tutup setelah pilih tanggal
-    console.log("Tanggal dipilih:", date);
-  };
-
   const handleFormChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   const handleFormSubmit = (e) => {
@@ -99,72 +96,62 @@ const BulananPage = () => {
     setShowFormModal(false);
   };
 
+  const handleDateChange = (date) => {
+    setSelectedDate(date);
+  };
+
   return (
-    <div className="flex relative bg-blue-50 min-h-screen">
+    <div className="flex relative bg-white-50 min-h-screen">
       <UserMenu />
       <Sidebar />
       <div className="flex-1 p-6 relative">
-        <h1 className="text-4xl font-semibold mb-6 text-blue-600">Bulanan</h1>
+        <h1 className="text-[32px] font-bold mb-6 text-black">Bulanan</h1>
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-4 items-center">
-            {/* Pilih Tanggal */}
-            <div className="relative">
-              <button
-                onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                className="flex items-center gap-2 bg-blue-600 text-black-600 hover:bg-blue-200 px-4 py-2 rounded-lg shadow"
-              >
-                <CalendarDays size={24} />
-                <span className="text-base font-medium">
-                  {selectedDate
-                    ? selectedDate.toLocaleDateString("id-ID", {
-                        day: "2-digit",
-                        month: "long",
-                        year: "numeric",
-                      })
-                    : "Pilih Tanggal"}
-                </span>
-              </button>
-              {isDatePickerOpen && (
-                <div
-                  ref={calendarRef}
-                  className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-12"
-                >
-                  <DatePicker
-                    selected={selectedDate}
-                    onChange={handleDateChange}
-                    inline
-                    dateFormat="dd/MM/yyyy"
-                    showPopperArrow={false}
-                  />
-                  {/* Button Pilih dan Batal */}
-                  <div className="mt-4 flex justify-between">
-                    <button
-                      onClick={() => setIsDatePickerOpen(false)}
-                      className="px-4 py-2 bg-gray-300 text-white rounded hover:bg-gray-400"
-                    >
-                      Batal
-                    </button>
-                    <button
-                      onClick={() => handleDateChange(selectedDate)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                    >
-                      Pilih Tanggal
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex gap-4 items-center">
+                            {/* Pilih Tanggal */}
+                            <div className="relative">
+                              <button
+                                onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+                                className="flex items-center gap-2 bg-[#3D6CB9] text-black-600 hover:bg-blue-500 px-4 py-2 rounded-lg shadow text-white"
+                              >
+                                <CalendarDays size={24} />
+                                <span className="text-base font-medium">
+                                  Pilih Tanggal
+                                </span>
 
-            {/* Tombol Tambah */}
-            <button
-              onClick={() => setShowFormModal(true)}
-              className="flex items-center gap-2 bg-blue-600 text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow"
-            >
-              <PlusCircle size={20} color="black" />
-              <span className="text-base font-medium text-black">Tambah</span>
-            </button>
+                              </button>
+                              {isDatePickerOpen && (
+                                <div
+                                  ref={calendarRef}
+                                  className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-12"
+                                >
+                                  <DatePicker
+                                    selected={selectedDate}
+                                    onChange={handleDateChange}
+                                    inline
+                                    dateFormat="dd/MM/yyyy"
+                                    showPopperArrow={false}
+                                  />
+                                  {/* Button Pilih dan Batal */}
+                                  <div className="mt-4 flex justify-between">
+                                    <button
+                                      onClick={() => setIsDatePickerOpen(false)}
+                                      className="px-4 py-2 bg-gray-300 text-white rounded hover:bg-gray-400"
+                                    >
+                                      Batal
+                                    </button>
+                                    <button
+                                      onClick={() => handleDateChange(selectedDate)}
+                                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                    >
+                                      Pilih Tanggal
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
           </div>
 
           {/* Tombol Export */}
@@ -186,19 +173,16 @@ const BulananPage = () => {
         
         {/* Tabel Data Pemasukan */}
         <div className="mt-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold text-blue-600">
-              Laporan Bulanan
-            </h2>
-
-            <button className="text-blue-600 hover:text-blue-800 text-base font-medium">
+          <div className="flex justify-end items-center mb-4">
+            <button className="text-[#3D6CB9] hover:text-blue-800 text-base font-medium">
               Lihat Semua
             </button>
           </div>
 
-          <table className="min-w-full table-auto border-collapse bg-white rounded-lg shadow text-sm">
+          <div className="rounded-lg overflow-hidden shadow">
+          <table className="min-w-full table-auto bg-white text-sm">
             <thead>
-              <tr className="bg-blue-600 text-white">
+              <tr className="bg-[#3D6CB9] text-white">
                 <th className="p-3 text-left">ID Laporan</th>
                 <th className="p-3 text-left">ID Pemasukan</th>
                 <th className="p-3 text-left">ID Pengeluaran</th>
@@ -226,6 +210,7 @@ const BulananPage = () => {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
 
         {/* Modal Form Tambah */}

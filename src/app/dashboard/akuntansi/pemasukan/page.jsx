@@ -4,7 +4,12 @@ import { useState, useRef, useEffect } from "react";
 import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
 import withAuth from "/src/app/lib/withAuth";
-import { CalendarDays, FileText, FileSpreadsheet } from "lucide-react";
+import { 
+  CalendarDays, 
+  FileText, 
+  FileSpreadsheet,
+  PlusCircle,
+} from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
@@ -46,7 +51,6 @@ const PemasukanPage = () => {
     setIsDatePickerOpen(false);
   };
 
-  // Close calendar if clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (calendarRef.current && !calendarRef.current.contains(event.target)) {
@@ -59,23 +63,20 @@ const PemasukanPage = () => {
     };
   }, []);
 
-  // Mock function for export actions
   const handleExportExcel = () => {
     alert("Export Excel clicked!");
-    // Logic for exporting data to Excel
   };
 
   const handleExportPDF = () => {
     alert("Export PDF clicked!");
-    // Logic for exporting data to PDF
   };
 
   return (
-    <div className="flex relative bg-blue-50">
+    <div className="flex relative bg-white-50">
       <UserMenu />
       <Sidebar />
       <div className="flex-1 p-6 relative">
-        <h1 className="text-4xl font-semibold mb-6 text-blue-600">Pemasukan</h1>
+        <h1 className="text-[32px] font-bold mb-6 text-black">Pemasukan</h1>
 
         {/* Toolbar */}
         <div className="flex items-center justify-between mb-6">
@@ -84,7 +85,7 @@ const PemasukanPage = () => {
             <div className="relative">
               <button
                 onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                className="flex items-center gap-2 bg-blue-600 text-black-600 hover:bg-blue-200 px-4 py-2 rounded-lg shadow"
+                className="flex items-center gap-2 bg-[#3D6CB9] text-black-600 hover:bg-blue-500 px-4 py-2 rounded-lg shadow text-white"
               >
                 <CalendarDays size={24} />
                 <span className="text-base font-medium">
@@ -113,7 +114,7 @@ const PemasukanPage = () => {
                   <div className="mt-4 flex justify-between">
                     <button
                       onClick={() => setIsDatePickerOpen(false)}
-                      className="px-4 py-2 bg-gray-300 text-white rounded hover:bg-gray-400"
+                      className="px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400"
                     >
                       Batal
                     </button>
@@ -154,19 +155,15 @@ const PemasukanPage = () => {
 
         {/* Tabel Data Pemasukan */}
         <div className="mt-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold text-blue-600">
-              Daftar Pemasukan
-            </h2>
-
-            <button className="text-blue-600 hover:text-blue-800 text-base font-medium">
+          <div className="flex justify-end items-center mb-4">
+            <button className="text-[#3D6CB9] hover:text-blue-800 text-base font-medium">
               Lihat Semua
             </button>
           </div>
-
-          <table className="min-w-full table-auto border-collapse bg-white rounded-lg shadow text-sm">
+          <div className="rounded-lg overflow-hidden shadow">
+          <table className="min-w-full table-auto bg-white text-sm">
             <thead>
-              <tr className="bg-blue-600 text-white">
+              <tr className="bg-[#3D6CB9] text-white">
                 <th className="p-3 text-left">ID Pemasukan</th>
                 <th className="p-3 text-left">ID Pengeluaran</th>
                 <th className="p-3 text-left">ID Ticketing</th>
@@ -193,6 +190,7 @@ const PemasukanPage = () => {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>
