@@ -195,12 +195,18 @@ const DriverDataPage = () => {
             </button>
           </div>
         </div>
-
-        {/* Tabel Data */}
+        {/* Tabel Data Pemasukan */}
         <div className="mt-8">
-          <h2 className="text-2xl font-semibold text-blue-600 mb-4">
-            Data Driver
-          </h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold text-blue-600">
+             Data Driver
+            </h2>
+
+            <button className="text-blue-600 hover:text-blue-800 text-base font-medium">
+              Lihat Semua
+            </button>
+          </div>
+
           <table className="min-w-full table-auto border-collapse bg-white rounded-lg shadow text-sm">
             <thead>
               <tr className="bg-blue-600 text-white">

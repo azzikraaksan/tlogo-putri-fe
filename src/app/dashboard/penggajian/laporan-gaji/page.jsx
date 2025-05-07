@@ -15,7 +15,7 @@ function Page() {
   const years = Array.from({ length: 11 }, (_, i) => 2020 + i);
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
+    <div className="flex min-h-screen bg-white-100">
       <Sidebar />
       <div className="flex flex-col flex-1 p-6">
         <div className="flex justify-end">
@@ -27,11 +27,11 @@ function Page() {
         <div className="bg-white p-6 rounded-xl shadow-xl">
           {/* Filter Bulan & Tahun */}
           <div className="flex flex-wrap gap-4 items-center mb-6">
-            <select className="border border-gray-300 p-2 rounded-md shadow-sm" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
+            <select className="border border-gray-300 p-2 rounded-md shadow-sm text-[14px]" value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)}>
               <option value="">Pilih Bulan</option>
               {months.map((month, index) => <option key={index} value={month}>{month}</option>)}
             </select>
-            <select className="border border-gray-300 p-2 rounded-md shadow-sm" value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
+            <select className="border border-gray-300 p-2 rounded-md shadow-sm text-[14px]" value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)}>
               <option value="">Pilih Tahun</option>
               {years.map(year => <option key={year} value={year}>{year}</option>)}
             </select>
@@ -46,51 +46,49 @@ function Page() {
                 <input
                   type="text"
                   placeholder="Search"
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-[14px]"
                 />
               </div>
             </div>
           </div>
 
-          {/* Header */}
-          <div className="bg-blue-600 text-white font-semibold px-4 py-2 rounded-md mb-4">
+          {/* Header Judul */}
+          <div className="bg-blue-600 text-white text-[14px] font-medium rounded-lg px-4 py-3 mb-4 shadow-md">
             Laporan Gaji Karyawan
             {selectedMonth && ` - Bulan: ${selectedMonth}`}
             {selectedYear && `, Tahun: ${selectedYear}`}
           </div>
 
-          {/* Table */}
-          <div className="overflow-x-auto rounded-lg">
-            <table className="w-full table-auto text-sm border-collapse">
+          {/* Tabel */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-white rounded-md shadow-md text-xs text-[14px]">
               <thead className="bg-blue-700 text-white">
                 <tr>
-                  <th className="p-3">No</th>
-                  <th className="p-3">Nomor Lambung</th>
+                  <th className="p-3 text-center">No</th>
+                  <th className="p-3 text-center">Nomor Lambung</th>
                   <th className="p-3 text-left">Nama Karyawan</th>
-                  <th className="p-3">Tanggal</th>
-                  <th className="p-3">Waktu</th>
-                  <th className="p-3">Posisi</th>
-                  <th className="p-3">No Rekening</th>
+                  <th className="p-3 text-center">Tanggal</th>
+                  <th className="p-3 text-center">Waktu</th>
+                  <th className="p-3 text-center">Posisi</th>
                   <th className="p-3 text-right">Nominal Gaji</th>
                 </tr>
               </thead>
-              <tbody className="text-gray-800 bg-white">
+              <tbody className="text-gray-800">
                 {[
-                  ["01", "0", "0", "0", "0", "0", "Rp. 0"],
-                  ["02", "Danang", "1/3/2025", "11.30", "Driver", "2020101016", "Rp. 2.000.000"],
-                  ["03", "Gading", "2/3/2025", "09.00", "Driver", "1010304576", "Rp. 1.500.000"],
-                  ["04", "Nanto", "3/3/2025", "09.00", "Driver", "1010304576", "Rp. 1.500.000"],
-                  ["05", "Rian", "4/3/2025", "09.00", "Driver", "1010304576", "Rp. 1.500.000"]
+                  ["0", "0", "0", "0", "0", "Rp. 0"],
+                  ["Danang", "1/3/2025", "11.30", "Driver", "Rp. 2.000.000"],
+                  ["Gading", "2/3/2025", "09.00", "Driver", "Rp. 1.500.000"],
+                  ["Nanto", "3/3/2025", "09.00", "Driver", "Rp. 1.500.000"],
+                  ["Rian", "4/3/2025", "09.00", "Driver", "Rp. 1.500.000"]
                 ].map((data, index) => (
-                  <tr key={index} className="border-b hover:bg-gray-100 transition">
-                    <td className="p-2 text-center">{index + 1}</td>
-                    <td className="p-2 text-center">{data[0]}</td>
-                    <td className="p-2">{data[1]}</td>
-                    <td className="p-2 text-center">{data[2]}</td>
-                    <td className="p-2 text-center">{data[3]}</td>
-                    <td className="p-2 text-center">{data[4]}</td>
-                    <td className="p-2 text-center">{data[5]}</td>
-                    <td className="p-2 text-right">{data[6]}</td>
+                  <tr key={index} className="border-b hover:bg-gray-50">
+                    <td className="p-3 text-center">{index + 1}</td>
+                    <td className="p-3 text-center">{index === 0 ? data[0] : `0${index}`}</td>
+                    <td className="p-3">{index === 0 ? data[1] : data[0]}</td>
+                    <td className="p-3 text-center">{index === 0 ? data[2] : data[1]}</td>
+                    <td className="p-3 text-center">{index === 0 ? data[3] : data[2]}</td>
+                    <td className="p-3 text-center">{index === 0 ? data[4] : data[3]}</td>
+                    <td className="p-3 text-right">{index === 0 ? data[5] : data[4]}</td>
                   </tr>
                 ))}
               </tbody>
@@ -108,9 +106,13 @@ function Page() {
             <button className="p-2 border rounded">&#8594;</button>
           </div>
 
-          {/* Cetak Button */}
+          {/* Tombol Cetak */}
           <div className="flex justify-end mt-6">
-            <button className="bg-blue-600 text-white px-5 py-2 rounded shadow hover:bg-blue-700 transition">
+            <button className="bg-blue-600 text-white px-5 py-2 rounded shadow hover:bg-blue-700 transition text-[14px] flex items-center gap-2">
+              {/* Ikon Cetak */}
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 9V2h12v7m4 4H4v6h4v3h8v-3h4v-6z" />
+              </svg>
               Cetak Laporan Penggajian
             </button>
           </div>

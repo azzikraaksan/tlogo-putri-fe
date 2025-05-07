@@ -330,6 +330,69 @@ export default function Home() {
         judul: "Tlogo Putri Kaliurang: Daya Tarik, Harga Tiket, Jam...",
         deskripsi: "Wisata Alam dengan panorama indah di..."
       }
+<<<<<<< HEAD
+=======
+    },
+    {
+      id: 4,
+      status: "Diterbitkan",
+      date: "15/01/2025",
+      title: "Nyalimu Seberapa? Uji di Medan Ekstrem Jeep Tlogo Putri Kaliurang!",
+      owner: "Deviana Dyah",
+      category: "Medan Ekstrem",
+      detail: {
+        judul: "Nyalimu Seberapa? Uji di Medan Ekstrem Jeep T...",
+        deskripsi: "Kamu pecinta tantangan dan p..."
+      }
+    },
+    {
+      id: 5,
+      status: "Diterbitkan",
+      date: "10/01/2025",
+      title: "Tlogo Putri Kaliurang: 2 Alasan Untuk Berkunjung, Info Tiket, dan Jam Buka",
+      owner: "Irene Jeny",
+      category: "Pesona Alam",
+      detail: {
+        judul: "Tlogo Putri Kaliurang 2: Alasan Untuk Berkunjung, In...",
+        deskripsi: "Banyak alasan buat balik lagi, su..."
+      }
+    },
+    {
+      id: 6,
+      status: "Diterbitkan",
+      date: "05/01/2025",
+      title: "Tlogo Putri Kaliurang - Tiket Masuk, Lokasi, dan Rutenya",
+      owner: "Aldo Susilo",
+      category: "Tiket Masuk",
+      detail: {
+        judul: "Tlogo Putri Kaliurang - Tiket Masuk, Lokasi, dan Rut...",
+        deskripsi: "Sebelum ke sana, cek dulu harg..."
+      }
+    }, 
+    {
+      id: 7,
+      status: "Diterbitkan",
+      date: "05/01/2025",
+      title: "Rekomendasi Wisata Alam di Tlogo Putri Kaliurang: Telaga Para Bidadari",
+      owner: "Endin Syamsul",
+      category: "Telaga",
+      detail: {
+        judul: "Rekomendasi Wisata Alam di Tlogo Putri Kaliuran...",
+        deskripsi: "Pilihan Wisata alam terbaik untuk..."
+      }
+    },
+    {
+      id: 8,
+      status: "Diterbitkan",
+      date: "01/01/2025",
+      title: "Tlogo Putri Kaliurang Yogyakarta: Keajaiban Alam Tersembunyi Di Kaki Gunung",
+      owner: "Ajeng Yunia",
+      category: "Keajaiban Alam",
+      detail: {
+        judul: "Tlogo Putri Kaliurang Yogyakarta: Keajaiban Alam Terse...",
+        deskripsi: "Destinasi eksotis yang memaduk..."
+      }
+>>>>>>> 41d9b653bd5a5bd887901031da90b848f72bc67d
     }
   ]);
 
@@ -470,6 +533,10 @@ export default function Home() {
             ))}
           </div>
 
+<<<<<<< HEAD
+=======
+          {/* Search */}
+>>>>>>> 41d9b653bd5a5bd887901031da90b848f72bc67d
           <div className="flex justify-end">
             <SearchInput
               value={searchTerm}

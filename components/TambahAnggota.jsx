@@ -15,7 +15,6 @@ const TambahAnggota = ({ onKembali }) => {
     telepon: "",
     status: "",
     tanggal_bergabung: "",
-    plat_jeep: "",
     jumlah_jeep: "",
     jabatan: "",
     foto_profil: "",
@@ -179,30 +178,6 @@ const TambahAnggota = ({ onKembali }) => {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  Foto Jeep
-                </label>
-                <input
-                  type="file"
-                  name="foto_jeep"
-                  onChange={handleFileChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Foto Profil (opsional)
-                </label>
-                <input
-                  type="file"
-                  name="foto_profil"
-                  onChange={handleFileChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700">
                   Tanggal Bergabung
                 </label>
                 <input
@@ -218,12 +193,26 @@ const TambahAnggota = ({ onKembali }) => {
                 <label className="block text-sm font-bold text-gray-700">
                   Status
                 </label>
-                <input
-                  type="text"
+                <select
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  placeholder="Masukkan Status"
+                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                >
+                  <option value="">Pilih Status</option>
+                  <option value="Aktif">Aktif</option>
+                  <option value="Tidak Aktif">Tidak Aktif</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700">
+                  Foto Profil (opsional)
+                </label>
+                <input
+                  type="file"
+                  name="foto_profil"
+                  onChange={handleFileChange}
                   className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                 />
               </div>
@@ -262,44 +251,6 @@ const TambahAnggota = ({ onKembali }) => {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  Foto Profil (opsional)
-                </label>
-                <input
-                  type="file"
-                  name="foto_profil"
-                  onChange={handleFileChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Foto Jeep (opsional)
-                </label>
-                <input
-                  type="file"
-                  name="foto_jeep"
-                  onChange={handleFileChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Plat Jeep
-                </label>
-                <input
-                  type="text"
-                  name="plat_jeep"
-                  value={formData.plat_jeep}
-                  onChange={handleChange}
-                  placeholder="Masukkan Plat Jeep"
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700">
                   Tanggal Bergabung
                 </label>
                 <input
@@ -315,12 +266,26 @@ const TambahAnggota = ({ onKembali }) => {
                 <label className="block text-sm font-bold text-gray-700">
                   Status
                 </label>
-                <input
-                  type="text"
+                <select
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  placeholder="Masukkan Status"
+                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                >
+                  <option value="">Pilih Status</option>
+                  <option value="Tersedia">Tersedia</option>
+                  <option value="Tidak Tersedia">Tidak Tersedia</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-gray-700">
+                  Foto Profil (opsional)
+                </label>
+                <input
+                  type="file"
+                  name="foto_profil"
+                  onChange={handleFileChange}
                   className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                 />
               </div>
@@ -359,18 +324,6 @@ const TambahAnggota = ({ onKembali }) => {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  Foto Profil (opsional)
-                </label>
-                <input
-                  type="file"
-                  name="foto_profil"
-                  onChange={handleFileChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700">
                   Tanggal Bergabung
                 </label>
                 <input
@@ -382,19 +335,6 @@ const TambahAnggota = ({ onKembali }) => {
                 />
               </div>
 
-              {/* <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Status
-                </label>
-                <input
-                  type="text"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  placeholder="Masukkan Status"
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                />
-              </div> */}
               <div>
                 <label className="block text-sm font-bold text-gray-700">
                   Status
@@ -405,15 +345,12 @@ const TambahAnggota = ({ onKembali }) => {
                   onChange={handleChange}
                   className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                 >
+                  <option value="">Pilih Status</option>
                   <option value="Aktif">Aktif</option>
                   <option value="Tidak Aktif">Tidak Aktif</option>
                 </select>
               </div>
-            </>
-          )}
 
-          {/* {formData.role === "Front Office" && (
-            <>
               <div>
                 <label className="block text-sm font-bold text-gray-700">
                   Foto Profil (opsional)
@@ -426,34 +363,7 @@ const TambahAnggota = ({ onKembali }) => {
                 />
               </div>
             </>
-          )} */}
-
-          {/* <div>
-            <label className="block text-sm font-bold text-gray-700">
-              Tanggal Bergabung
-            </label>
-            <input
-              type="date"
-              name="tanggal_bergabung"
-              value={formData.tanggal_bergabung}
-              onChange={handleChange}
-              className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-bold text-gray-700">
-              Status
-            </label>
-            <input
-              type="text"
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              placeholder="Masukkan Status"
-              className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-            />
-          </div> */}
+          )}
 
           <div className="flex justify-end">
             {" "}

@@ -1,14 +1,11 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { FaUserCircle } from "react-icons/fa";
-import { FaChevronDown } from "react-icons/fa6";
 import Link from "next/link";
 
 const UserMenu = () => {
   const [userName, setUserName] = useState("");
   const [userRole, setUserRole] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
-  const menuRef = useRef(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -36,57 +33,25 @@ const UserMenu = () => {
     fetchUserProfile();
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   return (
-    <div
-      className="absolute top-4 right-4 z-50 flex items-center gap-4 text-[#3D6CB9]"
-      ref={menuRef}
-    >
-      <FaUserCircle className="text-4xl cursor-default" />
-
-      <div className="h-10 border-l border-[#858585]"></div>
-
-      <div className="flex flex-col text-left">
-        <span className="text-[16px] font-semibold text-gray-800">
-          {userName}
-        </span>
-        <span className="text-sm text-gray-500">{userRole}</span>
-      </div>
-
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-1 text-[#3D6CB9] cursor-pointer"
+    <div className="absolute top-4 right-4 z-50 flex items-center gap-4 text-[#3D6CB9]">
+      <Link
+        href="/dashboard/profil"
+        className="flex items-center gap-4 hover:opacity-80 transition"
       >
-        <FaChevronDown
-          className={`transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </button>
+        <FaUserCircle className="text-4xl" />
 
-      {isOpen && (
-        <div className="absolute top-10 right-0 mt-2 bg-white border border-gray-200 rounded-md shadow-lg w-48 text-sm z-50">
-          <Link
-            href="/dashboard/profil"
-            className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-          >
-            Profil
-          </Link>
+        <div className="h-10 border-l border-[#858585]"></div>
+
+        <div className="flex flex-col text-left">
+          <span className="text-[16px] font-semibold text-gray-800">
+            {userName}
+          </span>
+          <span className="text-sm text-gray-500">{userRole}</span>
         </div>
-      )}
+      </Link>
     </div>
   );
 };
 
 export default UserMenu;
-

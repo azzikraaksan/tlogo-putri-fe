@@ -204,12 +204,16 @@ const PengeluaranPage = () => {
           </div>
         </div>
 
-        {/* Table */}
+        {/* Tabel Data Pemasukan */}
         <div className="mt-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-semibold text-blue-600">
-              Tabel Pengeluaran
+            Tabel Pengeluaran
             </h2>
+
+            <button className="text-blue-600 hover:text-blue-800 text-base font-medium">
+              Lihat Semua
+            </button>
           </div>
 
           <div className="overflow-x-auto">
@@ -242,7 +246,7 @@ const PengeluaranPage = () => {
                       {/* Edit Button */}
                       <button
                         onClick={() => handleEdit(index)}
-                        className="text-yellow-500 hover:text-yellow-700 mr-4"
+                        className="text-blue-500 hover:text-yellow-700 mr-4"
                       >
                         <Edit size={18} />
                       </button>

@@ -111,7 +111,7 @@ export default function AddJeepForm({ onKembali }) {
 
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/jeeps/create",
+        "http://localhost:8000/api/jeeps/update/${id}",
         form,
         {
           headers: {
