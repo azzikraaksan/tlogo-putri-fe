@@ -1,110 +1,57 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
 import SearchInput from "/components/Search.jsx";
-import { FiEdit, FiTrash2 } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiImage, FiEdit3, FiList } from "react-icons/fi";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("semua");
   const [searchTerm, setSearchTerm] = useState("");
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef();
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedId = searchParams.get('id');
 
   const [data] = useState([
     {
       id: 1,
       status: "Konsep",
       date: "02/02/2025",
-      title: "Weekend Santai di Tlogo",
+      title: "Weekend Santai? Ke Tlogo Putri Aja, Udara Segar dan Alam Terbuka",
       owner: "Aisyah Dwi A",
       category: "Udara Segar",
       detail: {
-        judul: "Weekend Santai di Tlogo Putri...",
-        deskripsi: "Libur-libur enaknya merefresh otak dan pikiran di kawasan Tlogo Putri, Kaliurang..."
+        judul: "Weekend Santai? Ke Tlogo Putri Aja, Udara Segar...",
+        deskripsi: "Libur-libur enaknya merefresh otak..."
       }
     },
     {
       id: 2,
       status: "Diterbitkan",
       date: "27/01/2025",
-      title: "Seru di Kaliurang",
+      title: "Weekend Seru di Tlogo Putri Kaliurang, Wisata Alam Plus Hiburan Lengkap",
       owner: "Rekanita Yunia",
       category: "Wisata Alam",
       detail: {
-        judul: "Seru di Kaliurang...",
-        deskripsi: "Menikmati suasana sejuk dan wahana menarik di Kaliurang."
+        judul: "Weekend Seru di Tlogo Putri Kaliurang, Wisata Alam...",
+        deskripsi: "Menikmati suasana sejuk..."
       }
     },
     {
       id: 3,
       status: "Konsep",
       date: "27/01/2025",
-      title: "Daya Tarik Tlogo Putri Kaliurang",
+      title: "Tlogo Putri Kaliurang : Daya Tarik, Harga Tiket, Jam Buka, dan Rute",
       owner: "Mita Aprilia D",
       category: "Daya Tarik",
       detail: {
-        judul: "Tlogo Putri Kaliurang: Daya Tarik, Ha...",
-        deskripsi: "Wisata Alam dengan panorama indah di Kaliurang"
-      }
-    },
-    {
-      id: 4,
-      status: "Diterbitkan",
-      date: "15/01/2025",
-      title: "Nyalimu Seberapa? Uji di Medan Ekstrem Jeep Kaliurang",
-      owner: "Deviana Dyah",
-      category: "Medan Ekstrem",
-      detail: {
-        judul: "Nyalimu Seberapa? Uji di Medan Eks...",
-        deskripsi: "Kamu pecinta tantangan dan p..."
-      }
-    },
-    {
-      id: 5,
-      status: "Diterbitkan",
-      date: "10/01/2025",
-      title: "Alasan Untuk Berkunjung ke Tlogo Putri Kaliurang",
-      owner: "Irene Jeny",
-      category: "Pesona Alam",
-      detail: {
-        judul: "Tlogo Putri Kaliurang 2: Alasan Untuk...",
-        deskripsi: "Banyak alasan buat balik lagi, su..."
-      }
-    },
-    {
-      id: 6,
-      status: "Diterbitkan",
-      date: "05/01/2025",
-      title: "Tlogo Putri Kaliurang - Tiket Masuk, Lokas...",
-      owner: "Aldo Susilo",
-      category: "Tiket Masuk",
-      detail: {
-        judul: "Tlogo Putri Kaliurang - Tiket Masuk...",
-        deskripsi: "Sebelum ke sana, cek dulu harg..."
-      }
-    }, 
-    {
-      id: 7,
-      status: "Diterbitkan",
-      date: "05/01/2025",
-      title: "Rekomendasi Wisata Alam di Tlogo Putri K-",
-      owner: "Endin Syamsul",
-      category: "Telaga",
-      detail: {
-        judul: "Rekomendasi Wisata Alam di Tlogo P...",
-        deskripsi: "Pilihan Wisata alam terbaik untuk..."
-      }
-    },
-    {
-      id: 8,
-      status: "Diterbitkan",
-      date: "01/01/2025",
-      title: "Keajaiban Tlogo Putri Kaliurang",
-      owner: "Ajeng Yunia",
-      category: "Keajaiban Alam",
-      detail: {
-        judul: "Tlogo Putri Kaliurang Yogyakarta: Ke...",
-        deskripsi: "Destinasi eksotis yang memaduk..."
+        judul: "Tlogo Putri Kaliurang: Daya Tarik, Harga Tiket, Jam...",
+        deskripsi: "Wisata Alam dengan panorama indah di..."
       }
     }
   ]);
@@ -117,32 +64,119 @@ export default function Home() {
   ];
 
   const filteredData = data.filter((item) => {
-    const tabMatch =
-      activeTab === "semua" ||
-      item.status.toLowerCase() === activeTab.toLowerCase();
+    const tabMatch = activeTab === "semua" || item.status.toLowerCase() === activeTab.toLowerCase();
     const searchMatch =
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.owner.toLowerCase().includes(searchTerm.toLowerCase());
     return tabMatch && searchMatch;
   });
 
+  const selectedArticle = data.find((item) => item.id === parseInt(selectedId));
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  if (selectedId && selectedArticle) {
+    return (
+      <div className="min-h-screen flex bg-white font-poppins">
+        <aside className="w-64">
+          <Sidebar />
+        </aside>
+        <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
+          <h1 className="text-[32px] font-bold mb-4 text-black">Editor Artikel</h1>
+
+          {/* Header kanan atas */}
+          <div className="flex justify-end items-center space-x-4">
+            <span className="text-sm italic text-gray-500">Kutip Sumber Anda</span>
+            <button className="flex items-center space-x-1 text-blue-600 hover:underline">
+              <FiEdit3 className="w-4 h-4" />
+              <span>Edit</span>
+            </button>
+          </div>
+
+          <div className="bg-gray-50 p-6 rounded-lg shadow space-y-6">
+            {/* Upload Gambar dengan ikon */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Unggah Gambar</label>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded hover:bg-gray-100"
+              >
+                <FiImage className="w-5 h-5 text-gray-700" />
+                <span>Pilih Gambar</span>
+              </button>
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                className="hidden"
+              />
+              {imagePreview && (
+                <div className="mt-4">
+                  <img src={imagePreview} alt="Preview" className="w-full max-h-96 object-contain rounded" />
+                </div>
+              )}
+            </div>
+
+            {/* Judul dengan ikon */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Judul</label>
+              <div className="flex items-center space-x-2">
+                <FiEdit3 className="text-gray-500" />
+                <input
+                  className="w-full p-2 border rounded-md"
+                  defaultValue={selectedArticle.detail.judul}
+                />
+              </div>
+            </div>
+
+            {/* Deskripsi dengan ikon nomor paragraf */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+              <div className="flex items-start space-x-2">
+                <FiList className="text-gray-500 mt-2" />
+                <textarea
+                  className="w-full p-2 border rounded-md"
+                  rows={5}
+                  defaultValue={selectedArticle.detail.deskripsi}
+                />
+              </div>
+            </div>
+
+            {/* Tombol kembali */}
+            <button
+              onClick={() => router.push('/dashboard/ai-generate/draft')}
+              className="mt-4 px-4 py-2 bg-[#3D6CB9] text-white rounded-md"
+            >
+              Kembali
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Halaman list jika tidak ada ID
   return (
     <div className="min-h-screen flex bg-white font-poppins">
-      {/* Sidebar */}
       <aside className="w-64">
         <Sidebar />
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 flex-col px-8 md:px-10 py-6 space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-[32px] font-bold mb-6 text-black">Draft</h1>
-        </div>
+        <h1 className="text-[32px] font-bold mb-6 text-black">Draft</h1>
 
-        {/* Tabs + Search + UserMenu */}
         <header className="flex items-center justify-between flex-wrap gap-4">
-          {/* Tabs */}
           <div className="flex items-center bg-[#3D6CB9] p-2 rounded-lg space-x-2">
             {tabs.map((tab) => (
               <button
@@ -159,7 +193,6 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Search */}
           <div className="flex justify-end">
             <SearchInput
               value={searchTerm}
@@ -169,11 +202,9 @@ export default function Home() {
             />
           </div>
 
-          {/* User Menu */}
           <UserMenu />
         </header>
 
-        {/* Table */}
         <section className="bg-white rounded-lg shadow overflow-x-auto">
           <table className="w-full text-sm text-gray-700">
             <thead className="bg-[#3D6CB9] text-white">
@@ -214,7 +245,7 @@ export default function Home() {
                     <td className="p-3">
                       <div className="flex justify-center space-x-2">
                         <button
-                          onClick={() => alert(`Edit artikel: ${item.title}`)}
+                          onClick={() => router.push(`/dashboard/ai-generate/draft?id=${item.id}`)}
                           className="p-2 rounded-md text-blue-500 hover:text-blue-700 hover:bg-blue-100"
                         >
                           <FiEdit />
