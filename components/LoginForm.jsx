@@ -63,6 +63,8 @@ const LoginForm = () => {
           router.push('/dashboard')
         } else if (role === 'Owner') {
           router.push('/dashboard')
+        } else if (role === 'Driver') {
+          router.push('/dashboard')
         } else {
           router.push('/dashboard2')
         }

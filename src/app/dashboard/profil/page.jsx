@@ -34,6 +34,11 @@ export default function ProfilPage() {
     fetchUser();
   }, []);
   
+  const handleEditClick = () => {
+    router.push(
+      `/dashboard/profil/edit-profil`
+    );
+  };
 
   if (!user) {
     return (
@@ -67,8 +72,11 @@ export default function ProfilPage() {
             )}
           </div>
           <div className="flex-1 relative">
-            <button className="absolute top-0 right-0 bg-[#B8D4F9] hover:bg-[#6CAEE5] text-[#1C7AC8] text-sm px-4 py-1 rounded-md cursor-pointer">
-              Edit Profil
+          <button
+              onClick={handleEditClick}
+              className="absolute top-0 right-0 bg-[#B8D4F9] hover:bg-[#6CAEE5] text-[#1C7AC8] text-sm px-4 py-1 rounded-[8px] cursor-pointer"
+            >
+              Edit Anggota
             </button>
             <div className="grid grid-cols-[250px_10px_auto] gap-y-6 text-gray-800 ml-70 mt-10 mb-10">
               <div className="font-semibold text-[#1C7AC8]">Nama Lengkap</div>
