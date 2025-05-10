@@ -330,8 +330,6 @@ export default function Home() {
         judul: "Tlogo Putri Kaliurang: Daya Tarik, Harga Tiket, Jam...",
         deskripsi: "Wisata Alam dengan panorama indah di..."
       }
-<<<<<<< HEAD
-=======
     },
     {
       id: 4,
@@ -392,7 +390,6 @@ export default function Home() {
         judul: "Tlogo Putri Kaliurang Yogyakarta: Keajaiban Alam Terse...",
         deskripsi: "Destinasi eksotis yang memaduk..."
       }
->>>>>>> 41d9b653bd5a5bd887901031da90b848f72bc67d
     }
   ]);
 
@@ -532,11 +529,7 @@ export default function Home() {
               </button>
             ))}
           </div>
-
-<<<<<<< HEAD
-=======
           {/* Search */}
->>>>>>> 41d9b653bd5a5bd887901031da90b848f72bc67d
           <div className="flex justify-end">
             <SearchInput
               value={searchTerm}
