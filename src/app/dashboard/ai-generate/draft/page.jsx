@@ -6,6 +6,9 @@ import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
 import SearchInput from "/components/Search.jsx";
 import { FiEdit, FiTrash2, FiImage, FiEdit3, FiList } from "react-icons/fi";
+import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill';
+
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("semua");
@@ -13,9 +16,45 @@ export default function Home() {
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef();
 
+  const [editorContent, setEditorContent] = useState('');
+  const judulRef = useRef(null);
+  const deskripsiRef = useRef(null);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedId = searchParams.get('id');
+
+  const applyFormatting = (ref, formatType) => {
+    const input = ref.current;
+    if (!input) return;
+
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const selectedText = input.value.substring(start, end);
+
+    let formatted = selectedText;
+
+    switch (formatType) {
+      case "bold":
+        formatted = `**${selectedText}**`;
+        break;
+      case "italic":
+        formatted = `*${selectedText}*`;
+        break;
+      case "underline":
+        formatted = `<u>${selectedText}</u>`;
+        break;
+      case "link":
+        formatted = `[${selectedText}](https://)`;
+        break;
+      default:
+        break;
+    }
+
+    input.setRangeText(formatted, start, end, "end");
+    input.focus();
+  };
+
 
   const [data] = useState([
     {
@@ -162,17 +201,15 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="bg-gray-50 p-6 rounded-lg shadow space-y-6">
-            {/* Upload Gambar dengan ikon */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Unggah Gambar</label>
+          <div className="space-y-6 mb-4">
+            {/* Tombol Unggah Gambar dan Toolbar*/}
+            <div className="flex flex-wrap gap-2 items-center">
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded hover:bg-gray-100"
+                className="p-2 bg-gray-100 rounded hover:bg-gray-200"
               >
-                <FiImage className="w-5 h-5 text-gray-700" />
-                <span>Pilih Gambar</span>
+                <FiImage className="w-6 h-6 text-gray-700" />
               </button>
               <input
                 type="file"
@@ -181,36 +218,79 @@ export default function Home() {
                 onChange={handleImageChange}
                 className="hidden"
               />
-              {imagePreview && (
-                <div className="mt-4">
-                  <img src={imagePreview} alt="Preview" className="w-full max-h-96 object-contain rounded" />
-                </div>
-              )}
+
+              {/* Toolbar Editor */}
+              {/* Bold */}
+              <button
+                onClick={() => applyFormatting(judulRef, "bold")}
+                className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+                title="Bold"
+              >
+                <strong>B</strong>
+              </button>
+
+              {/* Italic */}
+              <button
+                onClick={() => applyFormatting(judulRef, "italic")}
+                className="p-2 rounded bg-gray-100 hover:bg-gray-200 italic"
+                title="Italic"
+              >
+                I
+              </button>
+
+              {/* Underline */}
+              <button
+                onClick={() => applyFormatting(judulRef, "underline")}
+                className="p-2 rounded bg-gray-100 hover:bg-gray-200 underline"
+                title="Underline"
+              >
+                U
+              </button>
+
+              {/* Link */}
+              <button
+                onClick={() => applyFormatting(judulRef, "link")}
+                className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+                title="Link Sumber"
+              >
+                🔗
+              </button>
+
+              <select className="p-1 border rounded text-sm" title="Ukuran Teks">
+                <option value="normal">Normal</option>
+                <option value="h1">H1</option>
+                <option value="h2">H2</option>
+                <option value="h3">H3</option>
+              </select>
+
+              <button className="p-2 rounded bg-gray-100 hover:bg-gray-200" title="Bullet List">
+                ••
+              </button>
+              
+              <button className="p-2 rounded bg-gray-100 hover:bg-gray-200" title="Number List">
+                1.
+              </button>
             </div>
 
-            {/* Judul dengan ikon */}
+            {/* Judul */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Judul</label>
-              <div className="flex items-center space-x-2">
-                <FiEdit3 className="text-gray-500" />
-                <input
-                  className="w-full p-2 border rounded-md"
-                  defaultValue={selectedArticle.detail.judul}
-                />
-              </div>
+              <input
+                ref={judulRef}
+                className="w-full p-2 border rounded-md"
+                defaultValue={selectedArticle.detail.judul}
+              />    
             </div>
 
-            {/* Deskripsi dengan ikon nomor paragraf */}
+            {/* Deskripsi */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
-              <div className="flex items-start space-x-2">
-                <FiList className="text-gray-500 mt-2" />
-                <textarea
-                  className="w-full p-2 border rounded-md"
-                  rows={5}
-                  defaultValue={selectedArticle.detail.deskripsi}
-                />
-              </div>
+              <textarea
+                ref={deskripsiRef}
+                className="w-full p-2 border rounded-md"
+                rows={5}
+                defaultValue={selectedArticle.detail.deskripsi}
+              />
             </div>
 
             {/* Tombol kembali */}
