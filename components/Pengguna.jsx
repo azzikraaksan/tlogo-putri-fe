@@ -33,6 +33,17 @@ const UserMenu = () => {
     fetchUserProfile();
   }, []);
 
+  if (!userName && !userRole) { //bisa dibicarakan kembali
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-red bg-opacity-75">
+        <div className="bg-white shadow-md p-6 rounded-lg text-center">
+          <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="absolute top-4 right-4 z-50 flex items-center gap-4 text-[#3D6CB9]">
       <Link

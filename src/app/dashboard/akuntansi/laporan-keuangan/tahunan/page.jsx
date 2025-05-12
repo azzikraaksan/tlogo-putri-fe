@@ -17,6 +17,7 @@ const TahunanPage = () => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
+  const calendarRef = useRef(null);
   const [formData, setFormData] = useState({
     idLaporan: "",
     idPemasukan: "",
@@ -28,7 +29,6 @@ const TahunanPage = () => {
     operasionalBersih: "",
     kas: "",
   });
-  const calendarRef = useRef(null);
 
   const exampleData = [
     {
@@ -101,12 +101,12 @@ const TahunanPage = () => {
   };
 
   return (
-    <div className="flex relative bg-blue-50 min-h-screen">
+    <div className="flex relative bg-white-50 min-h-screen">
       <UserMenu />
       <Sidebar />
 
       <div className="flex-1 p-6 relative">
-        <h1 className="text-4xl font-semibold mb-6 text-blue-600">Tahunan</h1>
+        <h1 className="text-[32px] font-bold mb-6 text-black">Tahunan</h1>
 
         {/* Toolbar */}
                         <div className="flex items-center justify-between mb-6">
@@ -115,7 +115,7 @@ const TahunanPage = () => {
                             <div className="relative">
                               <button
                                 onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                                className="flex items-center gap-2 bg-blue-600 text-black-600 hover:bg-blue-200 px-4 py-2 rounded-lg shadow"
+                                className="flex items-center gap-2 bg-[#3D6CB9] text-black-600 hover:bg-blue-500 px-4 py-2 rounded-lg shadow text-white"
                               >
                                 <CalendarDays size={24} />
                                 <span className="text-base font-medium">
@@ -158,15 +158,6 @@ const TahunanPage = () => {
                                 </div>
                               )}
                             </div>
-
-            {/* Tombol Tambah */}
-            <button
-              onClick={() => setIsFormOpen(true)}
-              className="flex items-center gap-2 bg-blue-600 text-black hover:bg-blue-700 px-4 py-2 rounded-lg shadow"
-            >
-              <PlusCircle size={20} />
-              Tambah
-            </button>
           </div>
 
           {/* Tombol Export */}
@@ -188,19 +179,16 @@ const TahunanPage = () => {
 
         {/* Table */}
         <div className="mt-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold text-blue-600">
-              Laporan Tahunan
-            </h2>
-            <button className="text-blue-600 hover:text-blue-800 text-base font-medium">
+          <div className="flex justify-end items-center mb-4">
+            <button className="text-[#3D6CB9] hover:text-blue-800 text-base font-medium">
               Lihat Semua
             </button>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full table-auto border-collapse bg-white rounded-lg shadow text-sm">
+          <div className="rounded-lg overflow-x-auto">
+            <table className="min-w-full table-auto bg-white text-sm">
               <thead>
-                <tr className="bg-blue-600 text-white">
+                <tr className="bg-[#3D6CB9] text-white">
                   {[
                     "ID Laporan",
                     "ID Pemasukan (PK)",
