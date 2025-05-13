@@ -101,7 +101,7 @@ const DaftarPesanan = () => {
               onClick={() => setStatusFilter(status)}
               className={`px-3 py-1 rounded-full border text-sm font-medium transition-all duration-150 ${
                 statusFilter === status
-                  ? "bg-blue-600 text-white"
+                  ? "bg-[#3D6CB9] text-white"
                   : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
               }`}
             >
@@ -121,7 +121,7 @@ const DaftarPesanan = () => {
 
         <div className="overflow-x-auto bg-white rounded-xl shadow">
           <table className="w-full table-auto">
-            <thead className="bg-blue-500 text-white">
+            <thead className="bg-[#3D6CB9] text-white">
               <tr>
                 <th className="p-3 text-center font-semibold">No</th>
                 <th className="p-3 text-center font-semibold">Kode Pemesanan</th>
@@ -169,6 +169,7 @@ const DaftarPesanan = () => {
                         className="text-blue-600 hover:text-blue-800"
                         onClick={(e) => {
                           e.stopPropagation();
+                          router.push(`/dashboard/pemesanan/daftar-pesanan/${item.id}`);
                           // aksi edit
                         }}
                       >

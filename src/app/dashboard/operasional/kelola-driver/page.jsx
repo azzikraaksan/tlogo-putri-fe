@@ -361,9 +361,14 @@ const PenjadwalanPage = () => {
           }),
         ]);
 
+        // if (!jeepsRes.ok || !driversRes.ok) throw new Error("Gagal fetch"); //tidak perlu
+
         const driversData = await driversRes.json();
         const jeepsData = await jeepsRes.json();
-
+        
+        // const drivers = driversData?.data?.find(
+        //   (d) => d.id === jeepsData.data.users_id
+        // );
         const drivers = driversData.data || [];
         const jeeps = jeepsData.data || [];
 

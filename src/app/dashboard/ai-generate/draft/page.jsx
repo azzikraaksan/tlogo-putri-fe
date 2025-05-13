@@ -1,14 +1,60 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
 import SearchInput from "/components/Search.jsx";
-import { FiEdit, FiTrash2 } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiImage, FiEdit3, FiList } from "react-icons/fi";
+import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill';
+
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("semua");
   const [searchTerm, setSearchTerm] = useState("");
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef();
+
+  const [editorContent, setEditorContent] = useState('');
+  const judulRef = useRef(null);
+  const deskripsiRef = useRef(null);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedId = searchParams.get('id');
+
+  const applyFormatting = (ref, formatType) => {
+    const input = ref.current;
+    if (!input) return;
+
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const selectedText = input.value.substring(start, end);
+
+    let formatted = selectedText;
+
+    switch (formatType) {
+      case "bold":
+        formatted = `**${selectedText}**`;
+        break;
+      case "italic":
+        formatted = `*${selectedText}*`;
+        break;
+      case "underline":
+        formatted = `<u>${selectedText}</u>`;
+        break;
+      case "link":
+        formatted = `[${selectedText}](https://)`;
+        break;
+      default:
+        break;
+    }
+
+    input.setRangeText(formatted, start, end, "end");
+    input.focus();
+  };
+
 
   const [data] = useState([
     {
@@ -117,32 +163,160 @@ export default function Home() {
   ];
 
   const filteredData = data.filter((item) => {
-    const tabMatch =
-      activeTab === "semua" ||
-      item.status.toLowerCase() === activeTab.toLowerCase();
+    const tabMatch = activeTab === "semua" || item.status.toLowerCase() === activeTab.toLowerCase();
     const searchMatch =
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.owner.toLowerCase().includes(searchTerm.toLowerCase());
     return tabMatch && searchMatch;
   });
 
+  const selectedArticle = data.find((item) => item.id === parseInt(selectedId));
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  if (selectedId && selectedArticle) {
+    return (
+      <div className="min-h-screen flex bg-white font-poppins">
+        <aside className="w-64">
+          <Sidebar />
+        </aside>
+        <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
+          <h1 className="text-[32px] font-bold mb-4 text-black">Editor Artikel</h1>
+
+          {/* Header kanan atas */}
+          <div className="flex justify-end items-center space-x-4">
+            <span className="text-sm italic text-gray-500">Kutip Sumber Anda</span>
+            <button className="flex items-center space-x-1 text-blue-600 hover:underline">
+              <FiEdit3 className="w-4 h-4" />
+              <span>Edit</span>
+            </button>
+          </div>
+
+          <div className="space-y-6 mb-4">
+            {/* Tombol Unggah Gambar dan Toolbar*/}
+            <div className="flex flex-wrap gap-2 items-center">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="p-2 bg-gray-100 rounded hover:bg-gray-200"
+              >
+                <FiImage className="w-6 h-6 text-gray-700" />
+              </button>
+              <input
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                className="hidden"
+              />
+
+              {/* Toolbar Editor */}
+              {/* Bold */}
+              <button
+                onClick={() => applyFormatting(judulRef, "bold")}
+                className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+                title="Bold"
+              >
+                <strong>B</strong>
+              </button>
+
+              {/* Italic */}
+              <button
+                onClick={() => applyFormatting(judulRef, "italic")}
+                className="p-2 rounded bg-gray-100 hover:bg-gray-200 italic"
+                title="Italic"
+              >
+                I
+              </button>
+
+              {/* Underline */}
+              <button
+                onClick={() => applyFormatting(judulRef, "underline")}
+                className="p-2 rounded bg-gray-100 hover:bg-gray-200 underline"
+                title="Underline"
+              >
+                U
+              </button>
+
+              {/* Link */}
+              <button
+                onClick={() => applyFormatting(judulRef, "link")}
+                className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+                title="Link Sumber"
+              >
+                🔗
+              </button>
+
+              <select className="p-1 border rounded text-sm" title="Ukuran Teks">
+                <option value="normal">Normal</option>
+                <option value="h1">H1</option>
+                <option value="h2">H2</option>
+                <option value="h3">H3</option>
+              </select>
+
+              <button className="p-2 rounded bg-gray-100 hover:bg-gray-200" title="Bullet List">
+                ••
+              </button>
+              
+              <button className="p-2 rounded bg-gray-100 hover:bg-gray-200" title="Number List">
+                1.
+              </button>
+            </div>
+
+            {/* Judul */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Judul</label>
+              <input
+                ref={judulRef}
+                className="w-full p-2 border rounded-md"
+                defaultValue={selectedArticle.detail.judul}
+              />    
+            </div>
+
+            {/* Deskripsi */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
+              <textarea
+                ref={deskripsiRef}
+                className="w-full p-2 border rounded-md"
+                rows={5}
+                defaultValue={selectedArticle.detail.deskripsi}
+              />
+            </div>
+
+            {/* Tombol kembali */}
+            <button
+              onClick={() => router.push('/dashboard/ai-generate/draft')}
+              className="mt-4 px-4 py-2 bg-[#3D6CB9] text-white rounded-md"
+            >
+              Kembali
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Halaman list jika tidak ada ID
   return (
     <div className="min-h-screen flex bg-white font-poppins">
-      {/* Sidebar */}
       <aside className="w-64">
         <Sidebar />
       </aside>
 
-      {/* Main Content */}
       <main className="flex-1 flex-col px-8 md:px-10 py-6 space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-[32px] font-bold mb-6 text-black">Draft</h1>
-        </div>
+        <h1 className="text-[32px] font-bold mb-6 text-black">Draft</h1>
 
-        {/* Tabs + Search + UserMenu */}
         <header className="flex items-center justify-between flex-wrap gap-4">
-          {/* Tabs */}
           <div className="flex items-center bg-[#3D6CB9] p-2 rounded-lg space-x-2">
             {tabs.map((tab) => (
               <button
@@ -158,8 +332,6 @@ export default function Home() {
               </button>
             ))}
           </div>
-
-          {/* Search */}
           <div className="flex justify-end">
             <SearchInput
               value={searchTerm}
@@ -169,11 +341,9 @@ export default function Home() {
             />
           </div>
 
-          {/* User Menu */}
           <UserMenu />
         </header>
 
-        {/* Table */}
         <section className="bg-white rounded-lg shadow overflow-x-auto">
           <table className="w-full text-sm text-gray-700">
             <thead className="bg-[#3D6CB9] text-white">
@@ -214,7 +384,7 @@ export default function Home() {
                     <td className="p-3">
                       <div className="flex justify-center space-x-2">
                         <button
-                          onClick={() => alert(`Edit artikel: ${item.title}`)}
+                          onClick={() => router.push(`/dashboard/ai-generate/draft?id=${item.id}`)}
                           className="p-2 rounded-md text-blue-500 hover:text-blue-700 hover:bg-blue-100"
                         >
                           <FiEdit />
@@ -232,7 +402,7 @@ export default function Home() {
               ) : (
                 <tr>
                   <td colSpan="6" className="text-center text-gray-500 py-6 italic">
-                    Data tidak ditemukan.
+                    Data tidak ditemukan ya.
                   </td>
                 </tr>
               )}
