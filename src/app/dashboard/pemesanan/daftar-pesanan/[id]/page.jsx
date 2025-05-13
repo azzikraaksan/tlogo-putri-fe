@@ -16,9 +16,10 @@ const dummyData = [
     nama: "Bunde",
     email: "baragajul@gmail.com",
     phone: "081234567890",
-    waktupemesanan: "12 Januari 2025",
+    waktupemesanan: "2025-01-12",
     jenispaket: "Paket 2",
     statuspembayaran: "Sudah Bayar",
+    waktutour: "13:00",
     tanggaltour: "2025-01-18",
     jumlahpesanan: 1,
     kodeReffeal: "", // Menambahkan kodeReffeal
@@ -38,6 +39,7 @@ const DetailPemesanan = () => {
     waktupemesanan: "",
     jenispaket: "",
     statuspembayaran: "",
+    waktutour: "",
     tanggaltour: "",
     jumlahpesanan: "",
     kodeReffeal: "",
@@ -55,6 +57,7 @@ const DetailPemesanan = () => {
         waktupemesanan: "",
         jenispaket: "",
         statuspembayaran: "",
+        waktutour: "",
         tanggaltour: "",
         jumlahpesanan: "",
         kodeReffeal: "",
@@ -86,7 +89,7 @@ const DetailPemesanan = () => {
         <ToastContainer />
         <button
           onClick={() => router.push("/dashboard/pemesanan/daftar-pesanan")}
-          className="flex items-center text-black hover:text-black mb-6"
+          className="flex items-center text-black hover:text-black mb-6 cursor-pointer"
         >
           <ArrowLeft className="mr-2" size={20} />
           Kembali ke Daftar Pesanan
@@ -135,14 +138,14 @@ const DetailPemesanan = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">Waktu Pemesanan</label>
+            <label className="block text-sm font-medium text-gray-700 cursor-pointer">Waktu Pemesanan</label>
             <input
               type="date"
               value={pesanan.waktupemesanan}
               onChange={(e) =>
                 setPesanan({ ...pesanan, waktupemesanan: e.target.value })
               }
-              className="mt-1 w-full p-2 border rounded-md"
+              className="mt-1 w-full p-2 border rounded-md cursor-pointer"
             />
           </div>
 
@@ -153,7 +156,7 @@ const DetailPemesanan = () => {
               onChange={(e) =>
                 setPesanan({ ...pesanan, jenispaket: e.target.value })
               }
-              className="mt-1 w-full p-2 border rounded-md"
+              className="mt-1 w-full p-2 border rounded-md cursor-pointer"
             >
               <option value="Paket 1">Paket 1</option>
               <option value="Paket 2">Paket 2</option>
@@ -172,7 +175,7 @@ const DetailPemesanan = () => {
               onChange={(e) =>
                 setPesanan({ ...pesanan, tanggaltour: e.target.value })
               }
-              className="mt-1 w-full p-2 border rounded-md"
+              className="mt-1 w-full p-2 border rounded-md cursor-pointer"
             />
           </div>
 
@@ -183,11 +186,24 @@ const DetailPemesanan = () => {
               onChange={(e) =>
                 setPesanan({ ...pesanan, statuspembayaran: e.target.value })
               }
-              className="mt-1 w-full p-2 border rounded-md"
+              className="mt-1 w-full p-2 border rounded-md cursor-pointer"
             >
               <option value="Sudah Bayar">Sudah Bayar</option>
               <option value="DP 50%">DP 50%</option>
             </select>
+          </div>
+
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Waktu Tour</label>
+            <input
+            type="time"
+            value={pesanan.waktutour}
+            onChange={(e) =>
+              setPesanan({ ...pesanan, waktutour: e.target.value })
+              }
+              className="mt-1 w-full p-2 border rounded-md cursor-pointer"
+            />
           </div>
 
           <div>
@@ -205,9 +221,7 @@ const DetailPemesanan = () => {
             <input
               type="text"
               value={pesanan.kodeReffeal}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, kodeReffeal: e.target.value })
-              }
+              readOnly
               className="mt-1 w-full p-2 border rounded-md"
             />
           </div>
@@ -217,17 +231,16 @@ const DetailPemesanan = () => {
             <input
               type="text"
               value={pesanan.kodeVoucher}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, kodeVoucher: e.target.value })
-              }
+              readOnly
               className="mt-1 w-full p-2 border rounded-md"
             />
           </div>
         </div>
-        <div className="flex justify-end">
+
+        <div className="flex justify-end mt-6">
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-[#3D6CB9] text-white rounded-md hover:bg-[#3D6CB9]"
+            className="px-4 py-2 bg-[#3D6CB9] text-white rounded-md hover:bg-[#3D6CB9] cursor-pointer"
           >
             Simpan Perubahan
           </button>
