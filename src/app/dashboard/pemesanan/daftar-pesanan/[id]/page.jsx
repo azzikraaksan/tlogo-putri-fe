@@ -1,9 +1,14 @@
 "use client";
-import { useParams, useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
 import withAuth from "/src/app/lib/withAuth";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
+// Dummy data untuk sementara
 const dummyData = [
   {
     id: 1,
@@ -14,94 +19,222 @@ const dummyData = [
     waktupemesanan: "12 Januari 2025",
     jenispaket: "Paket 2",
     statuspembayaran: "Sudah Bayar",
-    tanggaltour: "18 Januari 2025",
+    tanggaltour: "2025-01-18",
     jumlahpesanan: 1,
-  },
-  {
-    id: 2,
-    bookingCode: "JTP002",
-    nama: "Zimut",
-    email: "zimut@gmail.com",
-    phone: "089876543210",
-    waktupemesanan: "12 Januari 2025",
-    jenispaket: "Paket 1",
-    statuspembayaran: "Sudah Bayar",
-    tanggaltour: "25 Januari 2025",
-    jumlahpesanan: 2,
-  },
-  {
-    id: 3,
-    bookingCode: "JTP003",
-    nama: "Naon Maneh",
-    email: "manehnaon@gmail.com",
-    phone: "081234567890",
-    waktupemesanan: "15 Januari 2025",
-    jenispaket: "Paket 3",
-    statuspembayaran: "DP 50%",
-    tanggaltour: "25 Januari 2025",
-    jumlahpesanan: 1,
-  },
-  {
-    id: 4,
-    bookingCode: "JTP004",
-    nama: "Maneh Saha",
-    email: "sahamaneh@gmail.com",
-    phone: "089876543210",
-    waktupemesanan: "15 Januari 2025",
-    jenispaket: "Paket 1",
-    statuspembayaran: "DP 50%",
-    tanggaltour: "27 Januari 2025",
-    jumlahpesanan: 1,
+    kodeReffeal: "", // Menambahkan kodeReffeal
+    kodeVoucher: "", // Menambahkan kodeVoucher
   },
 ];
 
-const DetailPesanan = () => {
-  const { id } = useParams();
+const DetailPemesanan = () => {
   const router = useRouter();
+  const { id } = useParams();
 
-  const data = dummyData.find((item) => item.id === parseInt(id));
+  const [pesanan, setPesanan] = useState({
+    bookingCode: "",
+    nama: "",
+    email: "",
+    phone: "",
+    waktupemesanan: "",
+    jenispaket: "",
+    statuspembayaran: "",
+    tanggaltour: "",
+    jumlahpesanan: "",
+    kodeReffeal: "",
+    kodeVoucher: "",
+  });
 
-  if (!data) {
-    return (
-      <div className="p-6">
-        <p className="text-red-500">Data tidak ditemukan.</p>
-      </div>
+  useEffect(() => {
+    if (id) {
+      const data = dummyData.find((item) => item.id === parseInt(id, 10));
+      setPesanan(data || {
+        bookingCode: "",
+        nama: "",
+        email: "",
+        phone: "",
+        waktupemesanan: "",
+        jenispaket: "",
+        statuspembayaran: "",
+        tanggaltour: "",
+        jumlahpesanan: "",
+        kodeReffeal: "",
+        kodeVoucher: "",
+      });
+    }
+  }, [id]);
+
+  const handleSave = () => {
+    const storedData = JSON.parse(localStorage.getItem("dataPemesanan")) || [];
+    const updatedData = storedData.map((item) =>
+      item.id === pesanan.id ? pesanan : item
     );
-  }
+    localStorage.setItem("dataPemesanan", JSON.stringify(updatedData));
+
+    toast.success("Data berhasil diperbaharui!");
+    setTimeout(() => {
+      router.push("/dashboard/pemesanan/daftar-pesanan");
+    }, 3000);
+  };
+
+  if (!pesanan) return null;
 
   return (
-    <div className="flex">
+    <div className="flex justify-between items-start min-h-screen">
       <UserMenu />
       <Sidebar />
       <div className="flex-1 p-6">
+        <ToastContainer />
         <button
-          onClick={() => router.back()}
-          className="mb-6 text-sm text-black hover:underline"
+          onClick={() => router.push("/dashboard/pemesanan/daftar-pesanan")}
+          className="flex items-center text-black hover:text-black mb-6"
         >
-          ← Kembali
+          <ArrowLeft className="mr-2" size={20} />
+          Kembali ke Daftar Pesanan
         </button>
 
-        <h1 className="text-4xl font-semibold mb-4 text-black">
-          Detail Pesanan
-        </h1>
-        <p className="text-lg text-gray-500 font-regular mt-0 leading-tight">
-          #{data.bookingCode}
-        </p>
-        
+        <h1 className="text-3xl font-bold mb-6 text-black">Detail Pemesanan</h1>
+        <h3 className="text-lg font-semibold mb-4 text-gray-500">
+          Booking Code: {pesanan.bookingCode}
+        </h3>
 
-        <div className="bg-white rounded-xl shadow-lg p-10 space-y-4 ">
-          <div><strong>Nama:</strong> {data.nama}</div>
-          <div><strong>Email:</strong> {data.email}</div>
-          <div><strong>No. HP:</strong> {data.phone}</div>
-          <div><strong>Waktu Pemesanan:</strong> {data.waktupemesanan}</div>
-          <div><strong>Paket:</strong> {data.jenispaket}</div>
-          <div><strong>Status Pembayaran:</strong> {data.statuspembayaran}</div>
-          <div><strong>Tanggal Tour:</strong> {data.tanggaltour}</div>
-          <div><strong>Jumlah Pemesanan:</strong> {data.jumlahpesanan}</div>
+        <div className="bg-white p-6 rounded-xl shadow-md space-y-4 max-w-full max-h-[65vh] overflow-y-auto">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Nama</label>
+            <input
+              type="text"
+              value={pesanan.nama}
+              onChange={(e) =>
+                setPesanan({ ...pesanan, nama: e.target.value })
+              }
+              className="mt-1 w-full p-2 border rounded-md bg-gray-100"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              value={pesanan.email}
+              onChange={(e) =>
+                setPesanan({ ...pesanan, email: e.target.value })
+              }
+              className="mt-1 w-full p-2 border rounded-md bg-gray-100"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">No. HP</label>
+            <input
+              type="text"
+              value={pesanan.phone}
+              onChange={(e) =>
+                setPesanan({ ...pesanan, phone: e.target.value })
+              }
+              className="mt-1 w-full p-2 border rounded-md bg-gray-100"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Waktu Pemesanan</label>
+            <input
+              type="date"
+              value={pesanan.waktupemesanan}
+              onChange={(e) =>
+                setPesanan({ ...pesanan, waktupemesanan: e.target.value })
+              }
+              className="mt-1 w-full p-2 border rounded-md"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Jenis Paket</label>
+            <select
+              value={pesanan.jenispaket}
+              onChange={(e) =>
+                setPesanan({ ...pesanan, jenispaket: e.target.value })
+              }
+              className="mt-1 w-full p-2 border rounded-md"
+            >
+              <option value="Paket 1">Paket 1</option>
+              <option value="Paket 2">Paket 2</option>
+              <option value="Paket 3">Paket 3</option>
+              <option value="Paket 4">Paket 4</option>
+              <option value="Paket 5">Paket 5</option>
+              <option value="Paket Sunrise">Paket Sunrise</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Tanggal Tour</label>
+            <input
+              type="date"
+              value={pesanan.tanggaltour}
+              onChange={(e) =>
+                setPesanan({ ...pesanan, tanggaltour: e.target.value })
+              }
+              className="mt-1 w-full p-2 border rounded-md"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Status Pembayaran</label>
+            <select
+              value={pesanan.statuspembayaran}
+              onChange={(e) =>
+                setPesanan({ ...pesanan, statuspembayaran: e.target.value })
+              }
+              className="mt-1 w-full p-2 border rounded-md"
+            >
+              <option value="Sudah Bayar">Sudah Bayar</option>
+              <option value="DP 50%">DP 50%</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Jumlah Pesanan</label>
+            <input
+              type="text"
+              value={pesanan.jumlahpesanan}
+              readOnly
+              className="mt-1 w-full p-2 border rounded-md bg-gray-100"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Kode Referral</label>
+            <input
+              type="text"
+              value={pesanan.kodeReffeal}
+              onChange={(e) =>
+                setPesanan({ ...pesanan, kodeReffeal: e.target.value })
+              }
+              className="mt-1 w-full p-2 border rounded-md"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Kode Voucher</label>
+            <input
+              type="text"
+              value={pesanan.kodeVoucher}
+              onChange={(e) =>
+                setPesanan({ ...pesanan, kodeVoucher: e.target.value })
+              }
+              className="mt-1 w-full p-2 border rounded-md"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 bg-[#3D6CB9] text-white rounded-md hover:bg-[#3D6CB9]"
+          >
+            Simpan Perubahan
+          </button>
         </div>
       </div>
     </div>
   );
 };
 
-export default withAuth(DetailPesanan);
+export default withAuth(DetailPemesanan);
