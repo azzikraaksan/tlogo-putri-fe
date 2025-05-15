@@ -1,14 +1,12 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
 import SearchInput from "/components/Search.jsx";
-import { FiEdit, FiTrash2, FiImage, FiEdit3 } from "react-icons/fi";
-import 'react-quill/dist/quill.snow.css';
 import { CircleArrowLeft } from "lucide-react";
-import ReactQuill from 'react-quill';
+import { FiEdit, FiTrash2, FiImage, FiEdit3, FiBold, FiItalic, FiUnderline, FiLink } from "react-icons/fi";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("semua");
@@ -16,9 +14,9 @@ export default function Home() {
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef();
 
-  const [editorContent, setEditorContent] = useState('');
   const judulRef = useRef(null);
   const deskripsiRef = useRef(null);
+  const [activeInputRef, setActiveInputRef] = useState(judulRef);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -33,7 +31,6 @@ export default function Home() {
     const selectedText = input.value.substring(start, end);
 
     let formatted = selectedText;
-
     switch (formatType) {
       case "bold":
         formatted = `**${selectedText}**`;
@@ -47,15 +44,13 @@ export default function Home() {
       case "link":
         formatted = `[${selectedText}](https://)`;
         break;
-      default:
-        break;
     }
 
     input.setRangeText(formatted, start, end, "end");
     input.focus();
   };
 
-  const [data] = useState([
+  const [data, setData] = useState([
     {
       id: 1,
       status: "Konsep",
@@ -127,7 +122,7 @@ export default function Home() {
         judul: "Tlogo Putri Kaliurang - Tiket Masuk, Lokasi, dan Rut...",
         deskripsi: "Sebelum ke sana, cek dulu harg..."
       }
-    },
+    }, 
     {
       id: 7,
       status: "Diterbitkan",
@@ -143,31 +138,42 @@ export default function Home() {
     {
       id: 8,
       status: "Diterbitkan",
-      date: "01/01/2022",
+      date: "01/01/2025",
       title: "Tlogo Putri Kaliurang Yogyakarta: Keajaiban Alam Tersembunyi Di Kaki Gunung",
       owner: "Ajeng Yunia",
       category: "Keajaiban Alam",
       detail: {
-        judul: "Tlogo Putri Kaliurang Yogyakarta: Keajaiban Alam Tersembunyi...",
+        judul: "Tlogo Putri Kaliurang Yogyakarta: Keajaiban Alam Terse...",
         deskripsi: "Destinasi eksotis yang memaduk..."
       }
     }
   ]);
 
-const tabs = [
-    { label: "Semua", value: "semua", count: 1024 },
-    { label: "Diterbitkan", value: "Diterbitkan", count: 834 },
-    { label: "Konsep", value: "Konsep", count: 368 },
-    { label: "Sampah", value: "Sampah", count: 0 },
+  const tabs = [
+    { label: "Semua", value: "Semua", count: data.filter(d => d.status.toLowerCase() !== "sampah").length },
+    { label: "Diterbitkan", value: "Diterbitkan", count: data.filter(d => d.status === "Diterbitkan").length },
+    { label: "Konsep", value: "Konsep", count: data.filter(d => d.status === "Konsep").length },
+    { label: "Sampah", value: "Sampah", count: data.filter(d => d.status.toLowerCase() === "sampah").length },
   ];
 
   const filteredData = data.filter((item) => {
-    const tabMatch = activeTab === "semua" || item.status.toLowerCase() === activeTab.toLowerCase();
-    const searchMatch =
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.owner.toLowerCase().includes(searchTerm.toLowerCase());
-    return tabMatch && searchMatch;
+    const status = item.status.toLowerCase();
+    const term = searchTerm.toLowerCase();
+    if (activeTab.toLowerCase() === "sampah") {
+      return status === "sampah";
+    } else if (activeTab.toLowerCase() === "semua") {
+      return status !== "sampah" && (
+        item.title.toLowerCase().includes(term) ||
+        item.owner.toLowerCase().includes(term)
+      );
+    } else {
+      return status === activeTab.toLowerCase() && (
+        item.title.toLowerCase().includes(term) ||
+        item.owner.toLowerCase().includes(term)
+      );
+    }
   });
+
 
   const selectedArticle = data.find((item) => item.id === parseInt(selectedId));
 
@@ -182,11 +188,35 @@ const tabs = [
     }
   };
 
+  const handleRestore = (id) => {
+    const confirmed = confirm("Pulihkan artikel ini dari Sampah?");
+    if (confirmed) {
+      setData(prevData =>
+        prevData.map(item =>
+          item.id === id ? { ...item, status: "Konsep" } : item
+        )
+      );
+      setActiveTab("Konsep"); // Beralih ke tab Konsep setelah dipulihkan
+    }
+  };
+
   const onKembali = () => {
     router.push("/dashboard/ai-generate/draft");
   };
 
-  // Editor view
+  const handleDelete = (id) => {
+    const confirmed = confirm("Yakin ingin menghapus artikel ini?");
+    if (confirmed) {
+      setData(prevData =>
+        prevData.map(item =>
+          item.id === id ? { ...item, status: "Sampah" } : item
+        )
+      );
+      setActiveTab("Sampah"); // Beralih ke tab Sampah
+    }
+  };
+
+  // Editor View
   if (selectedId && selectedArticle) {
     return (
       <div className="min-h-screen flex bg-white font-poppins">
@@ -208,41 +238,35 @@ const tabs = [
           </div>
 
           <div className="space-y-6 mb-4">
-            <div className="flex flex-wrap gap-2 items-center">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="p-2 bg-gray-100 rounded hover:bg-gray-200"
-              >
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Ikon Gambar */}
+              <button onClick={() => fileInputRef.current?.click()} className="p-2 bg-gray-100 rounded hover:bg-gray-200" title="Upload Gambar">
                 <FiImage className="w-6 h-6 text-gray-700" />
               </button>
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={handleImageChange}
-                className="hidden"
-              />
+              <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageChange} className="hidden" />
 
-              <button onClick={() => applyFormatting(judulRef, "bold")} className="p-2 rounded bg-gray-100 hover:bg-gray-200"><strong>B</strong></button>
-              <button onClick={() => applyFormatting(judulRef, "italic")} className="p-2 rounded bg-gray-100 hover:bg-gray-200 italic">I</button>
-              <button onClick={() => applyFormatting(judulRef, "underline")} className="p-2 rounded bg-gray-100 hover:bg-gray-200 underline">U</button>
-              <button onClick={() => applyFormatting(judulRef, "link")} className="p-2 rounded bg-gray-100 hover:bg-gray-200">🔗</button>
-
-              <select className="p-1 border rounded text-sm">
-                <option value="normal">Normal</option>
-                <option value="h1">H1</option>
-                <option value="h2">H2</option>
-                <option value="h3">H3</option>
-              </select>
-              <button className="p-2 rounded bg-gray-100 hover:bg-gray-200">••</button>
-              <button className="p-2 rounded bg-gray-100 hover:bg-gray-200">1.</button>
+              {/* Toolbar */}
+              <div className="flex gap-2 ml-2">
+                <button onClick={() => applyFormatting(activeInputRef, "bold")} className="p-2 bg-gray-100 rounded hover:bg-gray-200" title="Bold">
+                  <FiBold className="w-5 h-5 text-gray-700"/>
+                </button>
+                <button onClick={() => applyFormatting(activeInputRef, "italic")} className="p-2 bg-gray-100 rounded hover:bg-gray-200" title="Italic">
+                  <FiItalic className="w-5 h-5 text-gray-700"/>
+                </button>
+                <button onClick={() => applyFormatting(activeInputRef, "underline")} className="p-2 bg-gray-100 rounded hover:bg-gray-200" title="Underline">
+                  <FiUnderline className="w-5 h-5 text-gray-700"/>
+                </button>
+                <button onClick={() => applyFormatting(activeInputRef, "link")} className="p-2 bg-gray-100 rounded hover:bg-gray-200" title="Link">
+                  <FiLink className="w-5 h-5 text-gray-700"/>
+                </button>
+              </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Judul</label>
               <input
                 ref={judulRef}
+                onFocus={() => setActiveInputRef(judulRef)}
                 className="w-full p-2 border rounded-md"
                 defaultValue={selectedArticle.detail.judul}
               />
@@ -252,16 +276,14 @@ const tabs = [
               <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
               <textarea
                 ref={deskripsiRef}
+                onFocus={() => setActiveInputRef(deskripsiRef)}
                 className="w-full p-2 border rounded-md"
                 rows={5}
                 defaultValue={selectedArticle.detail.deskripsi}
               />
             </div>
 
-            <button
-              onClick={onKembali}
-              className="mt-4 px-4 py-2 bg-[#3D6CB9] text-white rounded-md"
-            >
+            <button onClick={onKembali} className="mt-4 px-4 py-2 bg-[#3D6CB9] text-white rounded-md">
               Simpan
             </button>
           </div>
@@ -270,7 +292,7 @@ const tabs = [
     );
   }
 
-  // Table view
+  // List View (dipertahankan seperti sebelumnya)
   return (
     <div className="min-h-screen flex bg-white font-poppins">
       <aside className="w-64">
@@ -281,31 +303,26 @@ const tabs = [
           <h1 className="text-[32px] font-bold text-black">Daftar Artikel</h1>
           <UserMenu />
         </div>
+
         <div className="flex justify-between items-center">
-           <div className="bg-[#3D6CB9] p-2 rounded-lg flex justify-between gap-4 items-center">
+          <div className="bg-[#3D6CB9] p-2 rounded-lg flex justify-between gap-4 items-center">
             {tabs.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`px-4 py-2 rounded cursor-pointere ${
-                  activeTab === tab.value ? 'bg-white text-[#3D6CB9] ' : 'bg-gray-100 text-black'
-                }`}
+                className={`px-4 py-2 rounded ${activeTab === tab.value ? 'bg-white text-[#3D6CB9]' : 'bg-gray-100 text-black'}`}
               >
                 {tab.label} ({tab.count})
               </button>
             ))}
           </div>
-
-          <div>
-            <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-          </div>
+          <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
 
-
-          <div className="overflow-x-auto rounded-md shadow-md">
+        <div className="overflow-x-auto rounded-md shadow-md">
           <table className="min-w-full text-sm text-left text-gray-600">
-            <thead className="bg-[#3D6CB9] text-black uppercase text-xs">
-                <tr>
+            <thead className="bg-[#3D6CB9] text-white uppercase text-xs">
+              <tr>
                 <th className="px-4 py-2">Tanggal</th>
                 <th className="px-4 py-2">Judul</th>
                 <th className="px-4 py-2">Pemilik</th>
@@ -315,55 +332,45 @@ const tabs = [
               </tr>
             </thead>
             <tbody>
-          {filteredData.map((item) => (
-            <tr key={item.id} className="border-b hover:bg-gray-50">
-              <td className="px-4 py-2">
-          <div>{item.date}</div>
-          <div
-            className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full font-medium
-              ${item.status === "Diterbitkan" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
-          >
-            {item.status}
-          </div>
-        </td>
+              {filteredData.map((item) => (
+                <tr key={item.id} className="border-b hover:bg-gray-50">
+                  <td className="px-4 py-2">
+                    <div>{item.date}</div>
+                    <div className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full font-medium ${item.status === "Diterbitkan" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
+                      {item.status}
+                    </div>
+                  </td>
+                  <td className="px-4 py-2">{item.title}</td>
+                  <td className="px-4 py-2">{item.owner}</td>
+                  <td className="px-4 py-2 italic">{item.category}</td>
+                  <td className="px-4 py-2 max-w-xs">
+                    <div className="text-sm font-semibold truncate" title={item.detail?.judul}>
+                      {item.detail?.judul || '-'}
+                    </div>
+                    <div className="text-xs text-gray-500 truncate" title={item.detail?.deskripsi}>
+                      {item.detail?.deskripsi || '-'}
+                    </div>
+                  </td>
+                  <td className="px-4 py-2 flex space-x-3">
+                    <button
+                      onClick={() => router.push(`/dashboard/ai-generate/draft?id=${item.id}`)}
+                      title="Edit"
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      <FiEdit size={18} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      title="Hapus"
+                      className="text-red-600 hover:text-red-800"
+                    >
 
-      <td className="px-4 py-2">{item.title}</td>
-      <td className="px-4 py-2">{item.owner}</td>
-      <td className="px-4 py-2 italic">{item.category}</td>
-      <td className="px-4 py-2 max-w-xs">
-        <div className="text-sm font-semibold truncate" title={item.detail?.judul}>
-          {item.detail?.judul || '-'}
-        </div>
-        <div className="text-xs text-gray-500 truncate" title={item.detail?.deskripsi}>
-          {item.detail?.deskripsi || '-'}
-        </div>
-      </td>
-      <td className="px-4 py-2 flex space-x-3">
-  <button
-    onClick={() => router.push(`/dashboard/ai-generate/draft?id=${item.id}`)}
-    title="Edit"
-    className="text-blue-600 hover:text-blue-800"
-  >
-    <FiEdit size={18} />
-  </button>
-  <button
-    onClick={() => {
-      if (confirm("Yakin ingin menghapus artikel ini?")) {
-        // logika hapus artikel, misal panggil API atau update state
-        alert(`Artikel dengan id ${item.id} dihapus (simulasi).`);
-      }
-    }}
-    title="Hapus"
-    className="text-red-600 hover:text-red-800"
-  >
-    <FiTrash2 size={18} />
-  </button>
-</td>
-
-    </tr>
-  ))}
-</tbody>
-
+                      <FiTrash2 size={18} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       </main>
