@@ -154,7 +154,7 @@ export default function Home() {
     }
   ]);
 
-  const tabs = [
+const tabs = [
     { label: "Semua", value: "semua", count: 1024 },
     { label: "Diterbitkan", value: "Diterbitkan", count: 834 },
     { label: "Konsep", value: "Konsep", count: 368 },
@@ -186,18 +186,18 @@ export default function Home() {
     router.push("/dashboard/ai-generate/draft");
   };
 
+  // Editor view
   if (selectedId && selectedArticle) {
     return (
-          <div className="min-h-screen flex bg-white font-poppins">
-            <aside className="w-64">
-              <Sidebar />
-            </aside>
-            <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
-            <div className="flex items-center space-x-4">
-           <CircleArrowLeft onClick={onKembali} className="cursor-pointer" />
+      <div className="min-h-screen flex bg-white font-poppins">
+        <aside className="w-64">
+          <Sidebar />
+        </aside>
+        <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
+          <div className="flex items-center space-x-4">
+            <CircleArrowLeft onClick={onKembali} className="cursor-pointer" />
             <h1 className="text-[32px] font-bold text-black">Editor Artikel</h1>
           </div>
-
 
           <div className="flex justify-end items-center space-x-4">
             <span className="text-sm italic text-gray-500">Kutip Sumber Anda</span>
@@ -224,44 +224,19 @@ export default function Home() {
                 className="hidden"
               />
 
-              <button
-                onClick={() => applyFormatting(judulRef, "bold")}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200"
-                title="Bold"
-              >
-                <strong>B</strong>
-              </button>
-              <button
-                onClick={() => applyFormatting(judulRef, "italic")}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200 italic"
-                title="Italic"
-              >
-                I
-              </button>
-              <button
-                onClick={() => applyFormatting(judulRef, "underline")}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200 underline"
-                title="Underline"
-              >
-                U
-              </button>
-              <button
-                onClick={() => applyFormatting(judulRef, "link")}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200"
-                title="Link Sumber"
-              >
-                🔗
-              </button>
+              <button onClick={() => applyFormatting(judulRef, "bold")} className="p-2 rounded bg-gray-100 hover:bg-gray-200"><strong>B</strong></button>
+              <button onClick={() => applyFormatting(judulRef, "italic")} className="p-2 rounded bg-gray-100 hover:bg-gray-200 italic">I</button>
+              <button onClick={() => applyFormatting(judulRef, "underline")} className="p-2 rounded bg-gray-100 hover:bg-gray-200 underline">U</button>
+              <button onClick={() => applyFormatting(judulRef, "link")} className="p-2 rounded bg-gray-100 hover:bg-gray-200">🔗</button>
 
-              <select className="p-1 border rounded text-sm" title="Ukuran Teks">
+              <select className="p-1 border rounded text-sm">
                 <option value="normal">Normal</option>
                 <option value="h1">H1</option>
                 <option value="h2">H2</option>
                 <option value="h3">H3</option>
               </select>
-
-              <button className="p-2 rounded bg-gray-100 hover:bg-gray-200" title="Bullet List">••</button>
-              <button className="p-2 rounded bg-gray-100 hover:bg-gray-200" title="Number List">1.</button>
+              <button className="p-2 rounded bg-gray-100 hover:bg-gray-200">••</button>
+              <button className="p-2 rounded bg-gray-100 hover:bg-gray-200">1.</button>
             </div>
 
             <div>
@@ -270,7 +245,7 @@ export default function Home() {
                 ref={judulRef}
                 className="w-full p-2 border rounded-md"
                 defaultValue={selectedArticle.detail.judul}
-              />    
+              />
             </div>
 
             <div>
@@ -284,10 +259,10 @@ export default function Home() {
             </div>
 
             <button
-              onClick={() => router.push('/dashboard/ai-generate/draft')}
+              onClick={onKembali}
               className="mt-4 px-4 py-2 bg-[#3D6CB9] text-white rounded-md"
             >
-              Kembali
+              Simpan
             </button>
           </div>
         </main>
@@ -295,7 +270,103 @@ export default function Home() {
     );
   }
 
+  // Table view
   return (
-    <div>Loading...</div>
+    <div className="min-h-screen flex bg-white font-poppins">
+      <aside className="w-64">
+        <Sidebar />
+      </aside>
+      <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-[32px] font-bold text-black">Daftar Artikel</h1>
+          <UserMenu />
+        </div>
+        <div className="flex justify-between items-center">
+           <div className="bg-[#3D6CB9] p-2 rounded-lg flex justify-between gap-4 items-center">
+            {tabs.map((tab) => (
+              <button
+                key={tab.value}
+                onClick={() => setActiveTab(tab.value)}
+                className={`px-4 py-2 rounded cursor-pointere ${
+                  activeTab === tab.value ? 'bg-white text-[#3D6CB9] ' : 'bg-gray-100 text-black'
+                }`}
+              >
+                {tab.label} ({tab.count})
+              </button>
+            ))}
+          </div>
+
+          <div>
+            <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          </div>
+        </div>
+
+
+          <div className="overflow-x-auto rounded-md shadow-md">
+          <table className="min-w-full text-sm text-left text-gray-600">
+            <thead className="bg-[#3D6CB9] text-black uppercase text-xs">
+                <tr>
+                <th className="px-4 py-2">Tanggal</th>
+                <th className="px-4 py-2">Judul</th>
+                <th className="px-4 py-2">Pemilik</th>
+                <th className="px-4 py-2">Kategori</th>
+                <th className="px-4 py-2">Detail Aioseo</th>
+                <th className="px-4 py-2">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+          {filteredData.map((item) => (
+            <tr key={item.id} className="border-b hover:bg-gray-50">
+              <td className="px-4 py-2">
+          <div>{item.date}</div>
+          <div
+            className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full font-medium
+              ${item.status === "Diterbitkan" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
+          >
+            {item.status}
+          </div>
+        </td>
+
+      <td className="px-4 py-2">{item.title}</td>
+      <td className="px-4 py-2">{item.owner}</td>
+      <td className="px-4 py-2 italic">{item.category}</td>
+      <td className="px-4 py-2 max-w-xs">
+        <div className="text-sm font-semibold truncate" title={item.detail?.judul}>
+          {item.detail?.judul || '-'}
+        </div>
+        <div className="text-xs text-gray-500 truncate" title={item.detail?.deskripsi}>
+          {item.detail?.deskripsi || '-'}
+        </div>
+      </td>
+      <td className="px-4 py-2 flex space-x-3">
+  <button
+    onClick={() => router.push(`/dashboard/ai-generate/draft?id=${item.id}`)}
+    title="Edit"
+    className="text-blue-600 hover:text-blue-800"
+  >
+    <FiEdit size={18} />
+  </button>
+  <button
+    onClick={() => {
+      if (confirm("Yakin ingin menghapus artikel ini?")) {
+        // logika hapus artikel, misal panggil API atau update state
+        alert(`Artikel dengan id ${item.id} dihapus (simulasi).`);
+      }
+    }}
+    title="Hapus"
+    className="text-red-600 hover:text-red-800"
+  >
+    <FiTrash2 size={18} />
+  </button>
+</td>
+
+    </tr>
+  ))}
+</tbody>
+
+          </table>
+        </div>
+      </main>
+    </div>
   );
 }
