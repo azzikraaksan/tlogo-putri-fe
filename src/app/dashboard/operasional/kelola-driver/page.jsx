@@ -365,7 +365,7 @@ const PenjadwalanPage = () => {
 
         const driversData = await driversRes.json();
         const jeepsData = await jeepsRes.json();
-        
+
         // const drivers = driversData?.data?.find(
         //   (d) => d.id === jeepsData.data.users_id
         // );
@@ -373,14 +373,15 @@ const PenjadwalanPage = () => {
         const jeeps = jeepsData.data || [];
 
         const mergedData = jeeps.map((jeep) => {
-          const driver = drivers.find((d) => d.users_id === jeep.driver_id);
+          const driver = drivers.find((d) => d.id === jeep.users_id);
           return {
-            users_id: driver?.users_id,
+            users_id: driver?.id,
             name: driver?.name || "-",
             lambung: jeep.no_lambung,
             plat: jeep.plat_jeep,
             merek: jeep.merek,
             tipe: jeep.tipe,
+            status_jeep: jeep.status,
             tahun: jeep.tahun_kendaraan,
             status: driver?.status || "Tidak diketahui",
             foto: jeep.foto_jeep,
@@ -389,6 +390,24 @@ const PenjadwalanPage = () => {
             departure: "Pilih Driver",
           };
         });
+
+        // const mergedData = jeeps.map((jeep) => {
+        //   const driver = drivers.find((d) => d.users_id === jeep.driver_id);
+        //   return {
+        //     users_id: driver?.users_id,
+        //     name: driver?.name || "-",
+        //     lambung: jeep.no_lambung,
+        //     plat: jeep.plat_jeep,
+        //     merek: jeep.merek,
+        //     tipe: jeep.tipe,
+        //     tahun: jeep.tahun_kendaraan,
+        //     status: driver?.status || "Tidak diketahui",
+        //     foto: jeep.foto_jeep,
+        //     kontak: "WhatsApp",
+        //     konfirmasi: "-",
+        //     departure: "Pilih Driver",
+        //   };
+        // });
 
         setData(mergedData);
       } catch (error) {
@@ -473,7 +492,7 @@ const PenjadwalanPage = () => {
               <tr>
                 <th className="p-2 text-center font-normal">No. Lambung</th>
                 <th className="p-2 text-center font-normal">Nama Driver</th>
-                <th className="p-2 text-center font-normal">Status</th>
+                <th className="p-2 text-center font-normal">Status Jeep</th>
                 <th className="p-2 text-center font-normal">Kontak</th>
                 <th className="p-2 text-center font-normal">Konfirmasi</th>
                 <th className="p-2 text-center font-normal">Keberangkatan</th>
@@ -497,18 +516,18 @@ const PenjadwalanPage = () => {
                       <div className="flex items-center justify-center gap-2">
                         <span
                           className={`w-3 h-3 rounded-full ${
-                            item.status === "Tersedia"
+                            item.status_jeep === "Tersedia"
                               ? "bg-green-500"
-                              : item.status === "On Track"
+                              : item.status_jeep === "On Track"
                                 ? "bg-red-500"
-                                : item.status === "Tertunda"
+                                : item.status_jeep === "Tertunda"
                                   ? "bg-[#FBBC05]"
-                                  : item.status === "Selesai"
+                                  : item.status_jeep === "Selesai"
                                     ? "bg-[#3D6CB9]"
                                     : "bg-gray-300"
                           }`}
                         ></span>
-                        <span>{item.status}</span>
+                        <span>{item.status_jeep}</span>
                       </div>
                     </td>
                     <td className="p-2 text-center text-gray-750">
