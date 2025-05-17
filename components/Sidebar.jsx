@@ -506,19 +506,18 @@ const Sidebar = () => {
                     AI Generate Content
                   </Link>
                 </li>
-                <li>
-                  <Link
-                    href="/dashboard/ai-generate/draft"
-                    className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                      pathname.startsWith("/dashboard/ai-generate/draft")
-                        ? "bg-blue-300"
-                        : ""
-                    }`}
-                  >
-                    <Archive size={20} className="mr-2 w-[20px] h-auto" />
-                    Draft
-                  </Link>
-                </li>
+               <li>
+  <Link
+    href="/dashboard/ai-generate/draft"
+    className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
+      pathname.startsWith("/dashboard/ai-generate/draft") ? "bg-blue-300" : ""
+    }`}
+  >
+    <Archive size={20} className="mr-2 w-[20px] h-auto" />
+    Draft
+  </Link>
+</li>
+
               </ul>
             )}
           </li>
