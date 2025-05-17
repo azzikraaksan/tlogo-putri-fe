@@ -1,126 +1,217 @@
 "use client";
 
 import React, { useState } from "react";
-import Sidebar from "/components/Sidebar.jsx";
-import UserMenu from "/components/Pengguna.jsx";
 import { Send } from "lucide-react";
 import { motion } from "framer-motion";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import Sidebar from "/components/Sidebar";
+import UserMenu from "/components/Pengguna";
 
-
-
-function ContentGenerator() {
+export default function Page() {
   const [inputValue, setInputValue] = useState("");
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [messages, setMessages] = useState([]);
 
-  const handleKeyDown = async (e) => {
-    if (e.key === "Enter") {
-      if (inputValue.trim().length === 0) {
-        console.log("Input kosong, tidak bisa submit");
-        return;
-      }
-      else{
+  const sendPrompt = async () => {
+    if (!inputValue.trim()) return;
 
-        setLoading(true);
-        setError(null);
-        setTitle("");
-        setContent("");
-        
-        try {
-          const response = await fetch("http://localhost:8000/api/content-generate/generate", {
-            method: "POST",
-            headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ query: inputValue }),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
+    setMessages((prev) => [...prev, { role: "user", text: inputValue }]);
+    setInputValue("");
+    setLoading(true);
+    setError(null);
 
-        const data = await response.json();
-        // Simpan hasil title dan content dari API
-        setTitle(data.title || "Tidak ada judul");
-        setContent(data.content || "Tidak ada konten");
-      } catch (err) {
-        setError(err.message || "Terjadi kesalahan");
-      } finally {
-        setLoading(false);
-      }}
+    try {
+      const res = await fetch("http://localhost:8000/api/content-generate/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: inputValue }),
+      });
+
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+
+      const data = await res.json();
+
+      const formattedText = `### ${data.title}\n\n${data.content}`;
+      setMessages((prev) => [...prev, { role: "bot", text: formattedText }]);
+    } catch (err) {
+      setError("Gagal mengambil data. Coba lagi.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendPrompt();
+    }
+  };
+
+  const isEmpty = messages.length === 0 && !loading && !error;
+
   return (
-    <div className="min-h-screen flex bg-white relative">
+    <div className="flex bg-white min-h-screen relative">
+      {/* Judul kiri atas */}
+      <div className="absolute top-4 left-72">
+        <h1 className="text-[#000000] font-bold text-[32px]">Tlogo Generate Content</h1>
+      </div>
+
       {/* Sidebar */}
-      <div className="w-64">
-        <Sidebar />
-      </div>
-
       <UserMenu />
-      {/* User Menu */}
+      <Sidebar />
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-start p-4 pt-20">
-        {/* Logo */}
-        <div className="absolute top-4 left-72">
-          <h1 className="text-[#000000] font-bold text-[32px]">Tlogo Generate Content</h1>
-        </div>
+      {/* Main chat area */}
+      <main className="flex-1 flex flex-col items-center px-12 py-18"> {/* px-12 = 3rem padding left-right */}
+        <div
+          className={`w-full max-w-3xl flex flex-col ${
+            isEmpty ? "justify-center" : "justify-end"
+          } flex-1`}
+          style={{ minHeight: "70vh" }}
+        >
+          {/* Kontainer tengah saat kosong */}
+          {isEmpty && (
+            <motion.div
+              key="center-container"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="flex flex-col items-center justify-center h-full w-full gap-6"
+              style={{ minHeight: "70vh" }}
+            >
+              <h2 className="text-2xl md:text-3xl font-semibold text-center text-[#3D6CB9]">
+                Apa yang bisa saya bantu?
+              </h2>
 
-        {/* Centered Prompt and Input */}
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-100px)] space-y-6 w-full">
-          <h2 className="text-2xl md:text-3xl font-semibold text-center text-[#3D6CB9]">
-            Apa yang bisa saya bantu?
-          </h2>
-
-          <motion.div
-            className="w-full max-w-xl relative"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Masukkan kata kunci konten yang ingin dibuat"
-              className="w-full px-6 py-4 border border-blue-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700 placeholder-gray-400 pr-12 transition-all duration-300 focus:border-blue-400"
-              style={{
-                boxShadow: "0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.1)",
-              }}
-            />
-            {inputValue && (
-              <motion.button
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700"
-                initial={{ opacity: 0, scale: 0.5 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                onKeyDown={handleKeyDown}
-              >
-                <Send size={20} />
-              </motion.button>
-            )}
-          </motion.div>
-            {loading && <p className="mt-4 text-blue-600">Loading...</p>}
-            {error && <p className="mt-4 text-red-600">Error: {error}</p>}
-
-            {/* Tampilkan title */}
-            {title && <h2 className="mt-6 mx-5 text-xl font-semibold text-gray-900">{title}</h2>}
-
-            {/* Tampilkan content */}
-            {content && (
-              <div className="m-2 ml-5 p-4 border border-blue-300 rounded bg-blue-50 text-blue-900 whitespace-pre-wrap">
-                {content}
+              <div className="relative w-full max-w-md">
+                <input
+                  type="text"
+                  placeholder="Masukkan kata kunci yang ingin dibuat"
+                  className="w-full px-4 py-3 pr-14 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 box-border"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  style={{ height: "3rem" }}
+                />
+                <motion.button
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10"
+                  onClick={sendPrompt}
+                  disabled={loading}
+                  style={{ backgroundColor: "transparent" }}
+                >
+                  {loading ? (
+                    <svg
+                      className="animate-spin h-5 w-5 text-blue-500"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z"
+                      />
+                    </svg>
+                  ) : (
+                    <Send size={20} className="text-blue-500 hover:text-blue-700" />
+                  )}
+                </motion.button>
               </div>
-            )}
+            </motion.div>
+          )}
+
+          {/* Setelah ada pesan */}
+          {!isEmpty && (
+            <div className="flex flex-col-reverse flex-1 overflow-y-auto gap-4">
+              {/* Input dengan tinggi lebih besar */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="relative w-full max-w-3xl"
+              >
+                <input
+                  type="text"
+                  placeholder="Masukkan kata kunci yang ingin dibuat"
+                  className="w-full px-4 py-3 pr-14 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 box-border"
+                  style={{ height: "3.3rem" }}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+                <motion.button
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10"
+                  onClick={sendPrompt}
+                  disabled={loading}
+                  style={{ backgroundColor: "transparent" }}
+                >
+                  {loading ? (
+                    <svg
+                      className="animate-spin h-5 w-5 text-blue-500"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 100 16v-4l-3 3 3 3v-4a8 8 0 01-8-8z"
+                      />
+                    </svg>
+                  ) : (
+                    <Send size={20} className="text-blue-500 hover:text-blue-700" />
+                  )}
+                </motion.button>
+              </motion.div>
+
+              {/* Pesan chat */}
+              <div className="flex flex-col gap-4">
+                {messages.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={`rounded-xl px-4 py-3 max-w-[85%] ${
+                      msg.role === "user"
+                        ? "bg-blue-500 text-white self-end"
+                        : "bg-gray-100 text-gray-900 self-start prose prose-blue max-w-none"
+                    }`}
+                  >
+                    {msg.role === "bot" ? (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {msg.text}
+                      </ReactMarkdown>
+                    ) : (
+                      <span>{msg.text}</span>
+                    )}
+                  </div>
+                ))}
+
+                {loading && (
+                  <div className="self-start bg-gray-100 text-gray-900 rounded-lg px-4 py-3">
+                    <span className="animate-pulse">TlogoAI is typing…</span>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="self-center text-red-500 text-sm">{error}</div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
-
-export default ContentGenerator;
