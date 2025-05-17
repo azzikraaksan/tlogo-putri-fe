@@ -7,7 +7,7 @@ import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
 import { Eye, Pencil, Trash } from "lucide-react";
 
-const dummyData = [
+const initialData = [
   {
     id: 1,
     bookingCode: "JTP001",
@@ -59,6 +59,7 @@ const dummyData = [
 ];
 
 const DaftarPesanan = () => {
+  const [orders, setOrders] = useState(initialData);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("Semua");
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -72,7 +73,14 @@ const DaftarPesanan = () => {
 
   if (!isMounted) return null;
 
-  const filteredData = dummyData.filter((item) => {
+  const handleDelete = (id) => {
+    const confirmDelete = window.confirm("Apakah kamu yakin ingin menghapus pesanan ini?");
+    if (confirmDelete) {
+      setOrders(prev => prev.filter(item => item.id !== id));
+    }
+  };
+
+  const filteredData = orders.filter((item) => {
     const matchesSearch =
       item.bookingCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.waktupemesanan.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -156,7 +164,7 @@ const DaftarPesanan = () => {
                     </td>
                     <td className="p-2 flex justify-center gap-2">
                       <button
-                        className="text-gray-600 hover:text-black"
+                        className="text-gray-600 hover:text-black cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedOrder(item);
@@ -166,20 +174,19 @@ const DaftarPesanan = () => {
                         <Eye size={16} />
                       </button>
                       <button
-                        className="text-blue-600 hover:text-blue-800"
+                        className="text-blue-600 hover:text-blue-800 cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation();
                           router.push(`/dashboard/pemesanan/daftar-pesanan/${item.id}`);
-                          // aksi edit
                         }}
                       >
                         <Pencil size={16} />
                       </button>
                       <button
-                        className="text-red-600 hover:text-red-800"
+                        className="text-red-600 hover:text-red-800 cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation();
-                          // aksi hapus
+                          handleDelete(item.id);
                         }}
                       >
                         <Trash size={16} />
