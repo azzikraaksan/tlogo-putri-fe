@@ -5,10 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
 import SearchInput from "/components/Search.jsx";
-import { FiEdit, FiTrash2, FiImage, FiEdit3, FiList } from "react-icons/fi";
+import { FiEdit, FiTrash2, FiImage, FiEdit3 } from "react-icons/fi";
 import 'react-quill/dist/quill.snow.css';
+import { CircleArrowLeft } from "lucide-react";
 import ReactQuill from 'react-quill';
-
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("semua");
@@ -54,7 +54,6 @@ export default function Home() {
     input.setRangeText(formatted, start, end, "end");
     input.focus();
   };
-
 
   const [data] = useState([
     {
@@ -128,7 +127,7 @@ export default function Home() {
         judul: "Tlogo Putri Kaliurang - Tiket Masuk, Lokasi, dan Rut...",
         deskripsi: "Sebelum ke sana, cek dulu harg..."
       }
-    }, 
+    },
     {
       id: 7,
       status: "Diterbitkan",
@@ -144,18 +143,18 @@ export default function Home() {
     {
       id: 8,
       status: "Diterbitkan",
-      date: "01/01/2025",
+      date: "01/01/2022",
       title: "Tlogo Putri Kaliurang Yogyakarta: Keajaiban Alam Tersembunyi Di Kaki Gunung",
       owner: "Ajeng Yunia",
       category: "Keajaiban Alam",
       detail: {
-        judul: "Tlogo Putri Kaliurang Yogyakarta: Keajaiban Alam Terse...",
+        judul: "Tlogo Putri Kaliurang Yogyakarta: Keajaiban Alam Tersembunyi...",
         deskripsi: "Destinasi eksotis yang memaduk..."
       }
     }
   ]);
 
-  const tabs = [
+const tabs = [
     { label: "Semua", value: "semua", count: 1024 },
     { label: "Diterbitkan", value: "Diterbitkan", count: 834 },
     { label: "Konsep", value: "Konsep", count: 368 },
@@ -183,6 +182,11 @@ export default function Home() {
     }
   };
 
+  const onKembali = () => {
+    router.push("/dashboard/ai-generate/draft");
+  };
+
+  // Editor view
   if (selectedId && selectedArticle) {
     return (
       <div className="min-h-screen flex bg-white font-poppins">
@@ -190,9 +194,11 @@ export default function Home() {
           <Sidebar />
         </aside>
         <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
-          <h1 className="text-[32px] font-bold mb-4 text-black">Editor Artikel</h1>
+          <div className="flex items-center space-x-4">
+            <CircleArrowLeft onClick={onKembali} className="cursor-pointer" />
+            <h1 className="text-[32px] font-bold text-black">Editor Artikel</h1>
+          </div>
 
-          {/* Header kanan atas */}
           <div className="flex justify-end items-center space-x-4">
             <span className="text-sm italic text-gray-500">Kutip Sumber Anda</span>
             <button className="flex items-center space-x-1 text-blue-600 hover:underline">
@@ -202,7 +208,6 @@ export default function Home() {
           </div>
 
           <div className="space-y-6 mb-4">
-            {/* Tombol Unggah Gambar dan Toolbar*/}
             <div className="flex flex-wrap gap-2 items-center">
               <button
                 type="button"
@@ -219,70 +224,30 @@ export default function Home() {
                 className="hidden"
               />
 
-              {/* Toolbar Editor */}
-              {/* Bold */}
-              <button
-                onClick={() => applyFormatting(judulRef, "bold")}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200"
-                title="Bold"
-              >
-                <strong>B</strong>
-              </button>
+              <button onClick={() => applyFormatting(judulRef, "bold")} className="p-2 rounded bg-gray-100 hover:bg-gray-200"><strong>B</strong></button>
+              <button onClick={() => applyFormatting(judulRef, "italic")} className="p-2 rounded bg-gray-100 hover:bg-gray-200 italic">I</button>
+              <button onClick={() => applyFormatting(judulRef, "underline")} className="p-2 rounded bg-gray-100 hover:bg-gray-200 underline">U</button>
+              <button onClick={() => applyFormatting(judulRef, "link")} className="p-2 rounded bg-gray-100 hover:bg-gray-200">🔗</button>
 
-              {/* Italic */}
-              <button
-                onClick={() => applyFormatting(judulRef, "italic")}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200 italic"
-                title="Italic"
-              >
-                I
-              </button>
-
-              {/* Underline */}
-              <button
-                onClick={() => applyFormatting(judulRef, "underline")}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200 underline"
-                title="Underline"
-              >
-                U
-              </button>
-
-              {/* Link */}
-              <button
-                onClick={() => applyFormatting(judulRef, "link")}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200"
-                title="Link Sumber"
-              >
-                🔗
-              </button>
-
-              <select className="p-1 border rounded text-sm" title="Ukuran Teks">
+              <select className="p-1 border rounded text-sm">
                 <option value="normal">Normal</option>
                 <option value="h1">H1</option>
                 <option value="h2">H2</option>
                 <option value="h3">H3</option>
               </select>
-
-              <button className="p-2 rounded bg-gray-100 hover:bg-gray-200" title="Bullet List">
-                ••
-              </button>
-              
-              <button className="p-2 rounded bg-gray-100 hover:bg-gray-200" title="Number List">
-                1.
-              </button>
+              <button className="p-2 rounded bg-gray-100 hover:bg-gray-200">••</button>
+              <button className="p-2 rounded bg-gray-100 hover:bg-gray-200">1.</button>
             </div>
 
-            {/* Judul */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Judul</label>
               <input
                 ref={judulRef}
                 className="w-full p-2 border rounded-md"
                 defaultValue={selectedArticle.detail.judul}
-              />    
+              />
             </div>
 
-            {/* Deskripsi */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
               <textarea
@@ -293,12 +258,11 @@ export default function Home() {
               />
             </div>
 
-            {/* Tombol kembali */}
             <button
-              onClick={() => router.push('/dashboard/ai-generate/draft')}
+              onClick={onKembali}
               className="mt-4 px-4 py-2 bg-[#3D6CB9] text-white rounded-md"
             >
-              Kembali
+              Simpan
             </button>
           </div>
         </main>
@@ -306,109 +270,102 @@ export default function Home() {
     );
   }
 
-  // Halaman list jika tidak ada ID
+  // Table view
   return (
     <div className="min-h-screen flex bg-white font-poppins">
       <aside className="w-64">
         <Sidebar />
       </aside>
-
-      <main className="flex-1 flex-col px-8 md:px-10 py-6 space-y-6">
-        <h1 className="text-[32px] font-bold mb-6 text-black">Draft</h1>
-
-        <header className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center bg-[#3D6CB9] p-2 rounded-lg space-x-2">
+      <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-[32px] font-bold text-black">Daftar Artikel</h1>
+          <UserMenu />
+        </div>
+        <div className="flex justify-between items-center">
+           <div className="bg-[#3D6CB9] p-2 rounded-lg flex justify-between gap-4 items-center">
             {tabs.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`px-3 py-1 rounded-[5px] text-sm font-normal ${
-                  activeTab === tab.value
-                    ? "bg-white text-[#3D6CB9]"
-                    : "bg-gray-100 text-gray-500"
+                className={`px-4 py-2 rounded cursor-pointere ${
+                  activeTab === tab.value ? 'bg-white text-[#3D6CB9] ' : 'bg-gray-100 text-black'
                 }`}
               >
                 {tab.label} ({tab.count})
               </button>
             ))}
           </div>
-          <div className="flex justify-end">
-            <SearchInput
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onClear={() => setSearchTerm("")}
-              placeholder="Cari"
-            />
+
+          <div>
+            <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
+        </div>
 
-          <UserMenu />
-        </header>
 
-        <section className="bg-white rounded-lg shadow overflow-x-auto">
-          <table className="w-full text-sm text-gray-700">
-            <thead className="bg-[#3D6CB9] text-white">
-              <tr>
-                <th className="p-3 text-center">Tanggal</th>
-                <th className="p-3 text-center">Judul</th>
-                <th className="p-3 text-center">Pemilik</th>
-                <th className="p-3 text-center">Kategori</th>
-                <th className="p-3 text-center">Detail AIOSEO</th>
-                <th className="p-3 text-center">Aksi</th>
+          <div className="overflow-x-auto rounded-md shadow-md">
+          <table className="min-w-full text-sm text-left text-gray-600">
+            <thead className="bg-[#3D6CB9] text-black uppercase text-xs">
+                <tr>
+                <th className="px-4 py-2">Tanggal</th>
+                <th className="px-4 py-2">Judul</th>
+                <th className="px-4 py-2">Pemilik</th>
+                <th className="px-4 py-2">Kategori</th>
+                <th className="px-4 py-2">Detail Aioseo</th>
+                <th className="px-4 py-2">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {filteredData.length > 0 ? (
-                filteredData.map((item) => (
-                  <tr key={item.id} className="border-t hover:bg-gray-100">
-                    <td className="p-3 text-center">
-                      <div className="text-sm text-gray-800">{item.date}</div>
-                      <div
-                        className={`mt-1 inline-block px-2 py-0.5 text-xs rounded-full ${
-                          item.status === "Diterbitkan"
-                            ? "bg-green-100 text-green-600"
-                            : item.status === "Konsep"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-gray-100 text-gray-500"
-                        }`}
-                      >
-                        {item.status}
-                      </div>
-                    </td>
-                    <td className="p-3">{item.title}</td>
-                    <td className="p-3">{item.owner}</td>
-                    <td className="p-3">{item.category}</td>
-                    <td className="p-3 whitespace-pre-wrap">
-                      <div><strong>Judul:</strong> {item.detail.judul}</div>
-                      <div><strong>Deskripsi:</strong> {item.detail.deskripsi}</div>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex justify-center space-x-2">
-                        <button
-                          onClick={() => router.push(`/dashboard/ai-generate/draft?id=${item.id}`)}
-                          className="p-2 rounded-md text-blue-500 hover:text-blue-700 hover:bg-blue-100"
-                        >
-                          <FiEdit />
-                        </button>
-                        <button
-                          onClick={() => alert(`Hapus artikel: ${item.title}`)}
-                          className="p-2 rounded-md text-red-500 hover:text-red-700 hover:bg-red-100"
-                        >
-                          <FiTrash2 />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="6" className="text-center text-gray-500 py-6 italic">
-                    Data tidak ditemukan ya.
-                  </td>
-                </tr>
-              )}
-            </tbody>
+          {filteredData.map((item) => (
+            <tr key={item.id} className="border-b hover:bg-gray-50">
+              <td className="px-4 py-2">
+          <div>{item.date}</div>
+          <div
+            className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full font-medium
+              ${item.status === "Diterbitkan" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
+          >
+            {item.status}
+          </div>
+        </td>
+
+      <td className="px-4 py-2">{item.title}</td>
+      <td className="px-4 py-2">{item.owner}</td>
+      <td className="px-4 py-2 italic">{item.category}</td>
+      <td className="px-4 py-2 max-w-xs">
+        <div className="text-sm font-semibold truncate" title={item.detail?.judul}>
+          {item.detail?.judul || '-'}
+        </div>
+        <div className="text-xs text-gray-500 truncate" title={item.detail?.deskripsi}>
+          {item.detail?.deskripsi || '-'}
+        </div>
+      </td>
+      <td className="px-4 py-2 flex space-x-3">
+  <button
+    onClick={() => router.push(`/dashboard/ai-generate/draft?id=${item.id}`)}
+    title="Edit"
+    className="text-blue-600 hover:text-blue-800"
+  >
+    <FiEdit size={18} />
+  </button>
+  <button
+    onClick={() => {
+      if (confirm("Yakin ingin menghapus artikel ini?")) {
+        // logika hapus artikel, misal panggil API atau update state
+        alert(`Artikel dengan id ${item.id} dihapus (simulasi).`);
+      }
+    }}
+    title="Hapus"
+    className="text-red-600 hover:text-red-800"
+  >
+    <FiTrash2 size={18} />
+  </button>
+</td>
+
+    </tr>
+  ))}
+</tbody>
+
           </table>
-        </section>
+        </div>
       </main>
     </div>
   );
