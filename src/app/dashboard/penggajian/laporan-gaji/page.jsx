@@ -78,7 +78,7 @@ function Page() {
             {selectedMonth && ` - Bulan: ${selectedMonth}`}
             {selectedYear && `, Tahun: ${selectedYear}`}
           </div>
-
+          
           {/* Tabel */}
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white rounded-md shadow-md text-xs text-[14px]">
@@ -144,10 +144,19 @@ function Page() {
         <div className="fixed inset-0 bg-black/40 z-50 overflow-y-auto py-4 sm:py-8">
           <div className="bg-white border border-gray-300 w-[90%] md:w-[70%] lg:w-[50%] mx-auto rounded-xl shadow-2xl relative p-6 text-black max-h-[90vh] overflow-y-auto">
             <button onClick={() => setShowPrintModal(false)} className="absolute top-3 right-4 text-2xl text-gray-600 hover:text-red-600 font-bold">&times;</button>
-            <div className="text-center mb-6">
-              <img src="/logo.png" alt="Logo" className="mx-auto h-16 mb-2" />
-              <h2 className="text-xl font-bold">Jeep Tlogo Putri</h2>
-              <p className="text-sm text-gray-500">Alamat | Telp.</p>
+            <div className="text-center mb-6">  
+              <div className="flex items-start mt-4 ml-4">
+                <img src="/images/logo.png" alt="Logo" className="w-[100px] h-auto mr-4" />
+                <div className="flex flex-col justify-center ml-16 mt-4">
+                  <h2 className="text-xl font-bold">Jeep Tlogo Putri</h2>
+                  <div className="text-sm text-gray-500 grid grid-cols-[auto,1fr] gap-x-2">
+                     <p className="font-medium">Alamat: Banyuraden Gamping Sleman Yogyakarta</p>
+                      <p></p>
+                      <p className="font-medium">Telp. 082135664668</p>
+                      <p></p>
+                  </div>
+                </div>
+              </div>
               <hr className="my-4 border-gray-300" />
               <h3 className="font-semibold text-lg">LAPORAN GAJI KARYAWAN</h3>
               <p className="text-sm">PERIODE BULAN {selectedMonth || "FEBRUARI"} {selectedYear || "2025"}</p>
