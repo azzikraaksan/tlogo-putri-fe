@@ -62,7 +62,7 @@ const LoginForm = () => {
         } else if (role === 'Admin') {
           router.push('/dashboard')
         } else if (role === 'Owner') {
-          router.push('/dashboard')
+          router.push('/dashboard/penggajian/penggajian-utama')
         } else if (role === 'Driver') {
           router.push('/dashboard')
         } else {
