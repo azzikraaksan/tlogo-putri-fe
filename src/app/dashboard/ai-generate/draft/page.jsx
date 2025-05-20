@@ -29,11 +29,9 @@ export default function Page() {
       const res = await fetch('http://127.0.0.1:8000/api/content-generate/draft');
       if (!res.ok) throw new Error('Gagal mengambil data');
       const result = await res.json();
-      console.log('DATA DARI API:', result);
       setData(result.data);
       setLoading(false);
     } catch (err) {
-      console.error('ERROR:', err.message);
       setError(err.message);
       setLoading(false);
     }
@@ -70,7 +68,6 @@ export default function Page() {
 
   const handleDelete = async (id) => {
     if (!confirm('Yakin ingin menghapus artikel ini?')) return;
-
     try {
       const res = await fetch(
         `http://127.0.0.1:8000/api/content-generate/article/${id}`,
@@ -103,24 +100,21 @@ export default function Page() {
   if (loading) return <div>Memuat data...</div>;
   if (error) return <div>Terjadi kesalahan: {error}</div>;
 
-  // Tampilkan Editor jika ada selectedId dan selectedArticle ditemukan
+  // Jika sedang memilih artikel untuk diedit
   if (selectedId && selectedArticle) {
     return (
       <div className="min-h-screen flex bg-white font-poppins">
         <aside className="w-64">
           <Sidebar />
         </aside>
-
-        <EditorArtikel
-          article={selectedArticle}
-          onSave={handleSave}
-          onDelete={handleDelete}
-          onBack={onBack}
-        />
+        <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
+          <EditorArtikel article={selectedArticle} onSave={handleSave} onBack={onBack} />
+        </main>
       </div>
     );
   }
 
+  // Tampilan daftar artikel
   return (
     <div className="min-h-screen flex bg-white font-poppins">
       <aside className="w-64">
@@ -133,14 +127,16 @@ export default function Page() {
           <UserMenu />
         </div>
 
-        <div className="flex justify-between items-center">
-          <div className="bg-[#3D6CB9] p-2 rounded-lg flex gap-4 items-center">
+        <div className="flex flex-wrap justify-between items-center gap-4">
+          <div className="flex gap-2 bg-[#3D6CB9] p-2 rounded-lg">
             {tabs.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`px-4 py-2 rounded cursor-pointer ${
-                  activeTab === tab.value ? 'bg-white text-[#3D6CB9]' : 'bg-gray-100 text-black'
+                className={`px-4 py-2 rounded ${
+                  activeTab === tab.value
+                    ? 'bg-white text-[#3D6CB9]'
+                    : 'bg-gray-100 text-black'
                 }`}
               >
                 {tab.label}
@@ -148,51 +144,76 @@ export default function Page() {
             ))}
           </div>
 
-          <SearchInput
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border border-gray-200">
-            <thead>
-              <tr className="bg-gray-100 text-gray-700 text-left text-sm">
-                <th className="px-4 py-2 border">Judul</th>
-                <th className="px-4 py-2 border">Pemilik</th>
-                <th className="px-4 py-2 border">Status</th>
-                <th className="px-4 py-2 border">Aksi</th>
+        <div className="overflow-x-auto rounded-md shadow-md">
+          <table className="min-w-full text-sm text-left text-gray-600">
+            <thead className="bg-[#3D6CB9] text-white uppercase text-xs">
+              <tr>
+                <th className="px-4 py-2">Tanggal</th>
+                <th className="px-4 py-2">Judul</th>
+                <th className="px-4 py-2">Pemilik</th>
+                <th className="px-4 py-2">Kategori</th>
+                <th className="px-4 py-2">Detail Aioseo</th>
+                <th className="px-4 py-2">Aksi</th>
               </tr>
             </thead>
             <tbody>
               {filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="px-4 py-4 text-center text-gray-500">
+                  <td colSpan="6" className="text-center py-4 text-gray-500">
                     Tidak ada artikel yang ditemukan.
                   </td>
                 </tr>
               ) : (
                 filteredData.map((item) => (
-                  <tr key={item.id} className="text-sm text-gray-700 hover:bg-gray-50">
-                    <td className="px-4 py-2 border">{item.judul || '-'}</td>
-                    <td className="px-4 py-2 border">{item.pemilik || '-'}</td>
-                    <td className="px-4 py-2 border">-</td>
-                    <td className="px-4 py-2 border space-x-2">
+                  <tr key={item.id} className="border-b hover:bg-gray-50">
+                    <td className="px-4 py-2">
+                      <div>{item.date}</div>
+                      <div
+                        className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full font-medium ${
+                          item.status === 'Diterbitkan'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-yellow-100 text-yellow-700'
+                        }`}
+                      >
+                        {item.status}
+                      </div>
+                    </td>
+                    <td className="px-4 py-2">{item.title || '-'}</td>
+                    <td className="px-4 py-2">{item.owner || '-'}</td>
+                    <td className="px-4 py-2 italic">{item.category || '-'}</td>
+                    <td className="px-4 py-2 max-w-xs">
+                      <div
+                        className="text-sm font-semibold truncate"
+                        title={item.detail?.judul}
+                      >
+                        {item.detail?.judul || '-'}
+                      </div>
+                      <div
+                        className="text-xs text-gray-500 truncate"
+                        title={item.detail?.deskripsi}
+                      >
+                        {item.detail?.deskripsi || '-'}
+                      </div>
+                    </td>
+                    <td className="px-4 py-2 flex space-x-3">
                       <button
                         onClick={() =>
                           router.push(`/dashboard/ai-generate/draft?id=${item.id}`)
                         }
-                        className="text-blue-600 hover:text-blue-800"
                         title="Edit"
+                        className="text-blue-600 hover:text-blue-800"
                       >
-                        <FiEdit />
+                        <FiEdit size={18} />
                       </button>
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="text-red-600 hover:text-red-800"
                         title="Hapus"
+                        className="text-red-600 hover:text-red-800"
                       >
-                        <FiTrash2 />
+                        <FiTrash2 size={18} />
                       </button>
                     </td>
                   </tr>
