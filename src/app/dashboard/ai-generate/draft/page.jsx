@@ -100,7 +100,6 @@ export default function Page() {
   if (loading) return <div>Memuat data...</div>;
   if (error) return <div>Terjadi kesalahan: {error}</div>;
 
-  // Jika sedang memilih artikel untuk diedit
   if (selectedId && selectedArticle) {
     return (
       <div className="min-h-screen flex bg-white font-poppins">
@@ -114,7 +113,6 @@ export default function Page() {
     );
   }
 
-  // Tampilan daftar artikel
   return (
     <div className="min-h-screen flex bg-white font-poppins">
       <aside className="w-64">
@@ -170,7 +168,7 @@ export default function Page() {
                 filteredData.map((item) => (
                   <tr key={item.id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-2">
-                      <div>{item.date}</div>
+                      <div>{item.date || '-'}</div>
                       <div
                         className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full font-medium ${
                           item.status === 'Diterbitkan'
@@ -178,11 +176,11 @@ export default function Page() {
                             : 'bg-yellow-100 text-yellow-700'
                         }`}
                       >
-                        {item.status}
+                        {item.status || 'Konsep'}
                       </div>
                     </td>
-                    <td className="px-4 py-2">{item.title || '-'}</td>
-                    <td className="px-4 py-2">{item.owner || '-'}</td>
+                    <td className="px-4 py-2">{item.title || item.judul || '-'}</td>
+                    <td className="px-4 py-2">{item.owner || item.pemilik || '-'}</td>
                     <td className="px-4 py-2 italic">{item.category || '-'}</td>
                     <td className="px-4 py-2 max-w-xs">
                       <div
