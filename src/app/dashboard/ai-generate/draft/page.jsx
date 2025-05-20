@@ -18,43 +18,47 @@ export default function Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedId = searchParams.get('id');
+  const selectedArticle = data.find((item) => item.id === Number(selectedId));
 
-useEffect(() => {
-  fetchData();
-}, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-async function fetchData() {
-  try {
-    const res = await fetch('http://127.0.0.1:8000/api/content-generate/draft'); // ✅ simpan ke variabel
-    if (!res.ok) throw new Error('Gagal mengambil data');
-    const result = await res.json();
-    setData(result.data); // ✅ ambil array data dari respons Laravel
-    setLoading(false);
-  } catch (err) {
-    setError(err.message);
-    setLoading(false);
+  async function fetchData() {
+    try {
+      const res = await fetch('http://127.0.0.1:8000/api/content-generate/draft');
+      if (!res.ok) throw new Error('Gagal mengambil data');
+      const result = await res.json();
+      console.log('DATA DARI API:', result);
+      setData(result.data);
+      setLoading(false);
+    } catch (err) {
+      console.error('ERROR:', err.message);
+      setError(err.message);
+      setLoading(false);
+    }
   }
-}
-
-
-
-  const selectedArticle = data.find((item) => item.id === parseInt(selectedId));
 
   const filteredData = data.filter((item) => {
-    const tabMatch = activeTab === 'semua' || item.status.toLowerCase() === activeTab.toLowerCase();
+    const tabMatch =
+      activeTab.toLowerCase() === 'semua' ||
+      item.status?.toLowerCase() === activeTab.toLowerCase();
     const searchMatch =
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.owner.toLowerCase().includes(searchTerm.toLowerCase());
+      item.judul?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.pemilik?.toLowerCase().includes(searchTerm.toLowerCase());
     return tabMatch && searchMatch;
   });
 
   const handleSave = async (updatedArticle) => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/content-generate/article/${updatedArticle.id}`, { // Ganti ke /article/{id}
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedArticle),
-      });
+      const res = await fetch(
+        `http://127.0.0.1:8000/api/content-generate/article/${updatedArticle.id}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updatedArticle),
+        }
+      );
       if (!res.ok) throw new Error('Gagal menyimpan data');
       alert('Artikel berhasil disimpan');
       await fetchData();
@@ -68,9 +72,12 @@ async function fetchData() {
     if (!confirm('Yakin ingin menghapus artikel ini?')) return;
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/content-generate/article/${id}`, { // Ganti ke /article/{id}
-        method: 'DELETE',
-      });
+      const res = await fetch(
+        `http://127.0.0.1:8000/api/content-generate/article/${id}`,
+        {
+          method: 'DELETE',
+        }
+      );
       if (!res.ok) throw new Error('Gagal menghapus data');
       alert('Artikel berhasil dihapus');
       await fetchData();
@@ -96,6 +103,7 @@ async function fetchData() {
   if (loading) return <div>Memuat data...</div>;
   if (error) return <div>Terjadi kesalahan: {error}</div>;
 
+  // Tampilkan Editor jika ada selectedId dan selectedArticle ditemukan
   if (selectedId && selectedArticle) {
     return (
       <div className="min-h-screen flex bg-white font-poppins">
@@ -113,7 +121,6 @@ async function fetchData() {
     );
   }
 
-  // Tampilan daftar artikel
   return (
     <div className="min-h-screen flex bg-white font-poppins">
       <aside className="w-64">
@@ -141,7 +148,10 @@ async function fetchData() {
             ))}
           </div>
 
-          <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          <SearchInput
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
 
         <div className="overflow-x-auto">
@@ -164,12 +174,14 @@ async function fetchData() {
               ) : (
                 filteredData.map((item) => (
                   <tr key={item.id} className="text-sm text-gray-700 hover:bg-gray-50">
-                    <td className="px-4 py-2 border">{item.title}</td>
-                    <td className="px-4 py-2 border">{item.owner}</td>
-                    <td className="px-4 py-2 border">{item.status}</td>
+                    <td className="px-4 py-2 border">{item.judul || '-'}</td>
+                    <td className="px-4 py-2 border">{item.pemilik || '-'}</td>
+                    <td className="px-4 py-2 border">-</td>
                     <td className="px-4 py-2 border space-x-2">
                       <button
-                        onClick={() => router.push(`/dashboard/ai-generate/draft?id=${item.id}`)}
+                        onClick={() =>
+                          router.push(`/dashboard/ai-generate/draft?id=${item.id}`)
+                        }
                         className="text-blue-600 hover:text-blue-800"
                         title="Edit"
                       >
