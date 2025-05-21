@@ -13,6 +13,7 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [ContentList, setContentList] = useState([]);
 
   const sendPrompt = async () => {
     if (!inputValue.trim()) return;
@@ -32,6 +33,7 @@ export default function Page() {
       if (!res.ok) throw new Error(`Error ${res.status}`);
 
       const data = await res.json();
+      setContentList((prevList) => [...prevList, data]);
 
       setMessages((prev) => [
         ...prev,
@@ -39,6 +41,7 @@ export default function Page() {
           role: "bot",
           title: data.title,
           content: data.content,
+          category: data.category || "Umum", // Jika ada kategori dari API
         },
       ]);
     } catch (err) {
@@ -60,6 +63,7 @@ export default function Page() {
       if (!res.ok) throw new Error(`Error ${res.status}`);
 
       const data = await res.json();
+      setContentList((prevList) => [...prevList, data]);
 
       setMessages((prev) =>
         prev.map((msg, i) =>
@@ -73,12 +77,30 @@ export default function Page() {
     }
   };
 
-  const handleSave = (msg) => {
-    console.log("Konten disimpan:", {
-      title: msg.title,
-      content: msg.content,
-    });
-    alert("Konten disimpan!");
+  const handleSave = async (item) => {
+    const payload = {
+      judul: item.title,
+      pemilik: "TP_Kaliurang",
+      kategori: item.category || "Umum",
+      isi_konten: item.content,
+    };
+
+    console.log("Payload yang dikirim:", payload);
+
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/content-generate/storecontent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+
+      alert("Konten berhasil disimpan!");
+    } catch (err) {
+      console.error("Gagal menyimpan:", err);
+      alert("Gagal menyimpan konten.");
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -236,6 +258,7 @@ export default function Page() {
                           <button
                             className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
                             onClick={() => handleSave(msg)}
+                            disabled={loading}
                           >
                             Simpan
                           </button>
