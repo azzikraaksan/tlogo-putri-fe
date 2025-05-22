@@ -168,7 +168,7 @@ export default function Page() {
                 filteredData.map((item) => (
                   <tr key={item.id} className="border-b hover:bg-gray-50">
                     <td className="px-4 py-2">
-                      <div>{item.date || '-'}</div>
+                      <div>{item.tanggal || '-'}</div>
                       <div
                         className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full font-medium ${
                           item.status === 'Diterbitkan'
@@ -181,19 +181,19 @@ export default function Page() {
                     </td>
                     <td className="px-4 py-2">{item.title || item.judul || '-'}</td>
                     <td className="px-4 py-2">{item.owner || item.pemilik || '-'}</td>
-                    <td className="px-4 py-2 italic">{item.category || '-'}</td>
+                    <td className="px-4 py-2 italic">{item.kategori || '-'}</td>
                     <td className="px-4 py-2 max-w-xs">
                       <div
                         className="text-sm font-semibold truncate"
-                        title={item.detail?.judul}
+                        title={item.judul}
                       >
-                        {item.detail?.judul || '-'}
+                        {item.judul || '-'}
                       </div>
                       <div
                         className="text-xs text-gray-500 truncate"
-                        title={item.detail?.deskripsi}
+                        title={item.isi_konten}
                       >
-                        {item.detail?.deskripsi || '-'}
+                        {item.isi_konten || '-'}
                       </div>
                     </td>
                     <td className="px-4 py-2 flex space-x-3">
