@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { FiImage, FiEdit3 } from 'react-icons/fi';
+import { FiArrowLeftCircle, FiImage, FiEdit3 } from 'react-icons/fi';
 
 export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
   const judulRef = useRef(null);
@@ -54,8 +54,18 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
   const handleSaveClick = () => {
     onSave({
       id: article.id,
-      title: judulRef.current.value,
-      description: deskripsiRef.current.value,
+      judul: judulRef.current.value,
+      isi_konten: deskripsiRef.current.value,
+      status: article.status,
+    });
+  };
+
+  const handleUploadClick = () => {
+    onSave({
+      id: article.id,
+      judul: judulRef.current.value,
+      isi_konten: deskripsiRef.current.value,
+      status: 'Diterbitkan',
     });
   };
 
@@ -63,8 +73,8 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
     <div className="min-h-screen flex bg-white font-poppins">
       <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
         <div className="flex items-center space-x-4 mb-6">
-          <button onClick={onBack} className="text-blue-600 hover:underline">
-            &larr; Kembali
+          <button onClick={onBack} className="text-black-600 hover:text-blue-800">
+            <FiArrowLeftCircle className="w-6 h-6" />
           </button>
           <h1 className="text-3xl font-bold text-black">Editor Artikel</h1>
         </div>
@@ -125,7 +135,7 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
             <input
               ref={judulRef}
               className="w-full p-2 border rounded-md"
-              defaultValue={article.title}
+              defaultValue={article.judul}
             />
           </div>
 
@@ -135,7 +145,7 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
               ref={deskripsiRef}
               className="w-full p-2 border rounded-md"
               rows={5}
-              defaultValue={article.description}
+              defaultValue={article.isi_konten}
             />
           </div>
 
@@ -153,10 +163,10 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
               Simpan
             </button>
             <button
-              onClick={() => onDelete(article.id)}
-              className="px-4 py-2 bg-red-600 text-white rounded-md"
+              onClick={handleUploadClick}
+              className="px-4 py-2 bg-green-600 text-white rounded-md"
             >
-              Hapus
+              Unggah
             </button>
           </div>
         </div>

@@ -8,6 +8,15 @@ import SearchInput from '/components/Search.jsx';
 import EditorArtikel from '/components/EditArtikel.jsx';
 import { FiEdit, FiTrash2 } from 'react-icons/fi';
 
+function formatStatus(status) {
+  if (!status) return 'Konsep'; // default
+  const s = status.toLowerCase();
+  if (s === 'terbit' || s === 'diterbitkan') return 'Diterbitkan';
+  if (s === 'sampah') return 'Sampah';
+  if (s === 'konsep') return 'Konsep';
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+}
+
 export default function Page() {
   const [activeTab, setActiveTab] = useState('semua');
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,11 +31,30 @@ export default function Page() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [activeTab]);
 
   async function fetchData() {
+    setLoading(true);
+
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/content-generate/draft');
+      let url = '';
+
+      switch (activeTab.toLowerCase()) {
+        case 'diterbitkan':
+          url = 'http://127.0.0.1:8000/api/content-generate/articleterbit';
+          break;
+        case 'konsep':
+          url = 'http://127.0.0.1:8000/api/content-generate/articlekonsep';
+          break;
+        case 'sampah':
+          url = 'http://127.0.0.1:8000/api/content-generate/articlesampah';
+          break;
+        default:
+          url = 'http://127.0.0.1:8000/api/content-generate/draft';
+          break;
+      }
+
+      const res = await fetch(url);
       if (!res.ok) throw new Error('Gagal mengambil data');
       const result = await res.json();
       setData(result.data);
@@ -38,21 +66,26 @@ export default function Page() {
   }
 
   const filteredData = data.filter((item) => {
+    const status = item.status?.toLowerCase();
+
     const tabMatch =
       activeTab.toLowerCase() === 'semua' ||
-      item.status?.toLowerCase() === activeTab.toLowerCase();
+      (activeTab.toLowerCase() === 'diterbitkan' && (status === 'terbit' || status === 'diterbitkan')) ||
+      status === activeTab.toLowerCase();
+
     const searchMatch =
       item.judul?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.pemilik?.toLowerCase().includes(searchTerm.toLowerCase());
+      item.kategori?.toLowerCase().includes(searchTerm.toLowerCase());
+
     return tabMatch && searchMatch;
   });
 
   const handleSave = async (updatedArticle) => {
     try {
       const res = await fetch(
-        `http://127.0.0.1:8000/api/content-generate/article/${updatedArticle.id}`,
+        `http://127.0.0.1:8000/api/content-generate/articleupdate/${updatedArticle.id}`,
         {
-          method: 'PUT',
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(updatedArticle),
         }
@@ -70,7 +103,7 @@ export default function Page() {
     if (!confirm('Yakin ingin menghapus artikel ini?')) return;
     try {
       const res = await fetch(
-        `http://127.0.0.1:8000/api/content-generate/article/${id}`,
+        `http://127.0.0.1:8000/api/content-generate/articledelete/${id}`,
         {
           method: 'POST',
         }
@@ -99,6 +132,19 @@ export default function Page() {
 
   if (loading) return <div>Memuat data...</div>;
   if (error) return <div>Terjadi kesalahan: {error}</div>;
+
+  if (selectedId && !selectedArticle) {
+    return (
+      <div className="min-h-screen flex bg-white font-poppins">
+        <aside className="w-64">
+          <Sidebar />
+        </aside>
+        <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
+          <div>Memuat artikel...</div>
+        </main>
+      </div>
+    );
+  }
 
   if (selectedId && selectedArticle) {
     return (
@@ -165,57 +211,69 @@ export default function Page() {
                   </td>
                 </tr>
               ) : (
-                filteredData.map((item) => (
-                  <tr key={item.id} className="border-b hover:bg-gray-50">
-                    <td className="px-4 py-2">
-                      <div>{item.tanggal || '-'}</div>
-                      <div
-                        className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full font-medium ${
-                          item.status === 'Diterbitkan'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-yellow-100 text-yellow-700'
-                        }`}
-                      >
-                        {item.status || 'Konsep'}
-                      </div>
-                    </td>
-                    <td className="px-4 py-2">{item.title || item.judul || '-'}</td>
-                    <td className="px-4 py-2">{item.owner || item.pemilik || '-'}</td>
-                    <td className="px-4 py-2 italic">{item.kategori || '-'}</td>
-                    <td className="px-4 py-2 max-w-xs">
-                      <div
-                        className="text-sm font-semibold truncate"
-                        title={item.judul}
-                      >
-                        {item.judul || '-'}
-                      </div>
-                      <div
-                        className="text-xs text-gray-500 truncate"
-                        title={item.isi_konten}
-                      >
-                        {item.isi_konten || '-'}
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 flex space-x-3">
-                      <button
-                        onClick={() =>
-                          router.push(`/dashboard/ai-generate/draft?id=${item.id}`)
-                        }
-                        title="Edit"
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <FiEdit size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        title="Hapus"
-                        className="text-red-600 hover:text-red-800"
-                      >
-                        <FiTrash2 size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                filteredData.map((item) => {
+                  const formattedStatus = formatStatus(item.status);
+
+                  const statusClass =
+                    formattedStatus === 'Diterbitkan'
+                      ? 'bg-green-100 text-green-700'
+                      : formattedStatus === 'Sampah'
+                      ? 'bg-red-100 text-red-700'
+                      : 'bg-yellow-100 text-yellow-700';
+
+                  return (
+                    <tr key={item.id} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-2">
+                        <div>{item.tanggal || '-'}</div>
+                        <div
+                          className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full font-medium ${statusClass}`}
+                        >
+                          {formattedStatus}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">{item.title || item.judul || '-'}</td>
+                      <td className="px-4 py-2">{item.owner || item.pemilik || '-'}</td>
+                      <td className="px-4 py-2 italic">
+                        {item.kategori
+                          ?.split(/[0-9]+\.\s/)
+                          .filter(Boolean)[0]
+                          ?.trim() || '-'}
+                      </td>
+                      <td className="px-4 py-2 max-w-xs">
+                        <div
+                          className="text-sm font-semibold truncate"
+                          title={item.judul}
+                        >
+                          {item.judul || '-'}
+                        </div>
+                        <div
+                          className="text-xs text-gray-500 truncate"
+                          title={item.isi_konten}
+                        >
+                          {item.isi_konten || '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-13 flex items-center space-x-3">
+                        <button
+                          onClick={() =>
+                            router.push(`/dashboard/ai-generate/draft?id=${item.id}`)
+                          }
+                          title="Edit"
+                          className="text-blue-600 hover:text-blue-800 leading-none flex items-center justify-center"
+                        >
+                          <FiEdit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          title="Hapus"
+                          className="text-red-600 hover:text-blue-800 leading-none flex items-center justify-center"
+                        >
+                          <FiTrash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
