@@ -45,20 +45,19 @@ function Page() {
   const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
   // Export data
-const getFileName = (ext) => {
-  if (selectedMonth && selectedYear) {
-    const formattedMonth = selectedMonth.toLowerCase().replace(/\s+/g, "");
-    return `data_driver_${formattedMonth}_${selectedYear}.${ext}`;
-  }
-  return `data_driver_semua.${ext}`;
-};
+  const getFileName = (ext) => {
+    if (selectedMonth && selectedYear) {
+      const formattedMonth = selectedMonth.toLowerCase().replace(/\s+/g, "");
+      return `data_driver_${formattedMonth}_${selectedYear}.${ext}`;
+    }
+    return `data_driver_semua.${ext}`;
+  };
 
   const handleExportExcel = () => {
     if (filteredData.length === 0) {
       alert("Data kosong, tidak bisa export Excel!");
       return;
     }
-    
     try {
       const ws = XLSX.utils.json_to_sheet(filteredData);
       const wb = XLSX.utils.book_new();
@@ -70,23 +69,30 @@ const getFileName = (ext) => {
     }
   };
 
+  const tableColumn = [
+    "No",
+    "Nomor Lambung",
+    "Tanggal",
+    "Waktu",
+    "Posisi",
+    "Nominal Gaji"
+  ];
+
   const handleExportPDF = () => {
     if (filteredData.length === 0) {
       alert("Data kosong, tidak bisa export PDF!");
       return;
     }
-    
     try {
       const doc = new jsPDF();
-const tableRows = filteredData.map((item, index) => [
-  index + 1,
-  (index + 1).toString().padStart(2, "0"),
-  item.tanggal,
-  item.waktu,
-  item.posisi,
-  item.gaji,
-]);
-  
+      const tableRows = filteredData.map((item, index) => [
+        index + 1,
+        (index + 1).toString().padStart(2, "0"),
+        item.tanggal,
+        item.waktu,
+        item.posisi,
+        item.gaji,
+      ]);
       doc.text("Laporan Data Driver", 14, 10);
       autoTable(doc, {
         head: [tableColumn],
@@ -100,7 +106,6 @@ const tableRows = filteredData.map((item, index) => [
           fillColor: [61, 108, 185]
         }
       });
-      
       doc.save(getFileName("pdf"));
     } catch (error) {
       console.error("Export PDF error:", error);
@@ -108,16 +113,14 @@ const tableRows = filteredData.map((item, index) => [
     }
   };
 
-   return (
+  return (
     <div className="flex min-h-screen bg-white-100">
       <Sidebar />
       <div className="flex flex-col flex-1 p-6">
         <div className="flex justify-end">
           <UserMenu />
         </div>
-
         <h1 className="text-3xl font-bold mb-6 text-gray-800">Laporan Penggajian</h1>
-
         <div className="bg-white p-6 rounded-xl shadow-xl">
           {/* Filter Bulan & Tahun */}
           <div className="flex flex-wrap gap-4 items-center mb-6">
@@ -130,17 +133,15 @@ const tableRows = filteredData.map((item, index) => [
               {years.map(year => <option key={year} value={year}>{year}</option>)}
             </select>
           </div>
-
           <div className="flex justify-end mb-4">
             <SearchInput
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}flicts
+              onChange={(e) => setSearchTerm(e.target.value)}
               onClear={() => setSearchTerm("")}
               placeholder="Cari..."
             />
           </div>
-
-           {/* Tombol Export */}
+          {/* Tombol Export */}
           <div className="flex justify-end gap-4 mb-4">
             <button
               onClick={handleExportExcel}
@@ -167,7 +168,6 @@ const tableRows = filteredData.map((item, index) => [
               <span>Export PDF</span>
             </button>
           </div>
-
           {/* Header Judul */}
           <div className="bg-blue-600 text-white text-[14px] font-medium rounded-lg px-4 py-3 mb-4 shadow-md">
             Laporan Gaji Karyawan
@@ -203,7 +203,6 @@ const tableRows = filteredData.map((item, index) => [
               </tbody>
             </table>
           </div>
-
           {/* Pagination */}
           <div className="flex justify-center items-center mt-6 gap-2 flex-wrap">
             <button onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} className="p-2 border rounded disabled:opacity-50" disabled={currentPage === 1}>&#8592;</button>
@@ -218,7 +217,6 @@ const tableRows = filteredData.map((item, index) => [
             ))}
             <button onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} className="p-2 border rounded disabled:opacity-50" disabled={currentPage === totalPages}>&#8594;</button>
           </div>
-
           {/* Tombol Cetak */}
           <div className="flex justify-end mt-6">
             <button
@@ -264,50 +262,6 @@ const tableRows = filteredData.map((item, index) => [
                     <th className="border p-2">Waktu</th>
                     <th className="border p-2">Posisi</th>
                     <th className="border p-2">Nominal Gaji</th>
-      {/* Modal Cetak */}
-      {showPrintModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 overflow-y-auto py-4 sm:py-8">
-          <div className="bg-white border border-gray-300 w-[90%] md:w-[70%] lg:w-[50%] mx-auto rounded-xl shadow-2xl relative p-6 text-black max-h-[90vh] overflow-y-auto">
-            <button onClick={() => setShowPrintModal(false)} className="absolute top-3 right-4 text-2xl text-gray-600 hover:text-red-600 font-bold">&times;</button>
-            <div className="text-center mb-6">  
-              <div className="flex items-start mt-4 ml-4">
-                <img src="/images/logo.png" alt="Logo" className="w-[100px] h-auto mr-4" />
-                <div className="flex flex-col justify-center ml-16 mt-4">
-                  <h2 className="text-xl font-bold">Jeep Tlogo Putri</h2>
-                  <div className="text-sm text-gray-500 grid grid-cols-[auto,1fr] gap-x-2">
-                     <p className="font-medium">Alamat: Banyuraden Gamping Sleman Yogyakarta</p>
-                      <p></p>
-                      <p className="font-medium">Telp. 082135664668</p>
-                      <p></p>
-                  </div>
-                </div>
-              </div>
-              <hr className="my-4 border-gray-300" />
-              <h3 className="font-semibold text-lg">LAPORAN GAJI KARYAWAN</h3>
-              <p className="text-sm">PERIODE BULAN {selectedMonth || "FEBRUARI"} {selectedYear || "2025"}</p>
-            </div>
-            <table className="w-full border border-collapse border-gray-400 text-sm mb-4">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="border p-2">No</th>
-                  <th className="border p-2">Nomor Lambung</th>
-                  <th className="border p-2">Nama Karyawan</th>
-                  <th className="border p-2">Tanggal</th>
-                  <th className="border p-2">Waktu</th>
-                  <th className="border p-2">Posisi</th>
-                  <th className="border p-2">Nominal Gaji</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredData.map((row, index) => (
-                  <tr key={index}>
-                    <td className="border p-2 text-center">{index + 1}</td>
-                    <td className="border p-2 text-center">{(index + 1).toString().padStart(2, "0")}</td>
-                    <td className="border p-2 text-center">{row.nama}</td>
-                    <td className="border p-2 text-center">{row.tanggal}</td>
-                    <td className="border p-2 text-center">{row.waktu}</td>
-                    <td className="border p-2 text-center">{row.posisi}</td>
-                    <td className="border p-2 text-right">{row.gaji}</td>
                   </tr>
                 </thead>
                 <tbody>
