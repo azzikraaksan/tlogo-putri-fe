@@ -72,7 +72,7 @@ export default function Page() {
       const res = await fetch(
         `http://127.0.0.1:8000/api/content-generate/article/${id}`,
         {
-          method: 'DELETE',
+          method: 'POST',
         }
       );
       if (!res.ok) throw new Error('Gagal menghapus data');
