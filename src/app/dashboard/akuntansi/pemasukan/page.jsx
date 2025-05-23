@@ -4,123 +4,355 @@ import { useState, useRef, useEffect } from "react";
 import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
 import withAuth from "/src/app/lib/withAuth";
-import { 
-  CalendarDays, 
-  FileText, 
-  FileSpreadsheet,
-  PlusCircle,
-} from "lucide-react";
+import { CalendarDays, FileText, FileSpreadsheet, RotateCcw } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
+import { useRouter } from "next/navigation";
+import autoTable from "jspdf-autotable";
 
 const PemasukanPage = () => {
+  // State untuk data dan filter
   const [dataPemasukan, setDataPemasukan] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [tempDate, setTempDate] = useState(null);
   const calendarRef = useRef(null);
+  const router = useRouter();
 
-  // Example data for the table
-  const exampleData = [
-    {
-      idPemasukan: 1,
-      idPengeluaran: 2,
-      idTicketing: 3,
-      idPemesanan: 4,
-      tanggalPemesanan: "2025-04-20",
-      pengeluaran: "Rp 1.000.000",
-      totalBersih: "Rp 900.000",
-    },
-    {
-      idPemasukan: 2,
-      idPengeluaran: 3,
-      idTicketing: 4,
-      idPemesanan: 5,
-      tanggalPemesanan: "2025-04-21",
-      pengeluaran: "Rp 500.000",
-      totalBersih: "Rp 450.000",
-    },
-  ];
+  // Data contoh
+const exampleData = [
+  {
+    idPemasukan: "IDPM001",
+    idPengeluaran: "IDPG001",
+    idTicketing: "IDTK001",
+    idPemesanan: "IDPM001",
+    tanggalPemesanan: "17-05-2025",
+    pemasukan: "Rp 1.000.000",
+    pengeluaran: "Rp 1.000.000",
+    totalBersih: "Rp 900.000",
+    kas: "Rp 100.000",
+  },
+  {
+    idPemasukan: "IDPM002",
+    idPengeluaran: "IDPG002",
+    idTicketing: "IDTK002",
+    idPemesanan: "IDPM002",
+    tanggalPemesanan: "18-05-2025",
+    pemasukan: "Rp 2.000.000",
+    pengeluaran: "Rp 1.500.000",
+    totalBersih: "Rp 1.200.000",
+    kas: "Rp 800.000",
+  },
+  {
+    idPemasukan: "IDPM003",
+    idPengeluaran: "IDPG003",
+    idTicketing: "IDTK003",
+    idPemesanan: "IDPM003",
+    tanggalPemesanan: "19-05-2025",
+    pemasukan: "Rp 3.000.000",
+    pengeluaran: "Rp 2.000.000",
+    totalBersih: "Rp 2.500.000",
+    kas: "Rp 1.500.000",
+  },
+  {
+    idPemasukan: "IDPM004",
+    idPengeluaran: "IDPG004",
+    idTicketing: "IDTK004",
+    idPemesanan: "IDPM004",
+    tanggalPemesanan: "20-05-2025",
+    pemasukan: "Rp 4.000.000",
+    pengeluaran: "Rp 3.000.000",
+    totalBersih: "Rp 3.500.000",
+    kas: "Rp 2.500.000",
+  },
+  {
+    idPemasukan: "IDPM005",
+    idPengeluaran: "IDPG005",
+    idTicketing: "IDTK005",
+    idPemesanan: "IDPM005",
+    tanggalPemesanan: "21-05-2025",
+    pemasukan: "Rp 5.000.000",
+    pengeluaran: "Rp 4.000.000",
+    totalBersih: "Rp 4.500.000",
+    kas: "Rp 3.500.000",
+  },
+  {
+    idPemasukan: "IDPM006",
+    idPengeluaran: "IDPG006",
+    idTicketing: "IDTK006",
+    idPemesanan: "IDPM006",
+    tanggalPemesanan: "22-05-2025",
+    pemasukan: "Rp 6.000.000",
+    pengeluaran: "Rp 5.000.000",
+    totalBersih: "Rp 5.500.000",
+    kas: "Rp 4.500.000",
+  },
+  {
+    idPemasukan: "IDPM007",
+    idPengeluaran: "IDPG007",
+    idTicketing: "IDTK007",
+    idPemesanan: "IDPM007",
+    tanggalPemesanan: "23-05-2025",
+    pemasukan: "Rp 7.000.000",
+    pengeluaran: "Rp 6.000.000",
+    totalBersih: "Rp 6.500.000",
+    kas: "Rp 5.500.000",
+  },
+  {
+    idPemasukan: "IDPM008",
+    idPengeluaran: "IDPG008",
+    idTicketing: "IDTK008",
+    idPemesanan: "IDPM008",
+    tanggalPemesanan: "24-05-2025",
+    pemasukan: "Rp 8.000.000",
+    pengeluaran: "Rp 7.000.000",
+    totalBersih: "Rp 7.500.000",
+    kas: "Rp 6.500.000",
+  },
+  {
+    idPemasukan: "IDPM009",
+    idPengeluaran: "IDPG009",
+    idTicketing: "IDTK009",
+    idPemesanan: "IDPM009",
+    tanggalPemesanan: "25-05-2025",
+    pemasukan: "Rp 9.000.000",
+    pengeluaran: "Rp 8.000.000",
+    totalBersih: "Rp 8.500.000",
+    kas: "Rp 7.500.000",
+  },
+  {
+    idPemasukan: "IDPM010",
+    idPengeluaran: "IDPG010",
+    idTicketing: "IDTK010",
+    idPemesanan: "IDPM010",
+    tanggalPemesanan: "26-05-2025",
+    pemasukan: "Rp 10.000.000",
+    pengeluaran: "Rp 9.000.000",
+    totalBersih: "Rp 9.500.000",
+    kas: "Rp 8.500.000",
+  },
+  {
+    idPemasukan: "IDPM011",
+    idPengeluaran: "IDPG011",
+    idTicketing: "IDTK011",
+    idPemesanan: "IDPM011",
+    tanggalPemesanan: "27-05-2025",
+    pemasukan: "Rp 11.000.000",
+    pengeluaran: "Rp 10.000.000",
+    totalBersih: "Rp 10.500.000",
+    kas: "Rp 9.500.000",
+  },
+  {
+    idPemasukan: "IDPM012",
+    idPengeluaran: "IDPG012",
+    idTicketing: "IDTK012",
+    idPemesanan: "IDPM012",
+    tanggalPemesanan: "28-05-2025",
+    pemasukan: "Rp 12.000.000",
+    pengeluaran: "Rp 11.000.000",
+    totalBersih: "Rp 11.500.000",
+    kas: "Rp 10.500.000",
+  },
+  {
+    idPemasukan: "IDPM013",
+    idPengeluaran: "IDPG013",
+    idTicketing: "IDTK013", 
+    idPemesanan: "IDPM013",
+    tanggalPemesanan: "29-05-2025",
+    pemasukan: "Rp 13.000.000",
+    pengeluaran: "Rp 12.000.000",
+    totalBersih: "Rp 12.500.000",
+    kas: "Rp 11.500.000",
+  },
+  {
+    idPemasukan: "IDPM014",
+    idPengeluaran: "IDPG014",
+    idTicketing: "IDTK014",
+    idPemesanan: "IDPM014",
+    tanggalPemesanan: "30-05-2025",
+    pemasukan: "Rp 14.000.000",
+    pengeluaran: "Rp 13.000.000",
+    totalBersih: "Rp 13.500.000",
+    kas: "Rp 12.500.000",
+  },
+  {
+    idPemasukan: "IDPM015",
+    idPengeluaran: "IDPG015",
+    idTicketing: "IDTK015",
+    idPemesanan: "IDPM015",
+    tanggalPemesanan: "31-05-2025",
+    pemasukan: "Rp 15.000.000",
+    pengeluaran: "Rp 14.000.000",
+    totalBersih: "Rp 14.500.000",
+    kas: "Rp 13.500.000",
+  },
+];
 
-  useEffect(() => {
-    setDataPemasukan(exampleData);
-  }, []);
+  // Format tanggal
+  const formatDate = (date) => {
+    if (!date) return "";
+    const d = date.getDate().toString().padStart(2, "0");
+    const m = (date.getMonth() + 1).toString().padStart(2, "0");
+    const y = date.getFullYear();
+    return `${d}-${m}-${y}`;
+  };
 
-  // Handle Date Change
-  const handleDateChange = (date) => {
-    setSelectedDate(date);
+  // Filter berdasarkan tanggal
+  const applyDateFilter = () => {
+    if (!tempDate) return;
+    const formatted = formatDate(tempDate);
+    const filtered = dataPemasukan.filter(
+      (item) => item.tanggalPemesanan === formatted
+    );
+    setSelectedDate(tempDate);
+    setFilteredData(filtered);
     setIsDatePickerOpen(false);
   };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (calendarRef.current && !calendarRef.current.contains(event.target)) {
-        setIsDatePickerOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  const resetFilter = () => {
+    setSelectedDate(null);
+    setFilteredData(dataPemasukan);
+  };
+
+  // Export data
+  const getFileName = (ext) => {
+    if (selectedDate) {
+      const formatted = formatDate(selectedDate).replace(/-/g, "");
+      return `data_pemasukan_${formatted}.${ext}`;
+    }
+    return `data_pemasukan_semua.${ext}`;
+  };
 
   const handleExportExcel = () => {
-    alert("Export Excel clicked!");
+    if (filteredData.length === 0) {
+      alert("Data kosong, tidak bisa export Excel!");
+      return;
+    }
+    
+    try {
+      const ws = XLSX.utils.json_to_sheet(filteredData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Pemasukan");
+      XLSX.writeFile(wb, getFileName("xlsx"));
+    } catch (error) {
+      console.error("Export Excel error:", error);
+      alert("Gagal export Excel!");
+    }
   };
 
   const handleExportPDF = () => {
-    alert("Export PDF clicked!");
+    if (filteredData.length === 0) {
+      alert("Data kosong, tidak bisa export PDF!");
+      return;
+    }
+    
+    try {
+      const doc = new jsPDF();
+      const tableColumn = [
+        "ID Pemasukan",
+        "ID Pengeluaran",
+        "ID Ticketing",
+        "ID Pemesanan",
+        "Tanggal Pemesanan",
+        "Pemasukan",
+        "Pengeluaran",
+        "Total Bersih",
+        "Kas"
+      ];
+      const tableRows = filteredData.map((item) => [
+        item.idPemasukan,
+        item.idPengeluaran,
+        item.idTicketing,
+        item.idPemesanan,
+        item.tanggalPemesanan,
+        item.pemasukan,
+        item.pengeluaran,
+        item.totalBersih,
+        item.kas,
+      ]);
+      
+      doc.text("Laporan Pemasukan", 14, 10);
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 20,
+        styles: {
+          fontSize: 8,
+          cellPadding: 2,
+        },
+        headStyles: {
+          fillColor: [61, 108, 185]
+        }
+      });
+      doc.save(getFileName("pdf"));
+    } catch (error) {
+      console.error("Export PDF error:", error);
+      alert("Gagal export PDF!");
+    }
   };
 
+  useEffect(() => {
+  setDataPemasukan(exampleData);
+  setFilteredData(exampleData); 
+}, []);
+
   return (
-    <div className="flex relative bg-white-50">
+    <div className="flex relative bg-white-50 min-h-screen">
       <UserMenu />
       <Sidebar />
-      <div className="flex-1 p-6 relative">
-        <h1 className="text-[32px] font-bold mb-6 text-black">Pemasukan</h1>
+      <div className="flex-1 p-4 md:p-6 overflow-x-hidden">
+        <h1 className="text-[28px] md:text-[32px] font-bold mb-6 text-black">
+          Pemasukan
+        </h1>
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex gap-4 items-center">
-            {/* Pilih Tanggal */}
-            <div className="relative">
-              <button
-                onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                className="flex items-center gap-2 bg-[#3D6CB9] text-black-600 hover:bg-blue-500 px-4 py-2 rounded-lg shadow text-white"
-              >
-                <CalendarDays size={24} />
-                <span className="text-base font-medium">
-                  {selectedDate
-                    ? selectedDate.toLocaleDateString("id-ID", {
-                        day: "2-digit",
-                        month: "long",
-                        year: "numeric",
-                      })
-                    : "Pilih Tanggal"}
-                </span>
-              </button>
-              {isDatePickerOpen && (
-                <div
-                  ref={calendarRef}
-                  className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-12"
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+          <div className="flex gap-4">
+            <div className="relative" ref={calendarRef}>
+              {!selectedDate ? (
+                <button
+                  onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+                  className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
                 >
+                  <CalendarDays size={20} />
+                  <span>Pilih Tanggal</span>
+                </button>
+              ) : (
+                <button
+                  onClick={resetFilter}
+                  className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
+                >
+                  <RotateCcw size={20} />
+                  <span>Set Ulang</span>
+                </button>
+              )}
+
+              {isDatePickerOpen && (
+                <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-12">
                   <DatePicker
-                    selected={selectedDate}
-                    onChange={handleDateChange}
+                    selected={tempDate}
+                    onChange={(date) => setTempDate(date)}
                     inline
                     dateFormat="dd/MM/yyyy"
                     showPopperArrow={false}
                   />
-                  {/* Button Pilih dan Batal */}
                   <div className="mt-4 flex justify-between">
                     <button
-                      onClick={() => setIsDatePickerOpen(false)}
-                      className="px-4 py-2 bg-gray-300 text-black rounded hover:bg-gray-400"
+                      onClick={() => {
+                        setTempDate(null);
+                        setIsDatePickerOpen(false);
+                      }}
+                      className="px-4 py-2 bg-red-200 text-black rounded hover:bg-red-500 hover:text-white"
                     >
                       Batal
                     </button>
                     <button
-                      onClick={() => handleDateChange(selectedDate)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                      onClick={applyDateFilter}
+                      className="px-4 py-2 bg-[#B8D4F9] text-black rounded hover:bg-[#3D6CB9] hover:text-white"
                     >
                       Pilih Tanggal
                     </button>
@@ -130,68 +362,95 @@ const PemasukanPage = () => {
             </div>
           </div>
 
-          {/* Tombol Export */}
-          <div className="flex gap-4 justify-end">
+          <div className="flex gap-4">
             <button
               onClick={handleExportExcel}
-              className="flex items-center gap-2 bg-white text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow"
+              disabled={filteredData.length === 0}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
+                filteredData.length === 0
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-green-100 text-black hover:bg-[#B8D4F9]"
+              }`}
             >
-              <FileSpreadsheet size={18} color="green" />
-              <span className="text-base font-medium text-black">
-                Export Excel
-              </span>
+              <FileSpreadsheet size={20} color={filteredData.length === 0 ? "gray" : "green"} />
+              <span>Export Excel</span>
             </button>
             <button
               onClick={handleExportPDF}
-              className="flex items-center gap-2 bg-white text-black hover:bg-gray-100 px-4 py-2 rounded-lg shadow"
+              disabled={filteredData.length === 0}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
+                filteredData.length === 0
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-red-100 text-black hover:bg-[#B8D4F9]"
+              }`}
             >
-              <FileText size={18} color="red" />
-              <span className="text-base font-medium text-black">
-                Export PDF
-              </span>
+              <FileText size={20} color={filteredData.length === 0 ? "gray" : "red"} />
+              <span>Export PDF</span>
             </button>
           </div>
         </div>
 
-        {/* Tabel Data Pemasukan */}
-        <div className="mt-8">
-          <div className="flex justify-end items-center mb-4">
-            <button className="text-[#3D6CB9] hover:text-blue-800 text-base font-medium">
-              Lihat Semua
-            </button>
-          </div>
-          <div className="rounded-lg overflow-hidden shadow">
-          <table className="min-w-full table-auto bg-white text-sm">
-            <thead>
-              <tr className="bg-[#3D6CB9] text-white">
-                <th className="p-3 text-left">ID Pemasukan</th>
-                <th className="p-3 text-left">ID Pengeluaran</th>
-                <th className="p-3 text-left">ID Ticketing</th>
-                <th className="p-3 text-left">ID Pemesanan</th>
-                <th className="p-3 text-left">Tanggal Pemesanan</th>
-                <th className="p-3 text-left">Pengeluaran</th>
-                <th className="p-3 text-left">Total Bersih</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dataPemasukan.map((item) => (
-                <tr
-                  key={item.idPemasukan}
-                  className="border-b hover:bg-blue-50"
-                >
-                  <td className="p-3">{item.idPemasukan}</td>
-                  <td className="p-3">{item.idPengeluaran}</td>
-                  <td className="p-3">{item.idTicketing}</td>
-                  <td className="p-3">{item.idPemesanan}</td>
-                  <td className="p-3">{item.tanggalPemesanan}</td>
-                  <td className="p-3">{item.pengeluaran}</td>
-                  <td className="p-3">{item.totalBersih}</td>
+        {/* Tabel */}
+          <div className="overflow-y-auto max-h-[541px] rounded-lg shadow mb-8">
+            <table className="min-w-full table-auto bg-white text-sm">
+              <thead className="bg-[#3D6CB9] text-white">
+                <tr>
+                  {[
+                    "ID Pemasukan",
+                    "ID Pengeluaran",
+                    "ID Ticketing",
+                    "ID Pemesanan",
+                    "Tanggal Pemesanan",
+                    "Pemasukan",
+                    "Pengeluaran",
+                    "Total Bersih",
+                    "Kas",
+                  ].map((header, index, arr) => (
+                    <th
+                      key={header}
+                      className={`p-2 text-center sticky top-0 z-10 bg-[#3D6CB9]`}
+                      style={{
+                        borderTopLeftRadius: index === 0 ? "0.5rem" : undefined,
+                        borderTopRightRadius:
+                          index === arr.length - 1 ? "0.5rem" : undefined,
+                      }}
+                    >
+                      {header}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredData.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="text-center p-4 text-gray-500 font-medium"
+                    >
+                      Data Tidak Ditemukan
+                    </td>
+                  </tr>
+                ) : (
+                  filteredData.map((item, index) => (
+                    <tr
+                      key={item.idPemasukan || `row-${index}`}
+                      className="border-b text-center border-blue-200 hover:bg-blue-100 transition duration-200"
+                    >
+                      <td className="p-3">{item.idPemasukan}</td>
+                      <td className="p-3">{item.idPengeluaran}</td>
+                      <td className="p-3">{item.idTicketing}</td>
+                      <td className="p-3">{item.idPemesanan}</td>
+                      <td className="p-3">{item.tanggalPemesanan}</td>
+                      <td className="p-3">{item.pemasukan}</td>
+                      <td className="p-3">{item.pengeluaran}</td>
+                      <td className="p-3">{item.totalBersih}</td>
+                      <td className="p-3">{item.kas}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        </div>
       </div>
     </div>
   );
