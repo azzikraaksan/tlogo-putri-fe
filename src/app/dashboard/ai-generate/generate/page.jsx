@@ -77,31 +77,48 @@ export default function Page() {
     }
   };
 
+
   const handleSave = async (item) => {
-    const payload = {
-      judul: item.title,
-      pemilik: "TP_Kaliurang",
-      kategori: item.category || "Umum",
-      isi_konten: item.content,
-    };
-
-    console.log("Payload yang dikirim:", payload);
-
-    try {
-      const res = await fetch("http://127.0.0.1:8000/api/content-generate/storecontent", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error(`Error ${res.status}`);
-
-      alert("Konten berhasil disimpan!");
-    } catch (err) {
-      console.error("Gagal menyimpan:", err);
-      alert("Gagal menyimpan konten.");
-    }
+  const payload = {
+    judul: item.title || "Judul tidak tersedia",
+    pemilik: "TP_Kaliurang",
+    kategori: item.category || "Umum",
+    isi_konten: item.content || "",
   };
+
+  console.log("Payload yang dikirim:", payload);
+
+  try {
+    const res = await fetch("http://localhost:8000/api/content-generate/storecontent", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json" // Tambahan penting ini!
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const contentType = res.headers.get("content-type");
+
+    if (!res.ok) {
+      if (contentType && contentType.includes("application/json")) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Gagal menyimpan konten.");
+      } else {
+        const text = await res.text();
+        console.error("HTML error response:\n", text);
+        throw new Error("Server mengembalikan HTML (bukan JSON). Cek endpoint Laravel-nya.");
+      }
+    }
+
+    const responseData = await res.json();
+    alert("✅ Konten berhasil disimpan!\nID: " + responseData.data.id);
+  } catch (err) {
+    console.error("❌ Gagal menyimpan:", err.message);
+    alert(`❌ Gagal menyimpan konten: ${err.message}`);
+  }
+};
+
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
