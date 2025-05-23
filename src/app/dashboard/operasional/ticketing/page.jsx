@@ -205,11 +205,13 @@ import UserMenu from "/components/Pengguna.jsx";
 import SearchInput from "/components/Search.jsx";
 import withAuth from "/src/app/lib/withAuth";
 import { Printer, ArchiveRestore } from "lucide-react";
+import { useRouter } from 'next/navigation';
 
 const TicketingPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState([]);
   const [checked, setChecked] = useState([]);
+  const router = useRouter();
 
   useEffect(() => {
     const savedDrivers =
@@ -267,7 +269,7 @@ const TicketingPage = () => {
   };
 
   const handleClickArsip = () => {
-    console.log("Arsip diklik");
+    router.push('/dashboard/operasional/ticketing/arsip');
   };
   
 
@@ -297,9 +299,9 @@ const TicketingPage = () => {
           />
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto bg-white rounded-xl shadow">
           <table className="w-full table-auto">
-            <thead className="text-gray-500">
+            <thead className="bg-[#3D6CB9] text-white ">
               <tr>
                 <th className="p-2 text-center font-normal">Pilih</th>
                 <th className="p-2 text-center font-normal">Kode Pemesanan</th>

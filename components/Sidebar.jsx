@@ -53,7 +53,7 @@
 //       pathname.startsWith("/dashboard/akuntansi/pemasukan") ||
 //       pathname.startsWith("/dashboard/akuntansi/pengeluaran") ||
 //       pathname.startsWith("/dashboard/akuntansi/laporan-keuangan") ||
-//       pathname.startsWith("/dashboard/akuntansi/data-driver")
+//       pathname.startsWith("/dashboard/akuntansi/presensi")
 //     ) {
 //       setIsAkuntansiOpen(true);
 //     } else {
@@ -394,16 +394,16 @@
 //                 )}
 //                 <li>
 //                   <Link
-//                     href="/dashboard/akuntansi/data-driver"
+//                     href="/dashboard/akuntansi/presensi"
 //                     className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-//                       pathname.startsWith("/dashboard/akuntansi/data-driver")
+//                       pathname.startsWith("/dashboard/akuntansi/presensi")
 //                         ? "bg-blue-300"
 //                         : ""
 //                     }`}
 //                   >
 //                     <img
-//                       src="/images/data-driver.png"
-//                       alt="data-driver"
+//                       src="/images/presensi.png"
+//                       alt="presensi"
 //                       className="w-[20px] h-auto mr-2"
 //                     />
 //                     Data Driver
@@ -602,7 +602,7 @@ const Sidebar = () => {
       pathname.startsWith("/dashboard/akuntansi/pemasukan") ||
       pathname.startsWith("/dashboard/akuntansi/pengeluaran") ||
       pathname.startsWith("/dashboard/akuntansi/laporan-keuangan") ||
-      pathname.startsWith("/dashboard/akuntansi/data-driver")
+      pathname.startsWith("/dashboard/akuntansi/presensi")
     ) {
       setIsAkuntansiOpen(true);
     } else {
@@ -948,19 +948,19 @@ const Sidebar = () => {
                   )}
                   <li>
                     <Link
-                      href="/dashboard/akuntansi/data-driver"
+                      href="/dashboard/akuntansi/presensi"
                       className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                        pathname.startsWith("/dashboard/akuntansi/data-driver")
+                        pathname.startsWith("/dashboard/akuntansi/presensi")
                           ? "bg-blue-300"
                           : ""
                       }`}
                     >
                       <img
-                        src="/images/data-driver.png"
-                        alt="data-driver"
+                        src="/images/presensi.png"
+                        alt="presensi"
                         className="w-[20px] h-auto mr-2"
                       />
-                      Data Driver
+                      Presensi
                     </Link>
                   </li>
                 </ul>

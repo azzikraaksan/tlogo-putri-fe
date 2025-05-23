@@ -127,11 +127,11 @@ const JeepPage = () => {
             <h1 className="text-[32px] font-semibold mb-6 text-black">
               Daftar Jeep
             </h1>
-
+          
             <div className="flex">
               <button
                 onClick={handleTambahJeep}
-                className="bg-[#1C7AC8] rounded-[10px] text-white py-1 px-3 mt-2 cursor-pointer hover:bg-[#7ba2d0] transition flex items-center"
+                className="bg-[#3D6CB9] rounded-[10px] text-white py-1 px-3 mt-2 cursor-pointer hover:bg-[#7ba2d0] transition flex items-center"
               >
                 <Plus size={18} className="mr-2 w-[20px] h-auto" />
                 Tambah Jeep
@@ -147,9 +147,9 @@ const JeepPage = () => {
               />
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto bg-white rounded-xl shadow">
               <table className="w-full table-auto">
-                <thead className="text-gray-500">
+                <thead className="bg-[#3D6CB9] text-white ">
                   <tr>
                     <th className="p-2 text-center font-normal">Jeep ID</th>
                     <th className="p-2 text-center font-normal">No. Lambung</th>
@@ -189,7 +189,7 @@ const JeepPage = () => {
                         <td className="p-2 text-center">
                           <button
                             onClick={() => handleAturJeep(item.jeep_id)}
-                            className="w-[120px] bg-[#B8D4F9] rounded-[10px] text-[#1C7AC8] py-1 px-3 cursor-pointer hover:bg-[#7ba2d0] transition"
+                            className="w-[120px] bg-[#B8D4F9] rounded-[10px] text-[#1C7AC8] cursor-pointer hover:bg-[#7ba2d0] transition"
                           >
                             Lihat Detail
                           </button>

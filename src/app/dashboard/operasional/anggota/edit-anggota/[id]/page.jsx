@@ -500,8 +500,8 @@ const EditAnggota = () => {
                   onChange={handleChange}
                   className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                 >
-                  <option value="Tersedia">Tersedia</option>
-                  <option value="Tidak Tersedia">Tidak Tersedia</option>
+                  <option value="Aktif">Aktif</option>
+                  <option value="Tidak Aktif">Tidak Aktif</option>
                 </select>
               </div>
               <div>

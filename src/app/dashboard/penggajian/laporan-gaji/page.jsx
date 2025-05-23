@@ -4,6 +4,10 @@ import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
 import SearchInput from "/components/Search.jsx";
 import withAuth from "/src/app/lib/withAuth";
+import * as XLSX from "xlsx";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { FileText, FileSpreadsheet } from "lucide-react";
 
 function Page() {
   const [selectedMonth, setSelectedMonth] = useState('');
@@ -40,7 +44,71 @@ function Page() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
-  return (
+  // Export data
+const getFileName = (ext) => {
+  if (selectedMonth && selectedYear) {
+    const formattedMonth = selectedMonth.toLowerCase().replace(/\s+/g, "");
+    return `data_driver_${formattedMonth}_${selectedYear}.${ext}`;
+  }
+  return `data_driver_semua.${ext}`;
+};
+
+  const handleExportExcel = () => {
+    if (filteredData.length === 0) {
+      alert("Data kosong, tidak bisa export Excel!");
+      return;
+    }
+    
+    try {
+      const ws = XLSX.utils.json_to_sheet(filteredData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Driver");
+      XLSX.writeFile(wb, getFileName("xlsx"));
+    } catch (error) {
+      console.error("Export Excel error:", error);
+      alert("Gagal export Excel!");
+    }
+  };
+
+  const handleExportPDF = () => {
+    if (filteredData.length === 0) {
+      alert("Data kosong, tidak bisa export PDF!");
+      return;
+    }
+    
+    try {
+      const doc = new jsPDF();
+const tableRows = filteredData.map((item, index) => [
+  index + 1,
+  (index + 1).toString().padStart(2, "0"),
+  item.tanggal,
+  item.waktu,
+  item.posisi,
+  item.gaji,
+]);
+  
+      doc.text("Laporan Data Driver", 14, 10);
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 20,
+        styles: {
+          fontSize: 8,
+          cellPadding: 2
+        },
+        headStyles: {
+          fillColor: [61, 108, 185]
+        }
+      });
+      
+      doc.save(getFileName("pdf"));
+    } catch (error) {
+      console.error("Export PDF error:", error);
+      alert("Gagal export PDF!");
+    }
+  };
+
+   return (
     <div className="flex min-h-screen bg-white-100">
       <Sidebar />
       <div className="flex flex-col flex-1 p-6">
@@ -66,10 +134,38 @@ function Page() {
           <div className="flex justify-end mb-4">
             <SearchInput
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => setSearchTerm(e.target.value)}flicts
               onClear={() => setSearchTerm("")}
               placeholder="Cari..."
             />
+          </div>
+
+           {/* Tombol Export */}
+          <div className="flex justify-end gap-4 mb-4">
+            <button
+              onClick={handleExportExcel}
+              disabled={filteredData.length === 0}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
+                filteredData.length === 0
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-green-100 text-black hover:bg-[#B8D4F9]"
+              }`}
+            >
+              <FileSpreadsheet size={20} color={filteredData.length === 0 ? "gray" : "green"} />
+              <span>Export Excel</span>
+            </button>
+            <button
+              onClick={handleExportPDF}
+              disabled={filteredData.length === 0}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
+                filteredData.length === 0
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-red-100 text-black hover:bg-[#B8D4F9]"
+              }`}
+            >
+              <FileText size={20} color={filteredData.length === 0 ? "gray" : "red"} />
+              <span>Export PDF</span>
+            </button>
           </div>
 
           {/* Header Judul */}
@@ -78,7 +174,6 @@ function Page() {
             {selectedMonth && ` - Bulan: ${selectedMonth}`}
             {selectedYear && `, Tahun: ${selectedYear}`}
           </div>
-
           {/* Tabel */}
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white rounded-md shadow-md text-xs text-[14px]">
@@ -137,17 +232,56 @@ function Page() {
             </button>
           </div>
         </div>
-      </div>
-
+        {/* Modal Cetak */}
+        {showPrintModal && (
+          <div className="fixed inset-0 bg-black/40 z-50 overflow-y-auto py-4 sm:py-8">
+            <div className="bg-white border border-gray-300 w-[90%] md:w-[70%] lg:w-[50%] mx-auto rounded-xl shadow-2xl relative p-6 text-black max-h-[90vh] overflow-y-auto">
+              <button onClick={() => setShowPrintModal(false)} className="absolute top-3 right-4 text-2xl text-gray-600 hover:text-red-600 font-bold">&times;</button>
+              <div className="text-center mb-6">
+                <div className="flex items-start mt-4 ml-4">
+                  <img src="/images/logo.png" alt="Logo" className="w-[100px] h-auto mr-4" />
+                  <div className="flex flex-col justify-center ml-16 mt-4">
+                    <h2 className="text-xl font-bold">Jeep Tlogo Putri</h2>
+                    <div className="text-sm text-gray-500 grid grid-cols-[auto,1fr] gap-x-2">
+                      <p className="font-medium">Alamat: Banyuraden Gamping Sleman Yogyakarta</p>
+                      <p></p>
+                      <p className="font-medium">Telp. 082135664668</p>
+                      <p></p>
+                    </div>
+                  </div>
+                </div>
+                <hr className="my-4 border-gray-300" />
+                <h3 className="font-semibold text-lg">LAPORAN GAJI KARYAWAN</h3>
+                <p className="text-sm">PERIODE BULAN {selectedMonth || "FEBRUARI"} {selectedYear || "2025"}</p>
+              </div>
+              <table className="w-full border border-collapse border-gray-400 text-sm mb-4">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="border p-2">No</th>
+                    <th className="border p-2">Nomor Lambung</th>
+                    <th className="border p-2">Nama Karyawan</th>
+                    <th className="border p-2">Tanggal</th>
+                    <th className="border p-2">Waktu</th>
+                    <th className="border p-2">Posisi</th>
+                    <th className="border p-2">Nominal Gaji</th>
       {/* Modal Cetak */}
       {showPrintModal && (
         <div className="fixed inset-0 bg-black/40 z-50 overflow-y-auto py-4 sm:py-8">
           <div className="bg-white border border-gray-300 w-[90%] md:w-[70%] lg:w-[50%] mx-auto rounded-xl shadow-2xl relative p-6 text-black max-h-[90vh] overflow-y-auto">
             <button onClick={() => setShowPrintModal(false)} className="absolute top-3 right-4 text-2xl text-gray-600 hover:text-red-600 font-bold">&times;</button>
-            <div className="text-center mb-6">
-              <img src="/logo.png" alt="Logo" className="mx-auto h-16 mb-2" />
-              <h2 className="text-xl font-bold">Jeep Tlogo Putri</h2>
-              <p className="text-sm text-gray-500">Alamat | Telp.</p>
+            <div className="text-center mb-6">  
+              <div className="flex items-start mt-4 ml-4">
+                <img src="/images/logo.png" alt="Logo" className="w-[100px] h-auto mr-4" />
+                <div className="flex flex-col justify-center ml-16 mt-4">
+                  <h2 className="text-xl font-bold">Jeep Tlogo Putri</h2>
+                  <div className="text-sm text-gray-500 grid grid-cols-[auto,1fr] gap-x-2">
+                     <p className="font-medium">Alamat: Banyuraden Gamping Sleman Yogyakarta</p>
+                      <p></p>
+                      <p className="font-medium">Telp. 082135664668</p>
+                      <p></p>
+                  </div>
+                </div>
+              </div>
               <hr className="my-4 border-gray-300" />
               <h3 className="font-semibold text-lg">LAPORAN GAJI KARYAWAN</h3>
               <p className="text-sm">PERIODE BULAN {selectedMonth || "FEBRUARI"} {selectedYear || "2025"}</p>
@@ -175,21 +309,34 @@ function Page() {
                     <td className="border p-2 text-center">{row.posisi}</td>
                     <td className="border p-2 text-right">{row.gaji}</td>
                   </tr>
-                ))}
-                <tr>
-                  <td colSpan="6" className="border p-2 text-right font-semibold">Total Pendapatan Gaji</td>
-                  <td className="border p-2 text-right font-semibold">Rp. 9.000.000</td>
-                </tr>
-              </tbody>
-            </table>
-            <div className="mt-6 text-right text-sm">
-              <p>Yogyakarta, 02 {selectedMonth || "Februari"} {selectedYear || "2025"}</p>
-              <p className="mt-12 font-semibold">Inuk</p>
-              <p>Ketua</p>
+                </thead>
+                <tbody>
+                  {filteredData.map((row, index) => (
+                    <tr key={index}>
+                      <td className="border p-2 text-center">{index + 1}</td>
+                      <td className="border p-2 text-center">{(index + 1).toString().padStart(2, "0")}</td>
+                      <td className="border p-2 text-center">{row.nama}</td>
+                      <td className="border p-2 text-center">{row.tanggal}</td>
+                      <td className="border p-2 text-center">{row.waktu}</td>
+                      <td className="border p-2 text-center">{row.posisi}</td>
+                      <td className="border p-2 text-right">{row.gaji}</td>
+                    </tr>
+                  ))}
+                  <tr>
+                    <td colSpan="6" className="border p-2 text-right font-semibold">Total Pendapatan Gaji</td>
+                    <td className="border p-2 text-right font-semibold">Rp. 9.000.000</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div className="mt-6 text-right text-sm">
+                <p>Yogyakarta, 02 {selectedMonth || "Februari"} {selectedYear || "2025"}</p>
+                <p className="mt-12 font-semibold">Inuk</p>
+                <p>Ketua</p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

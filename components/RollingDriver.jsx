@@ -83,7 +83,7 @@ const RollingDriverPage = () => {
                   <td className="p-2 text-center">
                     <button
                       onClick={() => handleSelectDriver(driver)}
-                      className="bg-[#1C7AC8] text-white py-1 px-4 rounded-[10px] hover:bg-[#155d96] transition-colors"
+                      className="bg-[#1C7AC8] text-white px-2 rounded-[10px] hover:bg-[#155d96] transition-colors cursor-pointer"
                       disabled={driver.status === "On Track"}
                     >
                       {driver.status === "On Track" ? "Sudah Dipilih" : "Pilih Driver"}

@@ -21,31 +21,64 @@ export default function AddJeepForm({ onKembali }) {
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchDrivers = async () => {
-      try {
-        const token = localStorage.getItem("access_token");
-        const res = await axios.get(
-          "http://localhost:8000/api/users/by-role?role=DRIVER",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        const availableDrivers = res.data.data.filter(
-          (d) => d.status === "Tersedia"
-        );
-        setDrivers(availableDrivers);
-      } catch (err) {
-        console.error("Gagal ambil driver:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchDrivers = async () => {
+  //     try {
+  //       const token = localStorage.getItem("access_token");
+  //       const res = await axios.get(
+  //         "http://localhost:8000/api/users/by-role?role=DRIVER",
+  //         {
+  //           headers: {
+  //             Authorization: `Bearer ${token}`,
+  //           },
+  //         }
+  //       );
+  //       const availableDrivers = res.data.data.filter(
+  //         (d) => d.status === "Aktif"
+  //       );
+  //       setDrivers(availableDrivers);
+  //     } catch (err) {
+  //       console.error("Gagal ambil driver:", err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchDrivers();
-  }, []);
+  //   fetchDrivers();
+  // }, []);
+
+  useEffect(() => {
+  const fetchDrivers = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+
+      const jeepsRes = await axios.get("http://localhost:8000/api/jeeps/all", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const usedUserIds = jeepsRes.data.data.map((jeep) => jeep.users_id);
+
+      const driverRes = await axios.get(
+        "http://localhost:8000/api/users/by-role?role=DRIVER",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      const availableDrivers = driverRes.data.data.filter(
+        (driver) => driver.status === "Aktif" && !usedUserIds.includes(driver.id)
+      );
+
+      setDrivers(availableDrivers);
+    } catch (err) {
+      console.error("Gagal ambil data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchDrivers();
+}, []);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -124,7 +157,6 @@ export default function AddJeepForm({ onKembali }) {
       if (response.status === 201) {
         alert("Data Jeep berhasil ditambahkan");
         onKembali();
-        // router.push("/dashboard/operasional/jeep");
       }
     } catch (error) {
       console.error("Gagal tambah jeep:", error.response?.data);
@@ -140,7 +172,7 @@ export default function AddJeepForm({ onKembali }) {
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <CircleArrowLeft onClick={onKembali} className="cursor-pointer" />
-          <h1 className="text-[32px] font-semibold">Tambah Anggota</h1>
+          <h1 className="text-[32px] font-semibold">Tambah Jeep</h1>
         </div>
         <form
           onSubmit={handleSubmit}
@@ -157,7 +189,7 @@ export default function AddJeepForm({ onKembali }) {
             <option value="">-- Pilih Driver --</option>
             {drivers.map((driver) => (
               <option key={driver.id} value={driver.id}>
-                {driver.name} ({driver.id})
+                {driver.name}
               </option>
             ))}
           </select>
@@ -229,7 +261,7 @@ export default function AddJeepForm({ onKembali }) {
           >
             <option value="">Pilih Status</option>
             <option value="Tersedia">Tersedia</option>
-            <option value="Dipakai">Dipakai</option>
+            <option value="Tidak Tersedia">Tidak Tersedia</option>
           </select>
 
           {/* <input

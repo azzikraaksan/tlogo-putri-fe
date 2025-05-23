@@ -11,6 +11,7 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { useRouter } from "next/navigation";
+import autoTable from "jspdf-autotable";
 
 const PemasukanPage = () => {
   // State untuk data dan filter
@@ -19,7 +20,6 @@ const PemasukanPage = () => {
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [tempDate, setTempDate] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
   const calendarRef = useRef(null);
   const router = useRouter();
 
@@ -192,16 +192,6 @@ const exampleData = [
   },
 ];
 
-  useEffect(() => {
-    // Simulasi loading data
-    setIsLoading(true);
-    setTimeout(() => {
-      setDataPemasukan(exampleData);
-      setFilteredData(exampleData);
-      setIsLoading(false);
-    }, 500);
-  }, []);
-
   // Format tanggal
   const formatDate = (date) => {
     if (!date) return "";
@@ -284,13 +274,31 @@ const exampleData = [
         item.totalBersih,
         item.kas,
       ]);
-      // doc.autoTable({ head: [tableColumn], body: tableRows }); // Bagian ini masih error pas mau di-export
+      
+      doc.text("Laporan Pemasukan", 14, 10);
+      autoTable(doc, {
+        head: [tableColumn],
+        body: tableRows,
+        startY: 20,
+        styles: {
+          fontSize: 8,
+          cellPadding: 2,
+        },
+        headStyles: {
+          fillColor: [61, 108, 185]
+        }
+      });
       doc.save(getFileName("pdf"));
     } catch (error) {
       console.error("Export PDF error:", error);
       alert("Gagal export PDF!");
     }
   };
+
+  useEffect(() => {
+  setDataPemasukan(exampleData);
+  setFilteredData(exampleData); 
+}, []);
 
   return (
     <div className="flex relative bg-white-50 min-h-screen">
@@ -382,25 +390,8 @@ const exampleData = [
           </div>
         </div>
 
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={() => router.push("/lihat-semua")}
-            className="text-[#3D6CB9] hover:text-blue-800 text-base font-medium"
-          >
-            Lihat Semua
-          </button>
-        </div>
-
-        {/* Loading State */}
-        {isLoading && (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-        )}
-
         {/* Tabel */}
-        {!isLoading && (
-          <div className="overflow-y-auto max-h-[500px] rounded-lg shadow mb-8">
+          <div className="overflow-y-auto max-h-[541px] rounded-lg shadow mb-8">
             <table className="min-w-full table-auto bg-white text-sm">
               <thead className="bg-[#3D6CB9] text-white">
                 <tr>
@@ -460,7 +451,6 @@ const exampleData = [
               </tbody>
             </table>
           </div>
-        )}
       </div>
     </div>
   );
