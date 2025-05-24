@@ -21,7 +21,7 @@ const JeepPage = () => {
 
       try {
         const [driversRes, jeepsRes] = await Promise.all([
-          fetch("http://localhost:8000/api/users/by-role?role=DRIVER", {
+          fetch("http://localhost:8000/api/users/by-role?role=Driver", {
             headers: { Authorization: `Bearer ${token}` },
           }),
           fetch("http://localhost:8000/api/jeeps/all", {
@@ -36,10 +36,10 @@ const JeepPage = () => {
         const jeeps = jeepsData.data || [];
 
         const mergedData = jeeps.map((jeep) => {
-          const driver = drivers.find((d) => d.id === jeep.users_id);
+          const driver = drivers.find((d) => d.id === jeep.driver_id);
 
           return {
-            users_id: driver?.id,
+            driver_id: driver?.id,
             driver_name: driver?.name || "-",
             lambung: jeep.no_lambung,
             jeep_id: jeep.jeep_id,

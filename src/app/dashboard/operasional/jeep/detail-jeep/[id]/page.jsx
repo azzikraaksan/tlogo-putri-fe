@@ -22,7 +22,7 @@ const DetailJeep = () => {
             fetch(`http://localhost:8000/api/jeeps/id/${id}`, {
               headers: { Authorization: `Bearer ${token}` },
             }),
-            fetch("http://localhost:8000/api/users/by-role?role=DRIVER", {
+            fetch("http://localhost:8000/api/users/by-role?role=Driver", {
               headers: { Authorization: `Bearer ${token}` },
             }),
           ]);
@@ -33,7 +33,7 @@ const DetailJeep = () => {
           const driversData = await driversRes.json();
 
           const driver = driversData?.data?.find(
-            (d) => d.id === jeepData.data.users_id
+            (d) => d.id === jeepData.data.driver_id
           );
 
           const combinedData = {
