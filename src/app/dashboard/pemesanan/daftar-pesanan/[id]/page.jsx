@@ -8,75 +8,53 @@ import withAuth from "/src/app/lib/withAuth";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// Dummy data untuk sementara
-const dummyData = [
-  {
-    id: 1,
-    bookingCode: "JTP001",
-    nama: "Bunde",
-    email: "baragajul@gmail.com",
-    phone: "081234567890",
-    waktupemesanan: "12 Januari 2025",
-    jenispaket: "Paket 2",
-    statuspembayaran: "Sudah Bayar",
-    tanggaltour: "2025-01-18",
-    jumlahpesanan: 1,
-    kodeReffeal: "", // Menambahkan kodeReffeal
-    kodeVoucher: "", // Menambahkan kodeVoucher
-  },
-];
-
 const DetailPemesanan = () => {
   const router = useRouter();
   const { id } = useParams();
-
-  const [pesanan, setPesanan] = useState({
-    bookingCode: "",
-    nama: "",
-    email: "",
-    phone: "",
-    waktupemesanan: "",
-    jenispaket: "",
-    statuspembayaran: "",
-    tanggaltour: "",
-    jumlahpesanan: "",
-    kodeReffeal: "",
-    kodeVoucher: "",
-  });
+  const [pesanan, setPesanan] = useState(null);
 
   useEffect(() => {
-    if (id) {
-      const data = dummyData.find((item) => item.id === parseInt(id, 10));
-      setPesanan(data || {
-        bookingCode: "",
-        nama: "",
-        email: "",
-        phone: "",
-        waktupemesanan: "",
-        jenispaket: "",
-        statuspembayaran: "",
-        tanggaltour: "",
-        jumlahpesanan: "",
-        kodeReffeal: "",
-        kodeVoucher: "",
-      });
-    }
+    const fetchDetail = async () => {
+      try {
+        const res = await fetch(`http://localhost:8000/api/bookings/${id}`);
+        const data = await res.json();
+
+        const statusPembayaran =
+          data.payment_status === "paid"
+            ? "Sudah Bayar"
+            : data.payment_type === "dp"
+            ? "DP 50%"
+            : "Belum Bayar";
+
+        setPesanan({
+          bookingCode: data.order_id,
+          nama: data.customer_name,
+          email: data.customer_email,
+          phone: data.customer_phone,
+          waktupemesanan: data.created_at.slice(0, 10), // format YYYY-MM-DD
+          jenispaket: data.package?.package_name || "-",
+          statuspembayaran: statusPembayaran,
+          tanggaltour: data.tour_date,
+          jumlahpesanan: data.qty,
+          kodeReffeal: data.referral || "",
+          kodeVoucher: data.voucher || "",
+        });
+      } catch (error) {
+        console.error("Gagal mengambil detail pesanan:", error);
+      }
+    };
+
+    if (id) fetchDetail();
   }, [id]);
 
   const handleSave = () => {
-    const storedData = JSON.parse(localStorage.getItem("dataPemesanan")) || [];
-    const updatedData = storedData.map((item) =>
-      item.id === pesanan.id ? pesanan : item
-    );
-    localStorage.setItem("dataPemesanan", JSON.stringify(updatedData));
-
-    toast.success("Data berhasil diperbaharui!");
+    toast.success("Perubahan berhasil disimpan (simulasi)");
     setTimeout(() => {
       router.push("/dashboard/pemesanan/daftar-pesanan");
-    }, 3000);
+    }, 2000);
   };
 
-  if (!pesanan) return null;
+  if (!pesanan) return <div className="p-6">Memuat data...</div>;
 
   return (
     <div className="flex justify-between items-start min-h-screen">
@@ -98,136 +76,27 @@ const DetailPemesanan = () => {
         </h3>
 
         <div className="bg-white p-6 rounded-xl shadow-md space-y-4 max-w-full max-h-[65vh] overflow-y-auto">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Nama</label>
-            <input
-              type="text"
-              value={pesanan.nama}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, nama: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md bg-gray-100"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
-              value={pesanan.email}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, email: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md bg-gray-100"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">No. HP</label>
-            <input
-              type="text"
-              value={pesanan.phone}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, phone: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md bg-gray-100"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Waktu Pemesanan</label>
-            <input
-              type="date"
-              value={pesanan.waktupemesanan}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, waktupemesanan: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Jenis Paket</label>
-            <select
-              value={pesanan.jenispaket}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, jenispaket: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md"
-            >
-              <option value="Paket 1">Paket 1</option>
-              <option value="Paket 2">Paket 2</option>
-              <option value="Paket 3">Paket 3</option>
-              <option value="Paket 4">Paket 4</option>
-              <option value="Paket 5">Paket 5</option>
-              <option value="Paket Sunrise">Paket Sunrise</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Tanggal Tour</label>
-            <input
-              type="date"
-              value={pesanan.tanggaltour}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, tanggaltour: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Status Pembayaran</label>
-            <select
-              value={pesanan.statuspembayaran}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, statuspembayaran: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md"
-            >
-              <option value="Sudah Bayar">Sudah Bayar</option>
-              <option value="DP 50%">DP 50%</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Jumlah Pesanan</label>
-            <input
-              type="text"
-              value={pesanan.jumlahpesanan}
-              readOnly
-              className="mt-1 w-full p-2 border rounded-md bg-gray-100"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Kode Referral</label>
-            <input
-              type="text"
-              value={pesanan.kodeReffeal}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, kodeReffeal: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Kode Voucher</label>
-            <input
-              type="text"
-              value={pesanan.kodeVoucher}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, kodeVoucher: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md"
-            />
-          </div>
+          <InputField label="Nama" value={pesanan.nama} onChange={(v) => setPesanan({ ...pesanan, nama: v })} />
+          <InputField label="Email" value={pesanan.email} onChange={(v) => setPesanan({ ...pesanan, email: v })} />
+          <InputField label="No. HP" value={pesanan.phone} onChange={(v) => setPesanan({ ...pesanan, phone: v })} />
+          <InputField label="Waktu Pemesanan" value={pesanan.waktupemesanan} onChange={(v) => setPesanan({ ...pesanan, waktupemesanan: v })} type="date" />
+          <InputField label="Jenis Paket" value={pesanan.jenispaket} readOnly />
+          <SelectField
+            label="Status Pembayaran"
+            value={pesanan.statuspembayaran}
+            options={["Sudah Bayar", "DP 50%", "Belum Bayar"]}
+            onChange={(v) => setPesanan({ ...pesanan, statuspembayaran: v })}
+          />
+          <InputField label="Tanggal Tour" value={pesanan.tanggaltour} onChange={(v) => setPesanan({ ...pesanan, tanggaltour: v })} type="date" />
+          <InputField label="Jumlah Pesanan" value={pesanan.jumlahpesanan} readOnly />
+          <InputField label="Kode Referral" value={pesanan.kodeReffeal} onChange={(v) => setPesanan({ ...pesanan, kodeReffeal: v })} />
+          <InputField label="Kode Voucher" value={pesanan.kodeVoucher} onChange={(v) => setPesanan({ ...pesanan, kodeVoucher: v })} />
         </div>
-        <div className="flex justify-end">
+
+        <div className="flex justify-end mt-4">
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-[#3D6CB9] text-white rounded-md hover:bg-[#3D6CB9]"
+            className="px-4 py-2 bg-[#3D6CB9] text-white rounded-md hover:bg-blue-700"
           >
             Simpan Perubahan
           </button>
@@ -236,5 +105,35 @@ const DetailPemesanan = () => {
     </div>
   );
 };
+
+const InputField = ({ label, value, onChange, readOnly = false, type = "text" }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700">{label}</label>
+    <input
+      type={type}
+      value={value}
+      onChange={(e) => onChange && onChange(e.target.value)}
+      className="mt-1 w-full p-2 border rounded-md bg-gray-100"
+      readOnly={readOnly}
+    />
+  </div>
+);
+
+const SelectField = ({ label, value, onChange, options }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700">{label}</label>
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="mt-1 w-full p-2 border rounded-md"
+    >
+      {options.map((opt) => (
+        <option key={opt} value={opt}>
+          {opt}
+        </option>
+      ))}
+    </select>
+  </div>
+);
 
 export default withAuth(DetailPemesanan);
