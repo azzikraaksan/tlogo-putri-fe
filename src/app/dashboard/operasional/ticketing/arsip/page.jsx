@@ -20,7 +20,7 @@ const ArsipPage = () => {
                 <div className="flex items-center gap-3 mb-6">
                     <CircleArrowLeft
                         onClick={handleKembali}
-                        className="text-gray-600 hover:text-black cursor-pointer"
+                        className="cursor-pointer"
                         size={28}
                     />
                     <h1 className="text-[32px] font-semibold text-black">Arsip Tiket</h1>
