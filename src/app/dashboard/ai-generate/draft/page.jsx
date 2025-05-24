@@ -171,13 +171,13 @@ export default function Page() {
           <UserMenu />
         </div>
 
-        <div className="flex flex-wrap justify-between items-center gap-4">
+        <div className="flex flex-wrap justify-between items-center gap-1">
           <div className="flex gap-2 bg-[#3D6CB9] p-2 rounded-lg">
             {tabs.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`px-4 py-2 rounded ${
+                className={`px-3 py-2 rounded cursor-pointer ${
                   activeTab === tab.value
                     ? 'bg-white text-[#3D6CB9]'
                     : 'bg-gray-100 text-black'
@@ -193,7 +193,7 @@ export default function Page() {
 
         <div className="overflow-x-auto rounded-md shadow-md">
           <table className="min-w-full text-sm text-left text-gray-600">
-            <thead className="bg-[#3D6CB9] text-white uppercase text-xs">
+            <thead className="bg-[#3D6CB9] text-white">
               <tr>
                 <th className="px-4 py-2">Tanggal</th>
                 <th className="px-4 py-2">Judul</th>
@@ -235,9 +235,13 @@ export default function Page() {
                       <td className="px-4 py-2">{item.owner || item.pemilik || '-'}</td>
                       <td className="px-4 py-2 italic">
                         {item.kategori
-                          ?.split(/[0-9]+\.\s/)
-                          .filter(Boolean)[0]
-                          ?.trim() || '-'}
+                          ?.split(/\n|[-•]/)                     // pisah berdasarkan newline, strip, bullet
+                          .map(i => i.trim().replace(/^\d+\.\s*/, '')) // buang angka + titik di awal
+                          .filter(Boolean)                      // buang string kosong
+                          .slice(0, 1)                          // ambil maksimal 3
+                          .join(', ')                           // gabung pakai koma
+                          || '-'}
+
                       </td>
                       <td className="px-4 py-2 max-w-xs">
                         <div
@@ -259,14 +263,14 @@ export default function Page() {
                             router.push(`/dashboard/ai-generate/draft?id=${item.id}`)
                           }
                           title="Edit"
-                          className="text-blue-600 hover:text-blue-800 leading-none flex items-center justify-center"
+                          className="text-blue-600 hover:text-blue-800 leading-none flex items-center justify-center cursor-pointer"
                         >
                           <FiEdit size={18} />
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
                           title="Hapus"
-                          className="text-red-600 hover:text-blue-800 leading-none flex items-center justify-center"
+                          className="text-red-600 hover:text-blue-800 leading-none flex items-center justify-center cursor-pointer"
                         >
                           <FiTrash2 size={18} />
                         </button>
