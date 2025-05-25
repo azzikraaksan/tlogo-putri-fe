@@ -222,7 +222,7 @@ export default function Page() {
                 <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Judul</th>
                 <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Pemilik</th>
                 <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Kategori</th>
-                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Detail Aioseo</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Detail AIOSEO</th>
                 <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Aksi</th>
               </tr >
             </thead>
