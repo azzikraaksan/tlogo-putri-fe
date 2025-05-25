@@ -214,17 +214,17 @@ export default function Page() {
           <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
 
-        <div className="overflow-x-auto rounded-md shadow-md">
+        <div className="overflow-x-auto rounded-md shadow-md max-h-125">
           <table className="min-w-full text-sm text-left text-gray-600">
             <thead className="bg-[#3D6CB9] text-white">
               <tr>
-                <th className="px-4 py-2">Tanggal</th>
-                <th className="px-4 py-2">Judul</th>
-                <th className="px-4 py-2">Pemilik</th>
-                <th className="px-4 py-2">Kategori</th>
-                <th className="px-4 py-2">Detail Aioseo</th>
-                <th className="px-4 py-2">Aksi</th>
-              </tr>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Tanggal</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Judul</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Pemilik</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Kategori</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Detail Aioseo</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Aksi</th>
+              </tr >
             </thead>
             <tbody>
               {filteredData.length === 0 ? (
@@ -267,7 +267,7 @@ export default function Page() {
                       </td>
                       <td className="px-4 py-2 max-w-xs">
                         <div
-                          className="text-sm font-semibold truncate"
+                          className="text-sm font-semibold truncate text-justify"
                           title={item.judul}
                         >
                           {item.judul || '-'}
