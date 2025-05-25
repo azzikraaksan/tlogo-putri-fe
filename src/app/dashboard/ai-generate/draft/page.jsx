@@ -57,7 +57,7 @@ export default function Page() {
       const res = await fetch(url);
       if (!res.ok) throw new Error('Gagal mengambil data');
       const result = await res.json();
-      const sorted = result.data.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+      const sorted = result.data.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
       setData(sorted);
       setLoading(false);
     } catch (err) {
