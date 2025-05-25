@@ -7,90 +7,58 @@ import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
 import { Eye, Pencil, Trash } from "lucide-react";
 
-const initialData = [
-  {
-    id: 1,
-    bookingCode: "JTP001",
-    nama: "Bunde",
-    email: "baragajul@gmail.com",
-    phone: "081234567890",
-    waktupemesanan: "12 Januari 2025",
-    jenispaket: "Paket 2",
-    statuspembayaran: "Sudah Bayar",
-    tanggaltour: "18 Januari 2025",
-    jumlahpesanan: 1,
-  },
-  {
-    id: 2,
-    bookingCode: "JTP002",
-    nama: "Zimut",
-    email: "zimut@gmail.com",
-    phone: "089876543210",
-    waktupemesanan: "12 Januari 2025",
-    jenispaket: "Paket 1",
-    statuspembayaran: "Sudah Bayar",
-    tanggaltour: "25 Januari 2025",
-    jumlahpesanan: 2,
-  },
-  {
-    id: 3,
-    bookingCode: "JTP003",
-    nama: "Naon Maneh",
-    email: "manehnaon@gmail.com",
-    phone: "081234567890",
-    waktupemesanan: "15 Januari 2025",
-    jenispaket: "Paket 3",
-    statuspembayaran: "DP 50%",
-    tanggaltour: "25 Januari 2025",
-    jumlahpesanan: 1,
-  },
-  {
-    id: 4,
-    bookingCode: "JTP004",
-    nama: "Maneh Saha",
-    email: "sahamaneh@gmail.com",
-    phone: "089876543210",
-    waktupemesanan: "15 Januari 2025",
-    jenispaket: "Paket 1",
-    statuspembayaran: "DP 50%",
-    tanggaltour: "27 Januari 2025",
-    jumlahpesanan: 1,
-  },
-];
+const formatNomorWA = (no) => {
+  return no.replace(/^0/, "62");
+};
 
 const DaftarPesanan = () => {
-  const [orders, setOrders] = useState(initialData);
+  const [orders, setOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("Semua");
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/api/bookings");
+        const data = await res.json();
+        setOrders(data);
+      } catch (error) {
+        console.error("Gagal mengambil data pemesanan:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
     setIsMounted(true);
   }, []);
 
+  if (loading) return <div className="p-6">Memuat data pemesanan...</div>;
   if (!isMounted) return null;
 
   const handleDelete = (id) => {
     const confirmDelete = window.confirm("Apakah kamu yakin ingin menghapus pesanan ini?");
     if (confirmDelete) {
-      setOrders(prev => prev.filter(item => item.id !== id));
+      setOrders((prev) => prev.filter((item) => item.booking_id !== id));
     }
   };
 
   const filteredData = orders.filter((item) => {
     const matchesSearch =
-      item.bookingCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.waktupemesanan.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.nama.toLowerCase().includes(searchTerm.toLowerCase());
+      (item.order_id || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.created_at || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.customer_phone || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.customer_name || "").toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
       statusFilter === "Semua" ||
-      (statusFilter === "Sudah Bayar" && item.statuspembayaran === "Sudah Bayar") ||
-      (statusFilter === "Belum Lunas" && item.statuspembayaran === "DP 50%");
+      (statusFilter === "Sudah Bayar" && item.payment_status === "paid") ||
+      (statusFilter === "Belum Lunas" && item.payment_status === "dp");
 
     return matchesSearch && matchesStatus;
   });
@@ -144,22 +112,22 @@ const DaftarPesanan = () => {
             <tbody>
               {filteredData.length > 0 ? (
                 filteredData.map((item, index) => (
-                  <tr key={item.id} className="border-t text-center hover:bg-gray-50">
+                  <tr key={item.booking_id} className="border-t text-center hover:bg-gray-50">
                     <td className="p-2">{index + 1}</td>
-                    <td className="p-2">{item.bookingCode}</td>
-                    <td className="p-2">{item.nama}</td>
-                    <td className="p-2">{item.phone}</td>
-                    <td className="p-2">{item.waktupemesanan}</td>
-                    <td className="p-2">{item.jenispaket}</td>
+                    <td className="p-2">{item.order_id}</td>
+                    <td className="p-2">{item.customer_name}</td>
+                    <td className="p-2">{item.customer_phone}</td>
+                    <td className="p-2">{item.created_at}</td>
+                    <td className="p-2">{item.package?.package_name}</td>
                     <td className="p-2">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          item.statuspembayaran === "Sudah Bayar"
+                          item.payment_status === "paid"
                             ? "bg-green-100 text-green-800"
                             : "bg-yellow-100 text-yellow-800"
                         }`}
                       >
-                        {item.statuspembayaran}
+                        {item.payment_status === "paid" ? "Sudah Bayar" : "DP 50%"}
                       </span>
                     </td>
                     <td className="p-2 flex justify-center gap-2">
@@ -177,7 +145,7 @@ const DaftarPesanan = () => {
                         className="text-blue-600 hover:text-blue-800 cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation();
-                          router.push(`/dashboard/pemesanan/daftar-pesanan/${item.id}`);
+                          router.push(`/dashboard/pemesanan/daftar-pesanan/${item.booking_id}`);
                         }}
                       >
                         <Pencil size={16} />
@@ -186,7 +154,7 @@ const DaftarPesanan = () => {
                         className="text-red-600 hover:text-red-800 cursor-pointer"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDelete(item.id);
+                          handleDelete(item.booking_id);
                         }}
                       >
                         <Trash size={16} />
@@ -205,7 +173,6 @@ const DaftarPesanan = () => {
           </table>
         </div>
 
-        {/* Modal Detail Pesanan */}
         {isModalOpen && selectedOrder && (
           <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50">
             <div className="bg-white rounded-xl shadow-xl p-6 w-[90%] max-w-md relative">
@@ -217,14 +184,24 @@ const DaftarPesanan = () => {
               </button>
               <h2 className="text-xl font-bold mb-4">Detail Pesanan</h2>
               <div className="space-y-2 text-sm">
-                <p><strong>Nama:</strong> {selectedOrder.nama}</p>
-                <p><strong>Email:</strong> {selectedOrder.email}</p>
-                <p><strong>No. HP:</strong> {selectedOrder.phone}</p>
-                <p><strong>Waktu Pemesanan:</strong> {selectedOrder.waktupemesanan}</p>
-                <p><strong>Paket:</strong> {selectedOrder.jenispaket}</p>
-                <p><strong>Status Pembayaran:</strong> {selectedOrder.statuspembayaran}</p>
-                <p><strong>Tanggal Tour:</strong> {selectedOrder.tanggaltour}</p>
-                <p><strong>Jumlah Pesanan:</strong> {selectedOrder.jumlahpesanan}</p>
+                <p><strong>Nama:</strong> {selectedOrder.customer_name}</p>
+                <p><strong>Email:</strong> {selectedOrder.customer_email}</p>
+                <p><strong>No. HP:</strong> {selectedOrder.customer_phone}</p>
+                <p><strong>Waktu Pemesanan:</strong> {selectedOrder.created_at}</p>
+                <p><strong>Paket:</strong> {selectedOrder.package?.package_name}</p>
+                <p><strong>Status Pembayaran:</strong> {selectedOrder.payment_status === "paid" ? "Sudah Bayar" : "DP 50%"}</p>
+                <p><strong>Tanggal Tour:</strong> {selectedOrder.tour_date}</p>
+                <p><strong>Jumlah Pesanan:</strong> {selectedOrder.qty}</p>
+                <div className="text-center mt-4">
+                  <a
+                    href={`https://wa.me/${formatNomorWA(selectedOrder.customer_phone)}?text=Halo ${selectedOrder.customer_name}, kami dari tim admin ingin mengonfirmasi pesanan Anda dengan kode ${selectedOrder.order_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block bg-[#3D6CB9] hover:bg-blue-700 text-white font-medium py-2 px-4 rounded text-sm"
+                  >
+                    Hubungi Pelanggan via WhatsApp
+                  </a>
+                </div>
               </div>
             </div>
           </div>
