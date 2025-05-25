@@ -148,34 +148,83 @@ const PenjadwalanPage = () => {
   const [orders, setOrders] = useState([]);
   const router = useRouter();
 
-  const fetchOrders = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch("http://localhost:8000/api/payment/orders", {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+//   const fetchOrders = async () => {
+//   try {
+//     const token = localStorage.getItem("access_token");
+//     const response = await fetch("http://localhost:8000/api/payment/orders", {
+//       method: "GET",
+//       headers: {
+//         Accept: "application/json",
+//         Authorization: `Bearer ${token}`,
+//       },
+//     });
 
-      if (!response.ok) {
-        throw new Error("Gagal mengambil data pemesanan");
-      }
+//     if (!response.ok) {
+//       throw new Error("Gagal mengambil data pemesanan");
+//     }
 
-      const result = await response.json();
-      setOrders(result);
-    } catch (error) {
-      console.error("Error saat mengambil data:", error);
+//     const result = await response.json();
+
+//     const filteredOrders = result.filter(order =>
+//       order.payment_for.toLowerCase().includes("remaining") ||
+//       order.payment_for.toLowerCase().includes("full")
+//     );
+
+//     setOrders(filteredOrders);
+//   } catch (error) {
+//     console.error("Error saat mengambil data:", error);
+//   }
+// };
+
+const fetchOrders = async () => {
+  try {
+    const token = localStorage.getItem("access_token");
+
+    const ordersResponse = await fetch("http://localhost:8000/api/payment/orders", {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const ticketingResponse = await fetch("http://localhost:8000/api/ticketings/all", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!ordersResponse.ok || !ticketingResponse.ok) {
+      throw new Error("Gagal mengambil data");
     }
-  };
+
+    const ordersData = await ordersResponse.json();
+    const ticketingsData = await ticketingResponse.json();
+
+    const ticketingBookingIds = ticketingsData.map((t) => t.booking_id);
+
+    const filteredOrders = ordersData.filter(order =>
+      (
+        order.payment_for.toLowerCase().includes("remaining") ||
+        order.payment_for.toLowerCase().includes("full")
+      ) &&
+      !ticketingBookingIds.includes(order.booking.booking_id)
+    );
+
+    setOrders(filteredOrders);
+  } catch (error) {
+    console.error("Error saat mengambil data:", error);
+  }
+};
+
 
   useEffect(() => {
     fetchOrders();
   }, []);
 
-  const handleAturJadwal = (orderId) => {
-    router.push(`/dashboard/operasional/penjadwalan/rolling-driver/${orderId}`);
+  const handleAturJadwal = (bookingId) => {
+    router.push(`/dashboard/operasional/penjadwalan/rolling-driver/${bookingId}`);
   };
 
   const handleKembali = () => {
@@ -185,7 +234,7 @@ const PenjadwalanPage = () => {
   const filteredData = orders.filter((item) => {
     const booking = item.booking;
     return (
-      booking?.order_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      // booking?.booking_id?.includes(searchTerm) ||
       booking?.customer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking?.customer_phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       booking?.customer_name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -214,7 +263,7 @@ const PenjadwalanPage = () => {
               <table className="w-full table-auto">
                 <thead className="bg-[#3D6CB9] text-white ">
                   <tr>
-                    <th className="p-2 text-center font-normal">Kode Pemesanan</th>
+                    <th className="p-2 text-center font-normal">ID Pemesanan</th>
                     <th className="p-2 text-center font-normal">Nama</th>
                     <th className="p-2 text-center font-normal">No. HP</th>
                     <th className="p-2 text-center font-normal">Email</th>
@@ -226,14 +275,14 @@ const PenjadwalanPage = () => {
                   {filteredData.length > 0 ? (
                     filteredData.map((item) => (
                       <tr key={item.transaction_id} className="border-t border-[#808080] hover:bg-gray-50 transition-colors">
-                        <td className="p-2 text-center text-gray-750">{item.booking.order_id}</td>
+                        <td className="p-2 text-center text-gray-750">{item.booking_id}</td>
                         <td className="p-2 text-center text-gray-750">{item.booking.customer_name}</td>
                         <td className="p-2 text-center text-gray-750">{item.booking.customer_phone}</td>
                         <td className="p-2 text-center text-gray-750">{item.booking.customer_email}</td>
                         <td className="p-2 text-center text-gray-750">{item.booking.package_id}</td>
                         <td className="p-2 text-center text-gray-750">
                           <button
-                            onClick={() => handleAturJadwal(item.booking.order_id)}
+                            onClick={() => handleAturJadwal(item.booking.booking_id)}
                             className="w-[120px] bg-[#8FAFD9] rounded-[10px] hover:bg-[#7ba2d0] text-white cursor-pointer"
                           >
                             Atur Jadwal
