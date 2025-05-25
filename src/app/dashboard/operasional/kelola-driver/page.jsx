@@ -119,9 +119,6 @@
 
 // export default withAuth(RollingDriverPage);
 
-
-
-
 // "use client";
 // import { useState } from "react";
 // import Sidebar from "/components/Sidebar.jsx";
@@ -477,7 +474,7 @@ const PenjadwalanPage = () => {
 
       try {
         const [driversRes, jeepsRes] = await Promise.all([
-          fetch("http://localhost:8000/api/users/by-role?role=DRIVER", {
+          fetch("http://localhost:8000/api/users/by-role?role=Driver", {
             headers: { Authorization: `Bearer ${token}` },
           }),
           fetch("http://localhost:8000/api/jeeps/all", {
@@ -485,19 +482,17 @@ const PenjadwalanPage = () => {
           }),
         ]);
 
-        // if (!jeepsRes.ok || !driversRes.ok) throw new Error("Gagal fetch"); //tidak perlu
-
         const driversData = await driversRes.json();
         const jeepsData = await jeepsRes.json();
 
-        // const drivers = driversData?.data?.find(
-        //   (d) => d.id === jeepsData.data.users_id
-        // );
         const drivers = driversData.data || [];
         const jeeps = jeepsData.data || [];
 
         const mergedData = jeeps.map((jeep) => {
-          const driver = drivers.find((d) => d.id === jeep.users_id);
+          console.log("jeep driver_id:", jeep.driver_id);
+          const driver = drivers.find((d) => d.id === jeep.driver_id);
+          console.log("matched driver:", driver);
+
           return {
             users_id: driver?.id,
             name: driver?.name || "-",
@@ -510,30 +505,16 @@ const PenjadwalanPage = () => {
             status: driver?.status || "Tidak diketahui",
             foto: jeep.foto_jeep,
             kontak: "WhatsApp",
-            konfirmasi: "-",
+            // nanti diubah sesuai hasil presensi
+            konfirmasi: driver?.konfirmasi || "Bisa",
             departure: "Pilih Driver",
           };
         });
 
-        // const mergedData = jeeps.map((jeep) => {
-        //   const driver = drivers.find((d) => d.users_id === jeep.driver_id);
-        //   return {
-        //     users_id: driver?.users_id,
-        //     name: driver?.name || "-",
-        //     lambung: jeep.no_lambung,
-        //     plat: jeep.plat_jeep,
-        //     merek: jeep.merek,
-        //     tipe: jeep.tipe,
-        //     tahun: jeep.tahun_kendaraan,
-        //     status: driver?.status || "Tidak diketahui",
-        //     foto: jeep.foto_jeep,
-        //     kontak: "WhatsApp",
-        //     konfirmasi: "-",
-        //     departure: "Pilih Driver",
-        //   };
-        // });
-
         setData(mergedData);
+        console.log("driversData:", driversData);
+        console.log("jeepsData:", jeepsData);
+        console.log("Merged Data:", mergedData);
       } catch (error) {
         console.error("Gagal mengambil data driver dan jeep:", error);
       }
@@ -592,6 +573,53 @@ const PenjadwalanPage = () => {
     return lambungMatch || nameMatch;
   });
 
+  const handleStatusUpdate = async (item) => {
+    if (item.status_jeep === "Tersedia") {
+      alert("Status Jeep sudah Tersedia, tidak bisa diubah.");
+      return;
+    }
+
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      alert("Token tidak ditemukan");
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/jeeps/update/${item.lambung}`, // pastikan item.lambung = id jeep
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: "Tersedia" }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Gagal mengubah status");
+      }
+
+      const updatedData = data.map((d) =>
+        d.lambung === item.lambung
+          ? { ...d, status_jeep: "Tersedia", konfirmasi: "-" }
+          : d
+      );
+
+      const reordered = [
+        ...updatedData.filter((d) => d.lambung !== item.lambung),
+        updatedData.find((d) => d.lambung === item.lambung),
+      ];
+
+      setData(reordered);
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Gagal mengubah status Jeep.");
+    }
+  };
+
   return (
     <div className="flex">
       <UserMenu />
@@ -646,9 +674,7 @@ const PenjadwalanPage = () => {
                                 ? "bg-red-500"
                                 : item.status_jeep === "Tertunda"
                                   ? "bg-[#FBBC05]"
-                                  : item.status_jeep === "Selesai"
-                                    ? "bg-[#3D6CB9]"
-                                    : "bg-gray-300"
+                                  : "bg-gray-300"
                           }`}
                         ></span>
                         <span>{item.status_jeep}</span>
@@ -665,9 +691,9 @@ const PenjadwalanPage = () => {
                     <td className="p-2 text-center text-gray-750">
                       <button
                         onClick={() => handleDepartureClick(item)}
-                        disabled={item.status !== "Tersedia"}
+                        disabled={item.status_jeep !== "Tersedia"}
                         className={`px-3 rounded-[10px] text-white cursor-pointer ${
-                          item.status === "Tersedia"
+                          item.status_jeep === "Tersedia"
                             ? "bg-[#8FAFD9] cursor-pointer"
                             : "bg-gray-300 cursor-not-allowed"
                         }`}
@@ -676,21 +702,23 @@ const PenjadwalanPage = () => {
                       </button>
                     </td>
                     <td className="p-2 text-center text-gray-750">
-                      {item.status === "Tersedia" ? (
+                      {item.status_jeep === "Tersedia" ? (
                         <button
                           disabled
                           className="bg-gray-300 text-gray-600 rounded-[10px] px-3 cursor-not-allowed"
                         >
                           Tidak Bisa
                         </button>
-                      ) : item.status === "On Track" ? (
+                      ) : item.status_jeep === "On Track" ? (
                         <button
                           onClick={() => {
+                            // update status_jeep item jadi "Selesai"
                             const updatedData = data.map((d) =>
                               d.lambung === item.lambung
-                                ? { ...d, status: "Selesai" }
+                                ? { ...d, status_jeep: "Tersedia" }
                                 : d
                             );
+                            // pindahkan item yang baru diupdate ke paling bawah
                             const reordered = [
                               ...updatedData.filter(
                                 (d) => d.lambung !== item.lambung
@@ -701,28 +729,13 @@ const PenjadwalanPage = () => {
                             ];
                             setData(reordered);
                           }}
-                          className="bg-[#3D6CB9] hover:bg-blue-600 text-white rounded-[10px] px-3 cursor-pointer"
+                          className="bg-green-500 hover:bg-green-600 text-white rounded-[10px] px-3 cursor-pointer"
                         >
-                          Selesai
+                          Tersedia
                         </button>
                       ) : (
                         <button
-                          onClick={() => {
-                            const updatedData = data.map((d) =>
-                              d.lambung === item.lambung
-                                ? { ...d, status: "Tersedia", konfirmasi: "-" }
-                                : d
-                            );
-                            const reordered = [
-                              ...updatedData.filter(
-                                (d) => d.lambung !== item.lambung
-                              ),
-                              updatedData.find(
-                                (d) => d.lambung === item.lambung
-                              ),
-                            ];
-                            setData(reordered);
-                          }}
+                          onClick={() => handleStatusUpdate(item)}
                           className="bg-green-500 hover:bg-green-600 text-white rounded-[10px] px-3 cursor-pointer"
                         >
                           Tersedia
