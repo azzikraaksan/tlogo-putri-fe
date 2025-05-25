@@ -1,44 +1,64 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { FiArrowLeftCircle, FiImage, FiEdit3 } from 'react-icons/fi';
 
 export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
   const judulRef = useRef(null);
   const deskripsiRef = useRef(null);
-  const fileInputRef = React.useRef();
-  const [imagePreview, setImagePreview] = React.useState(null);
+  const fileInputRef = useRef(null);
+  const [imagePreview, setImagePreview] = useState(null);
+
+      useEffect(() => {
+      if (article?.gambar) {
+        const url = `http://127.0.0.1:8000/storage/gambar/${article.gambar}`;
+        console.log("Full image URL:", url);
+        setImagePreview(url);
+      }
+    }, [article]);
+
 
   const applyFormatting = (ref, formatType) => {
+    // ... (Fungsi ini tidak perlu diubah)
     const input = ref.current;
     if (!input) return;
-
     const start = input.selectionStart;
     const end = input.selectionEnd;
     const selectedText = input.value.substring(start, end);
-
     let formatted = selectedText;
-
     switch (formatType) {
-      case 'bold':
-        formatted = `**${selectedText}**`;
-        break;
-      case 'italic':
-        formatted = `*${selectedText}*`;
-        break;
-      case 'underline':
-        formatted = `<u>${selectedText}</u>`;
-        break;
-      case 'link':
-        formatted = `[${selectedText}](https://)`;
-        break;
-      default:
-        break;
+      case 'bold': formatted = `**${selectedText}**`; break;
+      case 'italic': formatted = `*${selectedText}*`; break;
+      case 'underline': formatted = `<u>${selectedText}</u>`; break;
+      case 'link': formatted = `[${selectedText}](https://)`; break;
+      default: break;
     }
-
     input.setRangeText(formatted, start, end, 'end');
     input.focus();
   };
+
+  const uploadImage = async (file) => {
+  if (!file) return;
+  const formData = new FormData();
+  formData.append('gambar', file);
+
+  try {
+    const res = await fetch(
+      `http://127.0.0.1:8000/api/content-generate/article/${article.id}/gambar`,
+      { method: 'POST', body: formData }
+    );
+    if (!res.ok) throw new Error('Gagal upload gambar');
+    const data = await res.json();
+    alert('Gambar berhasil diupload!');
+    
+    // ✅ Tambahkan baris ini:
+    setImagePreview(`http://127.0.0.1:8000/storage/${data.gambar}`);
+
+  } catch (err) {
+    alert(err.message);
+  }
+};
+
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -48,6 +68,7 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
         setImagePreview(reader.result);
       };
       reader.readAsDataURL(file);
+      uploadImage(file);
     }
   };
 
@@ -57,16 +78,20 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
       judul: judulRef.current.value,
       isi_konten: deskripsiRef.current.value,
       status: article.status,
+      gambar: article.gambar,
     });
   };
-
   const handleUploadClick = () => {
-    onSave({
+    onSave(
+      {
       id: article.id,
       judul: judulRef.current.value,
       isi_konten: deskripsiRef.current.value,
-      status: 'Diterbitkan',
-    });
+      status: 'terbit',
+      gambar: article.gambar,
+    },
+    true
+  );
   };
 
   return (
@@ -79,52 +104,63 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
           <h1 className="text-3xl font-bold text-black">Editor Artikel</h1>
         </div>
 
-        <div className="flex justify-end items-center space-x-4">
-          <span className="text-sm italic text-gray-500">Kutip Sumber Anda</span>
-          <button className="flex items-center space-x-1 text-blue-600 hover:underline">
-            <FiEdit3 className="w-4 h-4" />
-            <span>Edit</span>
-          </button>
-        </div>
-
         <div className="space-y-6 mb-4">
-          <div className="flex flex-wrap gap-2 items-center">
-            <button
-              type="button"
+          {/* ================================================================ */}
+          {/* BARU: Area khusus untuk upload gambar ditempatkan di sini         */}
+          {/* ================================================================ */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Gambar Artikel</label>
+            <div
               onClick={() => fileInputRef.current?.click()}
-              className="p-2 bg-gray-100 rounded hover:bg-gray-200"
+              className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md cursor-pointer hover:border-blue-500 transition-colors"
             >
-              <FiImage className="w-6 h-6 text-gray-700" />
-            </button>
-            <input
-              type="file"
-              accept="image/*"
-              ref={fileInputRef}
-              onChange={handleImageChange}
-              className="hidden"
-            />
+              {imagePreview ? (
+                // Jika ada gambar, tampilkan pratinjau
+                <img src={imagePreview} alt="Preview" className="max-h-60 rounded-md object-contain" />
+              ) : (
+                // Jika tidak ada, tampilkan placeholder
+                <div className="space-y-1 text-center">
+                  <FiImage className="mx-auto h-12 w-12 text-gray-400" />
+                  <div className="flex text-sm text-gray-600">
+                    <p className="pl-1">Klik untuk mengunggah gambar</p>
+                  </div>
+                  <p className="text-xs text-gray-500">PNG, JPG, GIF hingga 10MB</p>
+                </div>
+              )}
+            </div>
+          </div>
+          {/* Input file yang disembunyikan */}
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={handleImageChange}
+            className="hidden"
+          />
 
+          <div className="flex flex-wrap gap-2 items-center bg-gray-50 p-2 rounded-md">
+            {/* DIHAPUS: Tombol upload gambar lama sudah tidak ada di sini */}
             <button
               onClick={() => applyFormatting(judulRef, 'bold')}
-              className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+              className="p-2 rounded hover:bg-gray-200"
             >
               <strong>B</strong>
             </button>
             <button
               onClick={() => applyFormatting(judulRef, 'italic')}
-              className="p-2 rounded bg-gray-100 hover:bg-gray-200 italic"
+              className="p-2 rounded hover:bg-gray-200 italic"
             >
               I
             </button>
             <button
               onClick={() => applyFormatting(judulRef, 'underline')}
-              className="p-2 rounded bg-gray-100 hover:bg-gray-200 underline"
+              className="p-2 rounded hover:bg-gray-200 underline"
             >
               U
             </button>
             <button
               onClick={() => applyFormatting(judulRef, 'link')}
-              className="p-2 rounded bg-gray-100 hover:bg-gray-200"
+              className="p-2 rounded hover:bg-gray-200"
             >
               🔗
             </button>
@@ -149,23 +185,11 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
             />
           </div>
 
-          {imagePreview && (
-            <div>
-              <img src={imagePreview} alt="Preview" className="max-w-xs rounded" />
-            </div>
-          )}
-
           <div className="flex space-x-4">
-            <button
-              onClick={handleSaveClick}
-              className="px-4 py-2 bg-[#3D6CB9] text-white rounded-md"
-            >
+            <button onClick={handleSaveClick} className="px-4 py-2 bg-[#3D6CB9] text-white rounded-md cursor-pointer">
               Simpan
             </button>
-            <button
-              onClick={handleUploadClick}
-              className="px-4 py-2 bg-green-600 text-white rounded-md"
-            >
+            <button onClick={handleUploadClick} className="px-4 py-2 bg-green-600 text-white rounded-md cursor-pointer">
               Unggah
             </button>
           </div>

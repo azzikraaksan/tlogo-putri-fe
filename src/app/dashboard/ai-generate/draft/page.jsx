@@ -40,7 +40,7 @@ export default function Page() {
       let url = '';
 
       switch (activeTab.toLowerCase()) {
-        case 'diterbitkan':
+        case 'terbit':
           url = 'http://127.0.0.1:8000/api/content-generate/articleterbit';
           break;
         case 'konsep':
@@ -57,7 +57,8 @@ export default function Page() {
       const res = await fetch(url);
       if (!res.ok) throw new Error('Gagal mengambil data');
       const result = await res.json();
-      setData(result.data);
+      const sorted = result.data.sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+      setData(sorted);
       setLoading(false);
     } catch (err) {
       setError(err.message);
@@ -80,23 +81,40 @@ export default function Page() {
     return tabMatch && searchMatch;
   });
 
-  const handleSave = async (updatedArticle) => {
+  const handleSave = async (updatedArticle, publish = false) => {
     try {
+      // Status terbit jika publish true, else sesuai input atau default konsep
+      const bodyData = {
+        ...updatedArticle,
+        status: publish ? 'terbit' : updatedArticle.status || 'konsep',
+      };
+
       const res = await fetch(
         `http://127.0.0.1:8000/api/content-generate/articleupdate/${updatedArticle.id}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updatedArticle),
+          body: JSON.stringify(bodyData),
         }
       );
       if (!res.ok) throw new Error('Gagal menyimpan data');
-      alert('Artikel berhasil disimpan');
+
+      if (publish) {
+        alert('Artikel berhasil diterbitkan');
+      } else {
+        alert('Artikel berhasil disimpan');
+      }
+
       await fetchData();
       router.push('/dashboard/ai-generate/draft');
     } catch (err) {
       alert(err.message);
     }
+  };
+
+  // fungsi khusus publish, panggil handleSave dengan publish=true
+  const handlePublish = (article) => {
+    handleSave(article, true);
   };
 
   const handleDelete = async (id) => {
@@ -153,7 +171,12 @@ export default function Page() {
           <Sidebar />
         </aside>
         <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
-          <EditorArtikel article={selectedArticle} onSave={handleSave} onBack={onBack} />
+          <EditorArtikel
+            article={selectedArticle}
+            onSave={handleSave}        // simpan draft
+            onPublish={handlePublish}  // publish artikel
+            onBack={onBack}
+          />
         </main>
       </div>
     );
@@ -238,10 +261,9 @@ export default function Page() {
                           ?.split(/\n|[-•]/)                     // pisah berdasarkan newline, strip, bullet
                           .map(i => i.trim().replace(/^\d+\.\s*/, '')) // buang angka + titik di awal
                           .filter(Boolean)                      // buang string kosong
-                          .slice(0, 1)                          // ambil maksimal 3
+                          .slice(0, 1)                          // ambil maksimal 1
                           .join(', ')                           // gabung pakai koma
                           || '-'}
-
                       </td>
                       <td className="px-4 py-2 max-w-xs">
                         <div
