@@ -14,6 +14,9 @@ export default function Page() {
   const [error, setError] = useState(null);
   const [messages, setMessages] = useState([]);
   const [ContentList, setContentList] = useState([]);
+  const [customQuery, setCustomQuery] = useState(""); //customoptimize
+  const [customOptimizeDone, setCustomOptimizeDone] = useState(false); // track apakah optimize/custom optimize sudah selesai
+  const [statusMessage, setStatusMessage] = useState(""); // feedback sukses/gagal
 
   const sendPrompt = async () => {
     if (!inputValue.trim()) return;
@@ -44,6 +47,9 @@ export default function Page() {
           category: data.category || "Umum", // Jika ada kategori dari API
         },
       ]);
+
+      setCustomOptimizeDone(false);
+      setStatusMessage("Konten berhasil digenerate, lanjut optimasi atau simpan.");
     } catch (err) {
       setError("Gagal mengambil data. Coba lagi.");
     } finally {
@@ -53,6 +59,7 @@ export default function Page() {
 
   const handleOptimize = async (content, index) => {
     setLoading(true);
+    setStatusMessage("");
     try {
       const res = await fetch("http://localhost:8000/api/content-generate/optimize", {
         method: "POST",
@@ -70,6 +77,8 @@ export default function Page() {
           i === index ? { ...msg, title: data.title, content: data.content } : msg
         )
       );
+      setCustomOptimizeDone(true); // optimize selesai
+      setStatusMessage("Konten berhasil dioptimasi!");
     } catch (err) {
       setError("Gagal mengoptimasi konten.");
     } finally {
@@ -77,6 +86,39 @@ export default function Page() {
     }
   };
 
+  const handleCustomOptimize = async (query, content, index) => {
+    if (!query.trim()) {
+    setStatusMessage("Masukkan kata kunci tambahan sebelum optimasi.");
+    return;
+  }
+
+    setLoading(true);
+    setStatusMessage("");
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/content-generate/customoptimize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, content }),
+      });
+
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+
+      const data = await res.json();
+      setContentList((prevList) => [...prevList, data]);
+
+      setMessages((prev) =>
+        prev.map((msg, i) =>
+          i === index ? { ...msg, title: data.title, content: data.content } : msg
+        )
+      );
+      setCustomOptimizeDone(true);
+      setStatusMessage("Konten berhasil dioptimasi dengan custom query!");
+    } catch (err) {
+      setError("Gagal melakukan custom optimize.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSave = async (item) => {
   const payload = {
@@ -162,14 +204,14 @@ export default function Page() {
                 <input
                   type="text"
                   placeholder="Masukkan kata kunci yang ingin dibuat"
-                  className="w-full px-4 py-3 pr-14 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 box-border"
+                  className="w-full px-4 py-3 pr-14 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-[#3D6CB9]"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
                   style={{ height: "3rem" }}
                 />
                 <motion.button
-                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 z-10 cursor-pointer"
                   onClick={sendPrompt}
                   disabled={loading}
                   style={{ backgroundColor: "transparent" }}
@@ -194,7 +236,7 @@ export default function Page() {
                       />
                     </svg>
                   ) : (
-                    <Send size={20} className="text-blue-500 hover:text-blue-700" />
+                    <Send size={20} className="text-blue-500 hover:text-blue-700 transition duration-200" />
                   )}
                 </motion.button>
               </div>
@@ -264,26 +306,80 @@ export default function Page() {
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                           {`### ${msg.title}\n\n${msg.content}`}
                         </ReactMarkdown>
-                        <div className="mt-[15px] flex gap-2.5 justify-end">
-                          <button
-                            className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm cursor-pointer"
-                            onClick={() => handleOptimize(msg.content, idx)}
-                            disabled={loading}
-                          >
-                            Optimize
-                          </button>
-                          <button
-                            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm cursor-pointer"
-                            onClick={() => handleSave(msg)}
-                            disabled={loading}
-                          >
-                            Simpan
-                          </button>
-                        </div>
+
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          transition={{ duration: 0.3 }}
+                          className="flex flex-col gap-2 mt-4 mb-4"
+                        >
+
+                          <input
+                            type="text"
+                            placeholder="Masukkan kata kunci tambahan"
+                            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#3D6CB9]"
+                            value={customQuery}
+                            onChange={(e) => {
+                              setCustomQuery(e.target.value);
+                              setCustomOptimizeDone(false); // reset flag kalau input berubah
+                            }}
+                          />
+                        </motion.div>
+
+                        {(!customOptimizeDone && customQuery.trim() !== "") && (
+                          <span className="block text-red-500 text-xs -mt-3 mb-3"> {/* Perubahan kelas di sini */}
+                            *Selesaikan custom optimize untuk mengaktifkan tombol simpan.
+                          </span>
+                        )}
+                          <div className="flex justify-end gap-2.5">
+                            <button
+                              className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-1 rounded text-sm cursor-pointer"
+                              onClick={() => handleCustomOptimize(customQuery, msg.content, idx)}
+                              disabled={loading}
+                            >
+                              Custom Optimize
+                            </button>
+                            <button
+                              className={`px-3 py-1 rounded text-sm cursor-pointer ${
+                                loading || customQuery.trim() !== ""
+                                  ? "bg-gray-300 text-gray-500 cursor-not-allowed" // Gaya untuk disabled
+                                  : "bg-green-500 hover:bg-green-600 text-white" // Gaya untuk enabled
+                              }`}
+                              onClick={() => handleOptimize(msg.content, idx)}
+                              disabled={loading || customQuery.trim() !== ""}
+                            >
+                              Optimize
+                            </button>
+                            <button
+                              className={`px-3 py-1 rounded text-sm cursor-pointer ${
+                                loading || (!customOptimizeDone && customQuery.trim() !== "")
+                                  ? "bg-gray-300 text-gray-500 cursor-not-allowed" // Gaya untuk disabled
+                                  : "bg-blue-500 hover:bg-blue-600 text-white" // Gaya untuk enabled
+                              }`}
+                              onClick={() => handleSave(msg)}
+                              disabled={loading || (!customOptimizeDone && customQuery.trim() !== "")}
+                            >
+                              Simpan
+                              {/* {(!customOptimizeDone && customQuery.trim() !== "") && (
+                                <span className="absolute -bottom-4 left-0 text-xs bg-black text-white rounded px-2 py-1 whitespace-nowrap">
+                                  *Selesaikan custom optimize untuk mengaktifkan tombol simpan.
+                                </span>
+                              )} */}
+                            </button>
+                          </div>
+
+                          {statusMessage && (
+                            <div className="text-green-600 text-sm mt-1">
+                              {statusMessage}
+                            </div>
+                          )}
+
+                        {/* </div> */}
                       </>
                     ) : (
                       <span>{msg.text}</span>
                     )}
+
                   </div>
                 ))}
 
