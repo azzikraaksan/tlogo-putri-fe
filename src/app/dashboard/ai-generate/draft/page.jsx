@@ -40,7 +40,7 @@ export default function Page() {
       let url = '';
 
       switch (activeTab.toLowerCase()) {
-        case 'diterbitkan':
+        case 'terbit':
           url = 'http://127.0.0.1:8000/api/content-generate/articleterbit';
           break;
         case 'konsep':
@@ -57,7 +57,8 @@ export default function Page() {
       const res = await fetch(url);
       if (!res.ok) throw new Error('Gagal mengambil data');
       const result = await res.json();
-      setData(result.data);
+      const sorted = result.data.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+      setData(sorted);
       setLoading(false);
     } catch (err) {
       setError(err.message);
@@ -80,23 +81,40 @@ export default function Page() {
     return tabMatch && searchMatch;
   });
 
-  const handleSave = async (updatedArticle) => {
+  const handleSave = async (updatedArticle, publish = false) => {
     try {
+      // Status terbit jika publish true, else sesuai input atau default konsep
+      const bodyData = {
+        ...updatedArticle,
+        status: publish ? 'terbit' : updatedArticle.status || 'konsep',
+      };
+
       const res = await fetch(
         `http://127.0.0.1:8000/api/content-generate/articleupdate/${updatedArticle.id}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updatedArticle),
+          body: JSON.stringify(bodyData),
         }
       );
       if (!res.ok) throw new Error('Gagal menyimpan data');
-      alert('Artikel berhasil disimpan');
+
+      if (publish) {
+        alert('Artikel berhasil diterbitkan');
+      } else {
+        alert('Artikel berhasil disimpan');
+      }
+
       await fetchData();
       router.push('/dashboard/ai-generate/draft');
     } catch (err) {
       alert(err.message);
     }
+  };
+
+  // fungsi khusus publish, panggil handleSave dengan publish=true
+  const handlePublish = (article) => {
+    handleSave(article, true);
   };
 
   const handleDelete = async (id) => {
@@ -153,7 +171,12 @@ export default function Page() {
           <Sidebar />
         </aside>
         <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
-          <EditorArtikel article={selectedArticle} onSave={handleSave} onBack={onBack} />
+          <EditorArtikel
+            article={selectedArticle}
+            onSave={handleSave}        // simpan draft
+            onPublish={handlePublish}  // publish artikel
+            onBack={onBack}
+          />
         </main>
       </div>
     );
@@ -191,17 +214,17 @@ export default function Page() {
           <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
 
-        <div className="overflow-x-auto rounded-md shadow-md">
+        <div className="overflow-x-auto rounded-md shadow-md max-h-125">
           <table className="min-w-full text-sm text-left text-gray-600">
             <thead className="bg-[#3D6CB9] text-white">
               <tr>
-                <th className="px-4 py-2">Tanggal</th>
-                <th className="px-4 py-2">Judul</th>
-                <th className="px-4 py-2">Pemilik</th>
-                <th className="px-4 py-2">Kategori</th>
-                <th className="px-4 py-2">Detail Aioseo</th>
-                <th className="px-4 py-2">Aksi</th>
-              </tr>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Tanggal</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Judul</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Pemilik</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Kategori</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Detail AIOSEO</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Aksi</th>
+              </tr >
             </thead>
             <tbody>
               {filteredData.length === 0 ? (
@@ -238,14 +261,13 @@ export default function Page() {
                           ?.split(/\n|[-•]/)                     // pisah berdasarkan newline, strip, bullet
                           .map(i => i.trim().replace(/^\d+\.\s*/, '')) // buang angka + titik di awal
                           .filter(Boolean)                      // buang string kosong
-                          .slice(0, 1)                          // ambil maksimal 3
+                          .slice(0, 1)                          // ambil maksimal 1
                           .join(', ')                           // gabung pakai koma
                           || '-'}
-
                       </td>
                       <td className="px-4 py-2 max-w-xs">
                         <div
-                          className="text-sm font-semibold truncate"
+                          className="text-sm font-semibold truncate text-justify"
                           title={item.judul}
                         >
                           {item.judul || '-'}

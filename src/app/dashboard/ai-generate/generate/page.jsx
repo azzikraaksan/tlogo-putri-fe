@@ -266,14 +266,14 @@ export default function Page() {
                         </ReactMarkdown>
                         <div className="mt-[15px] flex gap-2.5 justify-end">
                           <button
-                            className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm"
+                            className="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm cursor-pointer"
                             onClick={() => handleOptimize(msg.content, idx)}
                             disabled={loading}
                           >
                             Optimize
                           </button>
                           <button
-                            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                            className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm cursor-pointer"
                             onClick={() => handleSave(msg)}
                             disabled={loading}
                           >
