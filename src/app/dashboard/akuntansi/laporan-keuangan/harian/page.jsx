@@ -3,12 +3,15 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
-import withAuth from "/src/app/lib/withAuth"; // Pastikan path ini benar
+import withAuth from "/src/app/lib/withAuth";
+import { useRouter } from 'next/navigation';
 import {
     CalendarDays,
     FileText,
     FileSpreadsheet,
     RotateCcw,
+    ArrowLeft,
+    Zap // Icon untuk generate laporan
 } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -17,14 +20,14 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 // Base URL untuk API backend Anda
-const API_BASE_URL = "http://localhost:8000/api"; // Ubah ini untuk endpoint base
+const API_BASE_URL = "http://localhost:8000/api";
 
-// Fungsi helper untuk memformat tanggal untuk tampilan (DD-MM-YYYY)
+// Fungsi helper untuk format tanggal ke tampilan (DD-MM-YYYY)
 const formatDateToDisplay = (dateString) => {
     if (!dateString) return "";
     const d = new Date(dateString);
     if (isNaN(d.getTime())) {
-        return dateString;
+        return dateString; // Kembali string asli jika tidak bisa di-parse
     }
     const day = d.getDate().toString().padStart(2, "0");
     const month = (d.getMonth() + 1).toString().padStart(2, "0");
@@ -32,31 +35,29 @@ const formatDateToDisplay = (dateString) => {
     return `${day}-${month}-${year}`;
 };
 
-// Fungsi helper untuk memformat tanggal ke format 'YYYY-MM-DD' untuk perbandingan yang konsisten
+// Fungsi helper untuk format tanggal ke ISO (YYYY-MM-DD)
 const formatToISODate = (date) => {
     if (!date) return null;
     const d = date instanceof Date ? date : new Date(date);
     if (isNaN(d.getTime())) return null;
-    return d.toISOString().split('T')[0]; // Ambil hanya YYYY-MM-DD
+    return d.toISOString().split('T')[0];
 };
 
-// Fungsi helper untuk memformat angka menjadi format Rupiah
+// Fungsi helper untuk format angka ke Rupiah
 const formatRupiah = (number) => {
     if (number === null || typeof number === 'undefined' || isNaN(number)) {
-        return 'Rp. 0'; // Default jika null atau tidak valid
+        return 'Rp. 0';
     }
     const formatter = new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
-        minimumFractionDigits: 0, // Tidak menampilkan desimal jika angka bulat
-        maximumFractionDigits: 2, // Maksimal 2 desimal
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
     });
-    return formatter.format(number).replace(/,/g, '.').replace('Rp', 'Rp.'); // Mengganti koma jadi titik, dan Rp jadi Rp.
+    return formatter.format(number).replace(/,/g, '.').replace('Rp', 'Rp.');
 };
 
-
-// Komponen utama halaman Laporan Harian
-const HarianPage = ({ children }) => {
+const HarianPage = () => {
     const [dataHarian, setDataHarian] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
@@ -65,17 +66,30 @@ const HarianPage = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
     const calendarRef = useRef(null);
 
-    // Fungsi untuk memuat dan memfilter data dari Backend
+    const router = useRouter();
+
+    // Fungsi untuk kembali ke halaman sebelumnya
+    const handleGoBack = () => {
+        router.push("/dashboard/akuntansi/laporan-keuangan");
+    };
+
+    // Fungsi untuk memuat dan memfilter data dari backend
     const loadAndFilterData = useCallback(async () => {
         setIsLoading(true);
         try {
             const response = await fetch(`${API_BASE_URL}/dailyreports/alldaily`);
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorText = await response.text();
+                throw new Error(`HTTP error! Status: ${response.status}. Detail: ${errorText || 'Tidak ada detail error.'}`);
             }
             const data = await response.json();
 
             const fetchedRawData = Array.isArray(data) ? data : data.data || [];
+
+            if (!Array.isArray(fetchedRawData)) {
+                console.error("Data dari backend bukan array atau tidak memiliki properti 'data':", fetchedRawData);
+                throw new Error("Format data dari backend tidak valid.");
+            }
 
             const formattedData = fetchedRawData.map(item => ({
                 idDailyReport: item.id_daily_report,
@@ -113,7 +127,7 @@ const HarianPage = ({ children }) => {
             }
         } catch (error) {
             console.error("Gagal memuat laporan harian dari backend:", error);
-            alert("Terjadi kesalahan saat memuat data laporan harian. Pastikan backend berjalan dan endpoint '/api/dailyreports/alldaily' mengembalikan data yang valid.");
+            alert(`Terjadi kesalahan saat memuat data laporan harian: ${error.message}. Pastikan backend berjalan dan mengembalikan data yang valid.`);
             setDataHarian([]);
             setFilteredData([]);
         } finally {
@@ -137,24 +151,33 @@ const HarianPage = ({ children }) => {
     };
 
     const handleGenerateDailyReport = async () => {
-        if (!confirm("Apakah Anda yakin ingin memicu perhitungan laporan harian otomatis dari backend?")) {
+        if (!confirm("Apakah Anda yakin ingin memicu perhitungan laporan harian otomatis dari backend? Proses ini mungkin memerlukan waktu.")) {
             return;
         }
         setIsLoading(true);
 
         try {
             const response = await fetch(`${API_BASE_URL}/dailyreports/generate-report`, {
-                method: 'GET',
+                method: 'POST',
                 headers: {
                     'Accept': 'application/json',
+                    'Content-Type': 'application/json',
                 },
             });
 
             if (!response.ok) {
-                throw new Error(`Gagal memicu generate laporan harian: ${response.statusText || 'Unknown Error'}`);
+                const errorData = await response.json().catch(() => response.text());
+                let errorMessage = `Gagal memicu generate laporan harian: ${response.status} ${response.statusText}`;
+                if (typeof errorData === 'object' && errorData !== null && errorData.message) {
+                    errorMessage += `. Detail: ${errorData.message}`;
+                } else if (typeof errorData === 'string') {
+                    errorMessage += `. Detail: ${errorData}`;
+                }
+                throw new Error(errorMessage);
             }
 
-            alert("Proses perhitungan laporan harian berhasil dipicu di backend. Memuat data terbaru...");
+            const result = await response.json();
+            alert(`Proses perhitungan laporan harian berhasil dipicu di backend. ${result.message || 'Memuat data terbaru...'}`);
             await loadAndFilterData();
         } catch (error) {
             console.error("Error saat memicu generate laporan harian:", error);
@@ -183,9 +206,9 @@ const HarianPage = ({ children }) => {
                 "Paket Tur": item.touringPacket,
                 "Keterangan": item.information,
                 "Kode": item.code,
-                "Marketing": item.marketing, // Export sebagai angka
+                "Marketing": item.marketing,
                 "Kas": item.cash,
-                "OOP": item.oop,
+                "OPP": item.oop,
                 "Driver Bayar": item.payDriver,
                 "Total Kas": item.totalCash,
                 "Jumlah": item.amount,
@@ -215,20 +238,16 @@ const HarianPage = ({ children }) => {
         try {
             const doc = new jsPDF('landscape');
             const tableColumn = [
-                "ID", "Booking ID", "Gaji ID", "No. LB", "Paket Tur",
-                "Info", "Kode", "Marketing", "Kas", "OOP", "Bayar Driver",
-                "Total Kas", "Jumlah", "Harga", "Driver Terima", "Tamu Bayar",
-                "Waktu Tiba"
+                "No. LB", "Paket Tur", "Info", "Kode", "Marketing", "Kas", "OOP",
+                "Bayar Driver", "Total Kas", "Jumlah", "Harga", "Driver Terima",
+                "Tamu Bayar", "Waktu Tiba"
             ];
             const tableRows = filteredData.map((item) => [
-                item.idDailyReport,
-                item.bookingId || '-',
-                item.salariesId || '-',
                 item.stomachNo || '-',
                 item.touringPacket || '-',
                 item.information || '-',
                 item.code || '-',
-                formatRupiah(item.marketing), // Format untuk PDF
+                formatRupiah(item.marketing),
                 formatRupiah(item.cash),
                 formatRupiah(item.oop),
                 formatRupiah(item.payDriver),
@@ -280,24 +299,31 @@ const HarianPage = ({ children }) => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [calendarRef]);
 
-    const tableHeaders = [
-        "ID Laporan Harian", "ID Pemesanan", "ID Gaji", "No. LB", "Paket Tur",
-        "Keterangan", "Kode", "Marketing", "Kas", "OOP", "Driver Bayar",
-        "Total Kas", "Jumlah", "Harga", "Driver Terima", "Tamu Bayar",
-        "Waktu Tiba"
+    const tableDisplayHeaders = [
+        "No. LB", "Paket Tur", "Keterangan", "Kode", "Marketing", "Kas", "OPP",
+        "Driver Bayar", "Total Kas", "Jumlah", "Harga", "Driver Terima",
+        "Tamu Bayar", "Waktu Tiba"
     ];
+
+    // Tentukan apakah ada data atau tidak
+    const hasData = filteredData.length > 0;
 
     return (
         <div className="flex relative bg-white-50 min-h-screen">
             <UserMenu />
             <Sidebar />
             <div className="flex-1 p-4 md:p-6 relative overflow-y-auto">
-                <h1 className="text-[28px] md:text-[32px] font-bold mb-6 text-black">
+                <h1
+                    className="text-[28px] md:text-[32px] font-semibold text-black flex items-center gap-3 cursor-pointer hover:text-[#3D6CB9] transition-colors mb-6"
+                    onClick={handleGoBack}
+                >
+                    <ArrowLeft size={28} />
                     Laporan Harian
                 </h1>
 
                 {/* Toolbar */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+                    {/* Filter Section */}
                     <div className="flex gap-4">
                         {/* Date Picker untuk Filter */}
                         <div className="relative" ref={calendarRef}>
@@ -313,7 +339,7 @@ const HarianPage = ({ children }) => {
                                     onClick={resetFilter}
                                     className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
                                 >
-                                    <RotateCcw size={20} /> <span>Set Ulang</span>
+                                    <RotateCcw size={20} /> <span>Set Ulang Filter</span>
                                 </button>
                             )}
                             {isDatePickerOpen && (
@@ -345,71 +371,76 @@ const HarianPage = ({ children }) => {
                                 </div>
                             )}
                         </div>
-                        {/* Tombol "Buat Laporan Otomatis" */}
+
+                        {/* Tombol Generate Laporan Harian */}
                         <button
                             onClick={handleGenerateDailyReport}
                             disabled={isLoading}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
-                                isLoading
+                                isLoading || !hasData // Kondisi disesuaikan: abu-abu jika loading atau tidak ada data
                                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                    : "bg-[#3D6CB9] hover:bg-[#B8D4F9] text-white hover:text-black"
+                                    : "bg-[#3D6CB9] text-white hover:bg-[#B8D4F9] hover:text-black"
                             }`}
                         >
-                            <span>Buat Laporan Otomatis</span>
+                            <Zap size={20} color={isLoading || !hasData ? "gray" : "white"} /> {/* Warna ikon disesuaikan */}
+                            <span>Buat Laporan</span>
                         </button>
                     </div>
-                    {/* Tombol Export */}
+
+                    {/* Export Section */}
                     <div className="flex gap-4">
                         <button
                             onClick={handleExportExcelAction}
-                            disabled={filteredData.length === 0 || isLoading}
+                            disabled={!hasData || isLoading}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
-                                filteredData.length === 0 || isLoading
+                                !hasData || isLoading
                                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                                     : "bg-green-100 text-black hover:bg-[#B8D4F9]"
                             }`}
                         >
                             <FileSpreadsheet
                                 size={20}
-                                color={filteredData.length === 0 || isLoading ? "gray" : "green"}
+                                color={!hasData || isLoading ? "gray" : "green"}
                             />{" "}
-                            <span>Export Excel</span>
+                            <span>Ekspor Excel</span>
                         </button>
                         <button
                             onClick={handleExportPDFAction}
-                            disabled={filteredData.length === 0 || isLoading}
+                            disabled={!hasData || isLoading}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
-                                filteredData.length === 0 || isLoading
+                                !hasData || isLoading
                                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                                     : "bg-red-100 text-black hover:bg-[#B8D4F9]"
                             }`}
                         >
                             <FileText
                                 size={20}
-                                color={filteredData.length === 0 || isLoading ? "gray" : "red"}
+                                color={!hasData || isLoading ? "gray" : "red"}
                             />{" "}
-                            <span>Export PDF</span>
+                            <span>Ekspor PDF</span>
                         </button>
                     </div>
                 </div>
 
                 {/* Tabel dengan scrolling */}
                 {isLoading ? (
-                    <div className="text-center p-10">Memuat data laporan harian...</div>
+                    <div className="text-center p-10 text-lg font-medium text-gray-700">
+                        Memuat data laporan harian, mohon tunggu...
+                    </div>
                 ) : (
                     <div className="overflow-x-auto rounded-lg shadow">
                         <div className="max-h-[600px] overflow-y-auto">
                             <table className="min-w-full table-auto bg-white text-sm">
                                 <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
                                     <tr>
-                                        {tableHeaders.map((header, index) => (
+                                        {tableDisplayHeaders.map((header, index) => (
                                             <th
                                                 key={header}
                                                 className={`p-2 text-center whitespace-nowrap`}
                                                 style={{
                                                     borderTopLeftRadius: index === 0 ? "0.5rem" : undefined,
                                                     borderTopRightRadius:
-                                                        index === tableHeaders.length - 1 ? "0.5rem" : undefined,
+                                                        index === tableDisplayHeaders.length - 1 ? "0.5rem" : undefined,
                                                 }}
                                             >
                                                 {header}
@@ -421,8 +452,8 @@ const HarianPage = ({ children }) => {
                                     {filteredData.length === 0 ? (
                                         <tr>
                                             <td
-                                                colSpan={tableHeaders.length}
-                                                className="text-center p-4 text-gray-500 font-medium"
+                                                colSpan={tableDisplayHeaders.length}
+                                                className="text-center p-4 text-gray-500 font-medium bg-white-100"
                                             >
                                                 Data Tidak Ditemukan
                                             </td>
@@ -433,9 +464,6 @@ const HarianPage = ({ children }) => {
                                                 key={item.idDailyReport}
                                                 className="border-b text-center border-blue-200 hover:bg-blue-100 transition duration-200"
                                             >
-                                                <td className="p-3 whitespace-nowrap">{item.idDailyReport}</td>
-                                                <td className="p-3 whitespace-nowrap">{item.bookingId || '-'}</td>
-                                                <td className="p-3 whitespace-nowrap">{item.salariesId || '-'}</td>
                                                 <td className="p-3 whitespace-nowrap">{item.stomachNo || '-'}</td>
                                                 <td className="p-3 whitespace-nowrap">{item.touringPacket || '-'}</td>
                                                 <td className="p-3 whitespace-nowrap">{item.information || '-'}</td>
@@ -459,8 +487,6 @@ const HarianPage = ({ children }) => {
                     </div>
                 )}
             </div>
-
-            {children}
         </div>
     );
 };

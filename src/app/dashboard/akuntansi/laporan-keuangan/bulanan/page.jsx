@@ -3,32 +3,32 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
-import withAuth from "/src/app/lib/withAuth"; // Pastikan path ini benar
+import withAuth from "/src/app/lib/withAuth";
 import {
     FileText,
     FileSpreadsheet,
-    RotateCcw, // Tambahkan ikon untuk reset filter jika diperlukan
+    ArrowLeft,
+    Zap
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useRouter } from 'next/navigation';
 
 // Base URL untuk API backend Anda
 const API_BASE_URL = "http://localhost:8000/api";
 
 // Fungsi helper untuk memformat angka menjadi format Rupiah
 const formatRupiah = (number) => {
-    // Pastikan number adalah angka, jika tidak, return 'Rp. 0' atau sesuai kebutuhan
     if (number === null || typeof number === 'undefined' || isNaN(number)) {
         return 'Rp. 0';
     }
     const formatter = new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
-        minimumFractionDigits: 0, // Tidak menampilkan desimal jika angka bulat
-        maximumFractionDigits: 2, // Maksimal 2 desimal
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
     });
-    // Menghilangkan 'Rp' bawaan dan menggantinya dengan 'Rp.'
     return formatter.format(number).replace(/,/g, '.').replace('Rp', 'Rp.');
 };
 
@@ -37,7 +37,7 @@ const formatDateToMonthYear = (dateString) => {
     if (!dateString) return "-";
     const d = new Date(dateString);
     if (isNaN(d.getTime())) {
-        return dateString; // Fallback jika parsing gagal
+        return dateString;
     }
     return d.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
 };
@@ -47,21 +47,21 @@ const BulananPage = ({ children }) => {
     const [dataBulanan, setDataBulanan] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // State untuk filter bulan dan tahun (default: bulan dan tahun saat ini)
-    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // Bulan saat ini (1-12)
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // Tahun saat ini
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+    const router = useRouter();
 
     // Fungsi untuk memuat data dari Backend
     const loadDataFromBackend = useCallback(async () => {
         setIsLoading(true);
         try {
-            // Mengirim bulan dan tahun sebagai query parameter
+            // Menggunakan GET untuk menampilkan rekap bulanan
             const response = await fetch(
                 `${API_BASE_URL}/reports/bulan?month=${selectedMonth}&year=${selectedYear}`
             );
             if (!response.ok) {
-                // Jika response 404, mungkin data tidak ada untuk bulan/tahun tersebut, bukan error fatal
-                if (response.status === 4.04) {
+                if (response.status === 404) {
                     console.warn(`Data laporan bulanan tidak ditemukan untuk ${selectedMonth}-${selectedYear}`);
                     setDataBulanan([]);
                     return;
@@ -70,18 +70,15 @@ const BulananPage = ({ children }) => {
             }
             const rawData = await response.json();
 
-            // Pastikan data yang diterima adalah array
-            // Jika backend mengembalikan { data: [...] } atau sejenisnya, sesuaikan di sini
             const fetchedData = Array.isArray(rawData) ? rawData : rawData.data || [];
 
-            // Memetakan data dari snake_case (BE) ke camelCase (FE) dan parsing angka
             const formattedData = fetchedData.map(item => ({
-                reportId: item.report_id,
-                reportDate: item.report_date, // Akan diformat saat ditampilkan
-                cash: parseFloat(item.cash || 0), // Tambahkan default 0 jika null/undefined
+                reportId: item.report_id, // Tetap ambil ID untuk key React, tapi tidak ditampilkan
+                reportDate: item.report_date,
+                cash: parseFloat(item.cash || 0),
                 operational: parseFloat(item.operational || 0),
                 expenditure: parseFloat(item.expenditure || 0),
-                netCash: parseFloat(item.net_cash || 0), // Ini adalah "Kas Bersih" yang akan dijumlahkan
+                netCash: parseFloat(item.net_cash || 0),
                 cleanOperations: parseFloat(item.clean_operations || 0),
                 jeepAmount: parseInt(item.jeep_amount || 0),
                 createdAt: item.created_at,
@@ -95,10 +92,9 @@ const BulananPage = ({ children }) => {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedMonth, selectedYear]); // Dependencies: muat ulang jika bulan/tahun berubah
+    }, [selectedMonth, selectedYear]);
 
     // Efek samping untuk memuat data saat komponen dimuat pertama kali
-    // dan saat selectedMonth/selectedYear berubah
     useEffect(() => {
         loadDataFromBackend();
     }, [loadDataFromBackend]);
@@ -113,18 +109,18 @@ const BulananPage = ({ children }) => {
         if (!confirm("Apakah Anda yakin ingin memicu pembuatan laporan bulanan otomatis dari backend untuk bulan/tahun saat ini?")) {
             return;
         }
-        setIsLoading(true); // Tunjukkan loading
+        setIsLoading(true);
 
         try {
-            // Endpoint generate mungkin tidak perlu parameter bulan/tahun jika ia menghitung bulan terakhir atau saat ini.
-            // Sesuai dokumentasi '/api/reports/generate' tidak menerima parameter.
+            // Menggunakan POST untuk generate rekap laporan bulanan
             const response = await fetch(`${API_BASE_URL}/reports/generate`, {
-                method: 'GET', // Metode GET sesuai dokumentasi API Anda
+                method: 'POST', // Pastikan ini adalah POST
                 headers: {
                     'Accept': 'application/json',
-                    // Tambahkan Authorization header jika diperlukan
-                    // 'Authorization': `Bearer ${token}`
+                    'Content-Type': 'application/json',
                 },
+                // Jika backend membutuhkan bulan/tahun untuk generate, uncomment baris di bawah:
+                // body: JSON.stringify({ month: selectedMonth, year: selectedYear }),
             });
 
             if (!response.ok) {
@@ -132,12 +128,12 @@ const BulananPage = ({ children }) => {
             }
 
             alert("Proses pembuatan laporan bulanan berhasil dipicu di backend. Memuat data terbaru...");
-            await loadDataFromBackend(); // Muat ulang data setelah generate
+            await loadDataFromBackend();
         } catch (error) {
             console.error("Error saat memicu generate laporan bulanan:", error);
             alert(`Gagal memicu generate laporan bulanan: ${error.message}`);
         } finally {
-            setIsLoading(false); // Selesai loading
+            setIsLoading(false);
         }
     };
 
@@ -147,6 +143,7 @@ const BulananPage = ({ children }) => {
         return `laporan_bulanan_${monthName}_${selectedYear}.${ext}`;
     };
 
+
     // Fungsi untuk export data ke Excel
     const handleExportExcelAction = () => {
         if (dataBulanan.length === 0) {
@@ -154,14 +151,13 @@ const BulananPage = ({ children }) => {
             return;
         }
         try {
-            // Siapkan data untuk export, sesuaikan dengan nama header yang diinginkan
             const dataToExport = dataBulanan.map(item => ({
-                "ID Laporan": item.reportId,
-                "Tanggal Laporan": formatDateToMonthYear(item.reportDate), // Untuk tampilan
-                "Kas": item.cash, // Export sebagai angka untuk Excel
+                // Tidak menampilkan ID Laporan di export Excel
+                "Tanggal Laporan": formatDateToMonthYear(item.reportDate),
+                "Kas": item.cash,
                 "Operasional": item.operational,
                 "Pengeluaran": item.expenditure,
-                // "Kas Bersih": item.netCash, // Dihapus dari export Excel
+                "Kas Bersih": item.netCash,
                 "Operasional Bersih": item.cleanOperations,
                 "Jumlah Jeep": item.jeepAmount,
             }));
@@ -183,19 +179,18 @@ const BulananPage = ({ children }) => {
             return;
         }
         try {
-            const doc = new jsPDF('landscape'); // Gunakan landscape jika kolom banyak
-            // Sesuaikan kolom dan baris tabel untuk PDF
+            const doc = new jsPDF('landscape');
             const tableColumn = [
-                "ID Laporan", "Tanggal Laporan", "Kas", "Operasional",
-                "Pengeluaran", "Operasional Bersih", "Jumlah Jeep" // "Kas Bersih" dihapus
+                // Tidak menampilkan ID Laporan di export PDF
+                "Tanggal Laporan", "Kas", "Operasional",
+                "Pengeluaran", "Kas Bersih", "Operasional Bersih", "Jumlah Jeep"
             ];
             const tableRows = dataBulanan.map((item) => [
-                item.reportId,
                 formatDateToMonthYear(item.reportDate),
                 formatRupiah(item.cash),
                 formatRupiah(item.operational),
                 formatRupiah(item.expenditure),
-                // formatRupiah(item.netCash), // Dihapus dari export PDF
+                formatRupiah(item.netCash),
                 formatRupiah(item.cleanOperations),
                 item.jeepAmount,
             ]);
@@ -209,7 +204,7 @@ const BulananPage = ({ children }) => {
                 styles: {
                     fontSize: 8,
                     cellPadding: 2,
-                    overflow: 'linebreak', // Pastikan teks terpotong jika terlalu panjang
+                    overflow: 'linebreak',
                 },
                 headStyles: {
                     fillColor: [61, 108, 185],
@@ -229,10 +224,9 @@ const BulananPage = ({ children }) => {
     };
 
     // Daftar kolom tabel yang akan ditampilkan di UI
-    // Kolom "Kas Bersih" telah dihapus dari sini
     const tableHeaders = [
-        "ID Laporan", "Tanggal Laporan", "Kas", "Operasional",
-        "Pengeluaran", "Operasional Bersih", "Jumlah Jeep"
+        "Tanggal Laporan", "Kas", "Operasional",
+        "Pengeluaran", "Kas Bersih", "Operasional Bersih", "Jumlah Jeep" // Menambahkan "Kas Bersih"
     ];
 
     // Opsi bulan dan tahun untuk dropdown
@@ -240,15 +234,38 @@ const BulananPage = ({ children }) => {
         value: i + 1,
         label: new Date(2000, i).toLocaleString('id-ID', { month: 'long' }),
     }));
+
+    // Generate years dynamically: dari 5 tahun ke belakang sampai 5 tahun ke depan
     const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i); // 2 tahun ke belakang, tahun ini, 2 tahun ke depan
+    const years = useMemo(() => {
+        const yearsArray = [];
+        const startYear = currentYear - 5;
+        const endYear = currentYear + 5;
+
+        for (let i = startYear; i <= endYear; i++) {
+            yearsArray.push(i);
+        }
+        return yearsArray;
+    }, [currentYear]);
+
+    // Fungsi untuk kembali
+    const handleGoBack = () => {
+        router.push("/dashboard/akuntansi/laporan-keuangan");
+    };
+
+    // Tentukan kondisi untuk warna tombol "Buat Laporan"
+    const isGenerateButtonDisabled = isLoading;
 
     return (
         <div className="flex relative bg-white-50 min-h-screen">
             <UserMenu />
             <Sidebar />
             <div className="flex-1 p-4 md:p-6 relative overflow-y-auto">
-                <h1 className="text-[28px] md:text-[32px] font-bold mb-6 text-black">
+                <h1
+                    className="text-[28px] md:text-[32px] font-semibold text-black flex items-center gap-3 cursor-pointer hover:text-[#3D6CB9] transition-colors mb-6"
+                    onClick={handleGoBack}
+                >
+                    <ArrowLeft size={28} />
                     Laporan Bulanan
                 </h1>
 
@@ -260,7 +277,7 @@ const BulananPage = ({ children }) => {
                             <select
                                 value={selectedMonth}
                                 onChange={(e) => setSelectedMonth(parseInt(e.target.value, 10))}
-                                className="px-3 py-2 rounded-lg border border-gray-300 shadow bg-white text-black"
+                                className="px-3 py-2 rounded-lg border border-gray-300 shadow bg-white text-black cursor-pointer"
                             >
                                 {months.map((month) => (
                                     <option key={month.value} value={month.value}>
@@ -271,7 +288,7 @@ const BulananPage = ({ children }) => {
                             <select
                                 value={selectedYear}
                                 onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-                                className="px-3 py-2 rounded-lg border border-gray-300 shadow bg-white text-black"
+                                className="px-3 py-2 rounded-lg border border-gray-300 shadow bg-white text-black cursor-pointer"
                             >
                                 {years.map((year) => (
                                     <option key={year} value={year}>
@@ -280,17 +297,18 @@ const BulananPage = ({ children }) => {
                                 ))}
                             </select>
                         </div>
-                        {/* Tombol "Buat Laporan Otomatis" */}
+                        {/* Tombol "Buat Laporan" */}
                         <button
                             onClick={handleGenerateReport}
-                            disabled={isLoading}
+                            disabled={isGenerateButtonDisabled}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
-                                isLoading
+                                isGenerateButtonDisabled
                                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                    : "bg-[#3D6CB9] hover:bg-[#B8D4F9] text-white hover:text-black"
+                                    : "bg-[#3D6CB9] hover:bg-[#B8D4F9] text-white hover:text-black cursor-pointer"
                             }`}
                         >
-                            <span>Buat Laporan Otomatis</span>
+                            <Zap size={20} color={isGenerateButtonDisabled ? "gray" : "white"} />
+                            <span>Buat Laporan</span>
                         </button>
                     </div>
                     {/* Tombol Export */}
@@ -301,14 +319,14 @@ const BulananPage = ({ children }) => {
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
                                 dataBulanan.length === 0 || isLoading
                                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                    : "bg-green-100 text-black hover:bg-[#B8D4F9]"
+                                    : "bg-green-100 text-black hover:bg-[#B8D4F9] cursor-pointer"
                             }`}
                         >
                             <FileSpreadsheet
                                 size={20}
                                 color={dataBulanan.length === 0 || isLoading ? "gray" : "green"}
                             />{" "}
-                            <span>Export Excel</span>
+                            <span>Ekspor Excel</span>
                         </button>
                         <button
                             onClick={handleExportPDFAction}
@@ -316,21 +334,21 @@ const BulananPage = ({ children }) => {
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
                                 dataBulanan.length === 0 || isLoading
                                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                    : "bg-red-100 text-black hover:bg-[#B8D4F9]"
+                                    : "bg-red-100 text-black hover:bg-[#B8D4F9] cursor-pointer"
                             }`}
                         >
                             <FileText
                                 size={20}
                                 color={dataBulanan.length === 0 || isLoading ? "gray" : "red"}
                             />{" "}
-                            <span>Export PDF</span>
+                            <span>Ekspor PDF</span>
                         </button>
                     </div>
                 </div>
 
                 {/* Tabel dengan scrolling */}
                 {isLoading ? (
-                    <div className="text-center p-10">Memuat data laporan bulanan...</div>
+                    <div className="text-center p-10 text-lg font-medium text-gray-700">Memuat data laporan bulanan, mohon tunggu...</div>
                 ) : (
                     <div className="overflow-x-auto rounded-lg shadow">
                         <div className="max-h-[600px] overflow-y-auto">
@@ -365,15 +383,14 @@ const BulananPage = ({ children }) => {
                                     ) : (
                                         dataBulanan.map((item) => (
                                             <tr
-                                                key={item.reportId}
+                                                key={item.reportId} // Menggunakan reportId sebagai key, tapi tidak ditampilkan
                                                 className="border-b text-center border-blue-200 hover:bg-blue-100 transition duration-200"
                                             >
-                                                <td className="p-3 whitespace-nowrap">{item.reportId}</td>
                                                 <td className="p-3 whitespace-nowrap">{formatDateToMonthYear(item.reportDate)}</td>
                                                 <td className="p-3 whitespace-nowrap">{formatRupiah(item.cash)}</td>
                                                 <td className="p-3 whitespace-nowrap">{formatRupiah(item.operational)}</td>
                                                 <td className="p-3 whitespace-nowrap">{formatRupiah(item.expenditure)}</td>
-                                                {/* Kolom Kas Bersih dihapus dari tabel */}
+                                                <td className="p-3 whitespace-nowrap">{formatRupiah(item.netCash)}</td>
                                                 <td className="p-3 whitespace-nowrap">{formatRupiah(item.cleanOperations)}</td>
                                                 <td className="p-3 whitespace-nowrap">{item.jeepAmount !== null ? item.jeepAmount : '-'}</td>
                                             </tr>
@@ -385,10 +402,9 @@ const BulananPage = ({ children }) => {
                     </div>
                 )}
 
-                {/* Tampilan Total Kas (Kas Bersih) yang fixed di kanan bawah */}
-                {/* Menggantikan div sebelumnya yang menggunakan mt-6 */}
-                <div className="fixed bottom-4 right-4 bg-white text-black px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-20"> {/* Tambahkan z-index agar selalu di atas */}
-                    <span className="font-bold text-lg">Total Kas:</span> {/* Diubah menjadi "Total Kas (Bersih)" */}
+                {/* Tampilan Total Kas yang fixed di kanan bawah */}
+                <div className="fixed bottom-4 right-4 bg-white text-black px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-20">
+                    <span className="font-bold text-lg">Total Kas:</span>
                     <span className="text-lg font-semibold text-[#3D6CB9]">{formatRupiah(totalNetCashBulanan)}</span>
                 </div>
             </div>

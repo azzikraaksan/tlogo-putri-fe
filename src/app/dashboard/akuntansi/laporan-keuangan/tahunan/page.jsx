@@ -4,10 +4,11 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
 import withAuth from "/src/app/lib/withAuth";
-import { FileText, FileSpreadsheet } from "lucide-react";
+import { FileText, FileSpreadsheet, ArrowLeft, Zap } from "lucide-react"; // Import Zap icon
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useRouter } from 'next/navigation';
 
 const API_BASE_URL = "http://localhost:8000/api";
 
@@ -32,13 +33,17 @@ const formatYearForReport = (year) => {
 const TahunanPage = ({ children }) => {
     const [dataTahunan, setDataTahunan] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+    const router = useRouter();
+
+    const handleGoBack = () => {
+        router.push("/dashboard/akuntansi/laporan-keuangan");
+    };
 
     const loadDataFromBackend = useCallback(async () => {
         setIsLoading(true);
         try {
-            // Mengirim year sebagai query parameter
             const response = await fetch(
                 `${API_BASE_URL}/reports/tahun?year=${selectedYear}`
             );
@@ -55,7 +60,7 @@ const TahunanPage = ({ children }) => {
 
             const formattedData = fetchedData.map(item => ({
                 reportId: item.report_id,
-                reportDate: item.report_date, // Digunakan jika ada detail tanggal, tapi untuk display akan menggunakan formatYearForReport
+                reportDate: item.report_date,
                 cash: parseFloat(item.cash || 0),
                 operational: parseFloat(item.operational || 0),
                 expenditure: parseFloat(item.expenditure || 0),
@@ -73,7 +78,7 @@ const TahunanPage = ({ children }) => {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedYear]); // Dependency: muat ulang jika tahun berubah
+    }, [selectedYear]);
 
     useEffect(() => {
         loadDataFromBackend();
@@ -90,8 +95,6 @@ const TahunanPage = ({ children }) => {
         }
         setIsLoading(true);
         try {
-            // Menggunakan endpoint generate yang sudah ada. Asumsi endpoint ini
-            // mungkin memicu kalkulasi untuk bulan/periode terkini secara otomatis di backend.
             const response = await fetch(`${API_BASE_URL}/reports/generate`, {
                 method: 'GET',
                 headers: { 'Accept': 'application/json' },
@@ -102,7 +105,7 @@ const TahunanPage = ({ children }) => {
             }
 
             alert("Proses pembuatan laporan berhasil dipicu di backend. Memuat data terbaru...");
-            await loadDataFromBackend(); // Muat ulang data tahunan setelah generate
+            await loadDataFromBackend();
         } catch (error) {
             console.error("Error saat memicu generate laporan:", error);
             alert(`Gagal memicu generate laporan: ${error.message}`);
@@ -122,12 +125,13 @@ const TahunanPage = ({ children }) => {
         }
         try {
             const dataToExport = dataTahunan.map(item => ({
-                "ID Laporan": item.reportId,
+                // "ID Laporan": item.reportId,
                 "Periode Laporan": formatYearForReport(selectedYear),
-                "Kas": item.cash,
                 "Operasional": item.operational,
+                "Kas": item.cash,
                 "Pengeluaran": item.expenditure,
                 "Operasional Bersih": item.cleanOperations,
+                "Kas Bersih": item.netCash,
                 "Jumlah Jeep": item.jeepAmount,
             }));
 
@@ -149,16 +153,17 @@ const TahunanPage = ({ children }) => {
         try {
             const doc = new jsPDF('landscape');
             const tableColumn = [
-                "ID Laporan", "Periode Laporan", "Kas", "Operasional",
-                "Pengeluaran", "Operasional Bersih", "Jumlah Jeep"
+                "Periode Laporan", "Operasional", "Kas",
+                "Pengeluaran", "Operasional Bersih", "Kas Bersih","Jumlah Jeep"
             ];
             const tableRows = dataTahunan.map((item) => [
                 item.reportId,
                 formatYearForReport(selectedYear),
-                formatRupiah(item.cash),
                 formatRupiah(item.operational),
+                formatRupiah(item.cash),
                 formatRupiah(item.expenditure),
                 formatRupiah(item.cleanOperations),
+                formatRupiah(item.netCash),
                 item.jeepAmount,
             ]);
 
@@ -183,19 +188,36 @@ const TahunanPage = ({ children }) => {
     };
 
     const tableHeaders = [
-        "ID Laporan", "Periode Laporan", "Kas", "Operasional",
-        "Pengeluaran", "Operasional Bersih", "Jumlah Jeep"
+        "Periode Laporan",  "Operasional", "Kas",
+        "Pengeluaran", "Operasional Bersih","Kas Bersih", "Jumlah Jeep"
     ];
 
+    // Generate years dynamically: from 1900 to currentYear + 100 years in the future
     const currentYear = new Date().getFullYear();
-    const years = Array.from({ length: 5 }, (_, i) => currentYear - 4 + i); // Menampilkan 5 tahun (4 tahun ke belakang dan tahun ini)
+    const years = useMemo(() => {
+        const yearsArray = [];
+        const startYear = 2015;
+        const endYear = currentYear + 5; // Extend far into the future
+
+        for (let i = startYear; i <= endYear; i++) {
+            yearsArray.push(i);
+        }
+        return yearsArray;
+    }, [currentYear]);
+
+    // Tentukan kondisi untuk warna tombol "Buat Laporan"
+    const isGenerateButtonDisabled = isLoading || dataTahunan.length === 0;
 
     return (
         <div className="flex relative bg-white-50 min-h-screen">
             <UserMenu />
             <Sidebar />
             <div className="flex-1 p-4 md:p-6 relative overflow-y-auto">
-                <h1 className="text-[28px] md:text-[32px] font-bold mb-6 text-black">
+                <h1
+                    className="text-[28px] md:text-[32px] font-semibold text-black flex items-center gap-3 cursor-pointer hover:text-[#3D6CB9] transition-colors mb-6"
+                    onClick={handleGoBack}
+                >
+                    <ArrowLeft size={28} />
                     Laporan Tahunan
                 </h1>
 
@@ -205,7 +227,7 @@ const TahunanPage = ({ children }) => {
                             <select
                                 value={selectedYear}
                                 onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-                                className="px-3 py-2 rounded-lg border border-gray-300 shadow bg-white text-black"
+                                className="px-3 py-2 rounded-lg border border-gray-300 shadow bg-white text-black cursor-pointer"
                             >
                                 {years.map((year) => (
                                     <option key={year} value={year}>
@@ -217,14 +239,15 @@ const TahunanPage = ({ children }) => {
                         {/* Tombol "Buat Laporan Otomatis" menggunakan endpoint /reports/generate */}
                         <button
                             onClick={handleGenerateReport}
-                            disabled={isLoading}
+                            disabled={isGenerateButtonDisabled}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
-                                isLoading
+                                isGenerateButtonDisabled
                                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                    : "bg-[#3D6CB9] hover:bg-[#B8D4F9] text-white hover:text-black"
+                                    : "bg-[#3D6CB9] hover:bg-[#B8D4F9] text-white hover:text-black cursor-pointer"
                             }`}
                         >
-                            <span>Buat Laporan Otomatis</span>
+                            <Zap size={20} color={isGenerateButtonDisabled ? "gray" : "white"} />
+                            <span>Buat Laporan</span>
                         </button>
                     </div>
                     <div className="flex gap-4">
@@ -234,11 +257,11 @@ const TahunanPage = ({ children }) => {
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
                                 dataTahunan.length === 0 || isLoading
                                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                    : "bg-green-100 text-black hover:bg-[#B8D4F9]"
+                                    : "bg-green-100 text-black hover:bg-[#B8D4F9] cursor-pointer"
                             }`}
                         >
                             <FileSpreadsheet size={20} color={dataTahunan.length === 0 || isLoading ? "gray" : "green"} />{" "}
-                            <span>Export Excel</span>
+                            <span>Ekspor Excel</span>
                         </button>
                         <button
                             onClick={handleExportPDFAction}
@@ -246,20 +269,21 @@ const TahunanPage = ({ children }) => {
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
                                 dataTahunan.length === 0 || isLoading
                                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                    : "bg-red-100 text-black hover:bg-[#B8D4F9]"
+                                    : "bg-red-100 text-black hover:bg-[#B8D4F9] cursor-pointer"
                             }`}
                         >
                             <FileText size={20} color={dataTahunan.length === 0 || isLoading ? "gray" : "red"} />{" "}
-                            <span>Export PDF</span>
+                            <span>Ekspor PDF</span>
                         </button>
                     </div>
                 </div>
 
                 {isLoading ? (
-                    <div className="text-center p-10">Memuat data laporan tahunan...</div>
+                    <div className="text-center p-10 text-lg font-medium text-gray-700">Memuat data laporan tahunan...</div>
                 ) : (
                     <div className="overflow-x-auto rounded-lg shadow">
                         <div className="max-h-[600px] overflow-y-auto">
+                            {/* Pastikan tidak ada whitespace di sini */}
                             <table className="min-w-full table-auto bg-white text-sm">
                                 <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
                                     <tr>
@@ -280,7 +304,7 @@ const TahunanPage = ({ children }) => {
                                 </thead>
                                 <tbody>
                                     {dataTahunan.length === 0 ? (
-                                        <tr key="no-data-tahunan"> {/* Key ditambahkan di sini */}
+                                        <tr>
                                             <td
                                                 colSpan={tableHeaders.length}
                                                 className="text-center p-4 text-gray-500 font-medium"
@@ -294,12 +318,13 @@ const TahunanPage = ({ children }) => {
                                                 key={item.reportId}
                                                 className="border-b text-center border-blue-200 hover:bg-blue-100 transition duration-200"
                                             >
-                                                <td className="p-3 whitespace-nowrap">{item.reportId}</td>
+                                                {/* <td className="p-3 whitespace-nowrap">{item.reportId}</td> */}
                                                 <td className="p-3 whitespace-nowrap">{formatYearForReport(selectedYear)}</td>
-                                                <td className="p-3 whitespace-nowrap">{formatRupiah(item.cash)}</td>
                                                 <td className="p-3 whitespace-nowrap">{formatRupiah(item.operational)}</td>
+                                                <td className="p-3 whitespace-nowrap">{formatRupiah(item.cash)}</td>
                                                 <td className="p-3 whitespace-nowrap">{formatRupiah(item.expenditure)}</td>
                                                 <td className="p-3 whitespace-nowrap">{formatRupiah(item.cleanOperations)}</td>
+                                                <td className="p-3 whitespace-nowrap">{formatRupiah(item.netCash)}</td>
                                                 <td className="p-3 whitespace-nowrap">{item.jeepAmount !== null ? item.jeepAmount : '-'}</td>
                                             </tr>
                                         ))

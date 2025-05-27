@@ -139,7 +139,7 @@ const EditPengeluaranPage = () => {
 
     const validateForm = () => {
         if (!formData.amount || !formData.information || !selectedDateForPicker || !formData.action) {
-            alert("Harap isi semua field yang wajib diisi (Tanggal, Jumlah, Keterangan, Aksi)!");
+            alert("Harap isi semua field yang wajib diisi (Tanggal, Jumlah, Keterangan)!");
             return false;
         }
         if (isNaN(parseFloat(formData.amount)) || parseFloat(formData.amount) <= 0) {
