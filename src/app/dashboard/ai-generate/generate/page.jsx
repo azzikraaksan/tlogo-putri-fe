@@ -49,7 +49,7 @@ export default function Page() {
       ]);
 
       setCustomOptimizeDone(false);
-      setStatusMessage("Konten berhasil digenerate, lanjut optimasi atau simpan.");
+      setStatusMessage("Konten berhasil digenerate, jika tidak sesuai silahkan masukan ulang kata kunci pada kolom diatas.");
     } catch (err) {
       setError("Gagal mengambil data. Coba lagi.");
     } finally {
@@ -369,7 +369,7 @@ export default function Page() {
                           </div>
 
                           {statusMessage && (
-                            <div className="text-green-600 text-sm mt-1">
+                            <div className="text-green-600 text-sm mt-1 max-w-100">
                               {statusMessage}
                             </div>
                           )}
