@@ -49,7 +49,7 @@ export default function Page() {
       ]);
 
       setCustomOptimizeDone(false);
-      setStatusMessage("Konten berhasil digenerate, lanjut optimasi atau simpan.");
+      setStatusMessage("Konten berhasil digenerate, jika tidak sesuai silahkan masukan ulang kata kunci pada kolom diatas.");
     } catch (err) {
       setError("Gagal mengambil data. Coba lagi.");
     } finally {
@@ -74,7 +74,7 @@ export default function Page() {
 
       setMessages((prev) =>
         prev.map((msg, i) =>
-          i === index ? { ...msg, title: data.title, content: data.content } : msg
+          i === index ? { ...msg, title: data.title, content: data.content, category: data.category } : msg
         )
       );
       setCustomOptimizeDone(true); // optimize selesai
@@ -108,7 +108,7 @@ export default function Page() {
 
       setMessages((prev) =>
         prev.map((msg, i) =>
-          i === index ? { ...msg, title: data.title, content: data.content } : msg
+          i === index ? { ...msg, title: data.title, content: data.content, category: data.category } : msg
         )
       );
       setCustomOptimizeDone(true);
@@ -254,11 +254,16 @@ export default function Page() {
                 <input
                   type="text"
                   placeholder="Masukkan kata kunci yang ingin dibuat"
-                  className="w-[99%] mb-2 ml-1 p-5 border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 box-border"
+                  className={`w-[99%] mb-2 ml-1 p-5 border rounded-xl shadow-sm focus:outline-none focus:ring-2 ${
+                    customQuery.trim() !== "" 
+                      ? "border-gray-300 bg-gray-100 cursor-not-allowed"
+                      : "border-gray-300 focus:ring-blue-500 bg-white"
+                  }`}
                   style={{ height: "3.3rem" }}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyDown={handleKeyDown}
+                  disabled={customQuery.trim() !== ""}
                 />
                 <motion.button
                   className="absolute right-4 top-1/2 -translate-y-1/2 z-10"
@@ -360,16 +365,11 @@ export default function Page() {
                               disabled={loading || (!customOptimizeDone && customQuery.trim() !== "")}
                             >
                               Simpan
-                              {/* {(!customOptimizeDone && customQuery.trim() !== "") && (
-                                <span className="absolute -bottom-4 left-0 text-xs bg-black text-white rounded px-2 py-1 whitespace-nowrap">
-                                  *Selesaikan custom optimize untuk mengaktifkan tombol simpan.
-                                </span>
-                              )} */}
                             </button>
                           </div>
 
                           {statusMessage && (
-                            <div className="text-green-600 text-sm mt-1">
+                            <div className="text-green-600 text-sm mt-1 max-w-100">
                               {statusMessage}
                             </div>
                           )}
