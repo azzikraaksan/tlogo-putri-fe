@@ -18,7 +18,7 @@ function Page() {
   const [currentPage, setCurrentPage] = useState(1);
   const [allData, setAllData] = useState([]);
   const itemsPerPage = 4;
-  const user_id = 1; // Ganti dengan user_id dari auth jika sudah tersedia
+  const user_id = 3; // Ganti dengan user_id dari auth jika sudah tersedia
 
   const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
   const years = Array.from({ length: 11 }, (_, i) => 2020 + i);
