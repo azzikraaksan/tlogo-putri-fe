@@ -5,7 +5,9 @@ import { FiArrowLeftCircle, FiImage } from 'react-icons/fi';
 
 export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
   const judulRef = useRef(null);
+  const captionRef = useRef(null);
   const deskripsiRef = useRef(null);
+  const kategoriRef = useRef(null);
   const fileInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
 
@@ -69,10 +71,12 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
       judul: judulRef.current.value,
       isi_konten: deskripsiRef.current.innerHTML,
       status: article.status,
-      gambar: article.gambar,
+      caption_gambar: captionRef.current.value,
+      kategori: kategoriRef.current.innerHTML
+      // gambar: article.gambar,
     });
   };
-
+  
   const handleUploadClick = () => {
     onSave(
       {
@@ -80,7 +84,9 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
         judul: judulRef.current.value,
         isi_konten: deskripsiRef.current.innerHTML,
         status: 'terbit',
-        gambar: article.gambar,
+        caption_gambar: captionRef.current.value,
+        kategori: kategoriRef.current.innerHTML
+        // gambar: article.gambar,
       },
       true
     );
@@ -91,7 +97,7 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
       <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
         <div className="flex items-center space-x-4 mb-6">
           <button onClick={onBack} className="text-black-600 hover:text-blue-800">
-            <FiArrowLeftCircle className="w-6 h-6" />
+            <FiArrowLeftCircle className="w-6 h-6 cursor-pointer" />
           </button>
           <h1 className="text-3xl font-bold text-black">Editor Artikel</h1>
         </div>
@@ -125,6 +131,15 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
             onChange={handleImageChange}
             className="hidden"
           />
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Caption untuk gambar</label>
+            <input
+              ref={captionRef}
+              className="w-full p-2 border rounded-md"
+              defaultValue={article.caption_gambar || ''}
+            />
+          </div>
 
           {/* Toolbar Format */}
           <div className="flex flex-wrap gap-2 items-center bg-gray-50 p-2 rounded-md">
@@ -160,7 +175,7 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
             <input
               ref={judulRef}
               className="w-full p-2 border rounded-md"
-              defaultValue={article.judul}
+              defaultValue={article.judul || ''}
             />
           </div>
 
@@ -175,15 +190,34 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Kategori / Keyword</label>
+            <div
+              ref={kategoriRef}
+              contentEditable
+              className="w-full p-2 border rounded-md min-h-[150px]"
+              dangerouslySetInnerHTML={{ __html: article.kategori || '' }}
+            />
+          </div>
           {/* Tombol Aksi */}
           <div className="flex space-x-4">
-            <button onClick={handleSaveClick} className="px-4 py-2 bg-[#3D6CB9] text-white rounded-md cursor-pointer">
-              Simpan
-            </button>
-            <button onClick={handleUploadClick} className="px-4 py-2 bg-green-600 text-white rounded-md cursor-pointer">
-              Unggah
-            </button>
-          </div>
+  <button
+    onClick={handleSaveClick}
+    className="px-4 py-2 bg-[#3D6CB9] text-white rounded-md cursor-pointer"
+  >
+    Simpan Perubahan
+  </button>
+
+  {article.status?.toLowerCase() !== 'terbit' && (
+    <button
+      onClick={handleUploadClick}
+      className="px-4 py-2 bg-green-600 text-white rounded-md cursor-pointer"
+    >
+      Unggah
+    </button>
+  )}
+</div>
+
         </div>
       </main>
     </div>
