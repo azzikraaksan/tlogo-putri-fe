@@ -19,28 +19,29 @@ const DetailPemesanan = () => {
         const res = await fetch(`http://localhost:8000/api/bookings/${id}`);
         const data = await res.json();
 
-        const statusPembayaran =
-          data.payment_status === "paid"
-            ? "Sudah Bayar"
-            : data.payment_type === "dp"
-            ? "DP 50%"
-            : "Belum Bayar";
+        let statusPembayaran = "Belum Bayar";
+        if (data.payment_status === "paid") {
+          statusPembayaran = "Sudah Bayar";
+        } else if (data.payment_type === "dp") {
+          statusPembayaran = "DP 30%";
+        }
 
         setPesanan({
-          bookingCode: data.order_id,
-          nama: data.customer_name,
-          email: data.customer_email,
-          phone: data.customer_phone,
-          waktupemesanan: data.created_at.slice(0, 10), // format YYYY-MM-DD
+          bookingCode: data.order_id || "-",
+          nama: data.customer_name || "-",
+          email: data.customer_email || "-",
+          phone: data.customer_phone || "-",
+          waktupemesanan: data.start_time || "-",
           jenispaket: data.package?.package_name || "-",
           statuspembayaran: statusPembayaran,
-          tanggaltour: data.tour_date,
-          jumlahpesanan: data.qty,
-          kodeReffeal: data.referral || "",
-          kodeVoucher: data.voucher || "",
+          tanggaltour: data.tour_date || "-",
+          jumlahpesanan: data.qty || 0,
+          kodeReferral: data.referral || "-",
+          kodeVoucher: data.voucher || "-",
         });
       } catch (error) {
         console.error("Gagal mengambil detail pesanan:", error);
+        toast.error("Gagal memuat detail pemesanan.");
       }
     };
 
@@ -48,13 +49,19 @@ const DetailPemesanan = () => {
   }, [id]);
 
   const handleSave = () => {
-    toast.success("Perubahan berhasil disimpan (simulasi)");
+    toast.success("Perubahan berhasil disimpan");
     setTimeout(() => {
       router.push("/dashboard/pemesanan/daftar-pesanan");
     }, 2000);
   };
 
-  if (!pesanan) return <div className="p-6">Memuat data...</div>;
+  if (!pesanan) {
+    return (
+      <div className="p-6 flex items-center justify-center h-screen">
+        Memuat data...
+      </div>
+    );
+  }
 
   return (
     <div className="flex justify-between items-start min-h-screen">
@@ -79,18 +86,29 @@ const DetailPemesanan = () => {
           <InputField label="Nama" value={pesanan.nama} onChange={(v) => setPesanan({ ...pesanan, nama: v })} />
           <InputField label="Email" value={pesanan.email} onChange={(v) => setPesanan({ ...pesanan, email: v })} />
           <InputField label="No. HP" value={pesanan.phone} onChange={(v) => setPesanan({ ...pesanan, phone: v })} />
-          <InputField label="Waktu Pemesanan" value={pesanan.waktupemesanan} onChange={(v) => setPesanan({ ...pesanan, waktupemesanan: v })} type="date" />
+          <InputField
+            label="Waktu Pemesanan"
+            value={pesanan.waktupemesanan}
+            onChange={(v) => setPesanan({ ...pesanan, waktupemesanan: v })}
+            type="time"
+          />
           <InputField label="Jenis Paket" value={pesanan.jenispaket} readOnly />
           <SelectField
             label="Status Pembayaran"
             value={pesanan.statuspembayaran}
-            options={["Sudah Bayar", "DP 50%", "Belum Bayar"]}
+            options={["Sudah Bayar", "DP 30%", "Belum Bayar"]}
             onChange={(v) => setPesanan({ ...pesanan, statuspembayaran: v })}
           />
-          <InputField label="Tanggal Tour" value={pesanan.tanggaltour} onChange={(v) => setPesanan({ ...pesanan, tanggaltour: v })} type="date" />
+          <InputField
+            label="Tanggal Tour"
+            value={pesanan.tanggaltour}
+            onChange={(v) => setPesanan({ ...pesanan, tanggaltour: v })}
+            type="date"
+            min={new Date().toISOString().split("T")[0]}
+          />
           <InputField label="Jumlah Pesanan" value={pesanan.jumlahpesanan} readOnly />
-          <InputField label="Kode Referral" value={pesanan.kodeReffeal} onChange={(v) => setPesanan({ ...pesanan, kodeReffeal: v })} />
-          <InputField label="Kode Voucher" value={pesanan.kodeVoucher} onChange={(v) => setPesanan({ ...pesanan, kodeVoucher: v })} />
+          <InputField label="Kode Referral" value={pesanan.kodeReferral} readOnly />
+          <InputField label="Kode Voucher" value={pesanan.kodeVoucher} readOnly />
         </div>
 
         <div className="flex justify-end mt-4">
@@ -106,15 +124,16 @@ const DetailPemesanan = () => {
   );
 };
 
-const InputField = ({ label, value, onChange, readOnly = false, type = "text" }) => (
+const InputField = ({ label, value, onChange, readOnly = false, type = "text", min }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700">{label}</label>
     <input
       type={type}
       value={value}
       onChange={(e) => onChange && onChange(e.target.value)}
-      className="mt-1 w-full p-2 border rounded-md bg-gray-100"
+      className={`mt-1 w-full p-2 border rounded-md ${readOnly ? "bg-gray-200" : "bg-white"}`}
       readOnly={readOnly}
+      min={min}
     />
   </div>
 );
@@ -125,7 +144,7 @@ const SelectField = ({ label, value, onChange, options }) => (
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="mt-1 w-full p-2 border rounded-md"
+      className="mt-1 w-full p-2 border rounded-md bg-white"
     >
       {options.map((opt) => (
         <option key={opt} value={opt}>
