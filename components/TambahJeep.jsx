@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { CircleArrowLeft } from "lucide-react";
+import { CircleArrowLeft, Upload } from "lucide-react";
 
 export default function AddJeepForm({ onKembali }) {
   const router = useRouter();
@@ -41,9 +41,7 @@ export default function AddJeepForm({ onKembali }) {
 
       const allOwners = res.data.data;
 
-      const filteredOwners = allOwners.filter(
-        (owner) => owner.jumlah_jeep < 2
-      );
+      const filteredOwners = allOwners.filter((owner) => owner.jumlah_jeep < 2);
       setOwners(filteredOwners);
 
       setOwners(filteredOwners.filter(Boolean));
@@ -85,62 +83,83 @@ export default function AddJeepForm({ onKembali }) {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    if (!files || files.length === 0) return;
 
-  const handleSubmit = async (e) => {
-  e.preventDefault();
-  const token = localStorage.getItem("access_token");
+    const file = files[0];
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+    const maxSize = 3 * 1024 * 1024; // 3MB dalam byte
 
-  const submitData = {
-    ...form,
-    users_id: form.owner_id,
-  };
-
-  const requiredFields = [
-    "no_lambung",
-    "plat_jeep",
-    "merek",
-    "tipe",
-    "tahun_kendaraan",
-    "status",
-  ];
-
-  const isAnyEmpty = requiredFields.some(
-    (field) => String(submitData[field]).trim() === ""
-  );
-
-  if (isAnyEmpty || !submitData.owner_id) {
-    alert("Semua field wajib diisi!");
-    return;
-  }
-
-  if (submitData.foto_jeep === "") {
-    submitData.foto_jeep = null;
-  }
-
-  try {
-    const response = await axios.post(
-      "http://localhost:8000/api/jeeps/create",
-      submitData,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    if (response.status === 201) {
-      alert("Data Jeep berhasil ditambahkan");
-      onKembali();
+    if (!allowedTypes.includes(file.type)) {
+      alert("Format file tidak valid. Harus jpeg, jpg, atau png.");
+      e.target.value = ""; // reset input file supaya bisa upload ulang
+      return;
     }
-  } catch (error) {
-    console.error("Gagal tambah jeep:", error.response?.data);
-    alert(
-      "Gagal menambahkan Jeep: " + error.response?.data?.message || "Terjadi masalah!"
-    );
-  }
-};
 
+    if (file.size > maxSize) {
+      alert("Ukuran file maksimal 3MB.");
+      e.target.value = ""; // reset input file
+      return;
+    }
+
+    setForm((prev) => ({ ...prev, [name]: file }));
+  };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem("access_token");
+
+    const submitData = {
+      ...form,
+      users_id: form.owner_id,
+    };
+
+    const requiredFields = [
+      "no_lambung",
+      "plat_jeep",
+      "merek",
+      "tipe",
+      "tahun_kendaraan",
+      "status",
+    ];
+
+    const isAnyEmpty = requiredFields.some(
+      (field) => String(submitData[field]).trim() === ""
+    );
+
+    if (isAnyEmpty || !submitData.owner_id) {
+      alert("Semua field wajib diisi!");
+      return;
+    }
+
+    // if (submitData.foto_jeep === "") {
+    //   submitData.foto_jeep = null;
+    // }
+
+    try {
+      const response = await axios.post(
+        "http://localhost:8000/api/jeeps/create",
+        submitData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.status === 201) {
+        alert("Data Jeep berhasil ditambahkan");
+        onKembali();
+      }
+    } catch (error) {
+      console.error("Gagal tambah jeep:", error.response?.data);
+      alert(
+        "Gagal menambahkan Jeep: " + error.response?.data?.message ||
+          "Terjadi masalah!"
+      );
+    }
+  };
 
   // const handleSubmit = async (e) => {
   //   e.preventDefault();
@@ -228,23 +247,23 @@ export default function AddJeepForm({ onKembali }) {
             </select>
           </div>
           <div>
-          <label className="block text-sm font-medium mb-1">
-            Pilih Driver :
-          </label>
-          <select
-            name="driver_id"
-            value={form.driver_id}
-            onChange={handleChange}
-            className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-            disabled={loading || drivers.length === 0}
-          >
-            <option value="">-- Pilih Driver --</option>
-            {drivers.map((driver) => (
-              <option key={driver.id} value={driver.id}>
-                {driver.name}
-              </option>
-            ))}
-          </select>
+            <label className="block text-sm font-medium mb-1">
+              Pilih Driver :
+            </label>
+            <select
+              name="driver_id"
+              value={form.driver_id}
+              onChange={handleChange}
+              className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+              disabled={loading || drivers.length === 0}
+            >
+              <option value="">-- Pilih Driver --</option>
+              {drivers.map((driver) => (
+                <option key={driver.id} value={driver.id}>
+                  {driver.name}
+                </option>
+              ))}
+            </select>
           </div>
           <label className="block text-sm font-medium mb-1">
             Masukan No Lambung :
@@ -267,7 +286,7 @@ export default function AddJeepForm({ onKembali }) {
             className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
           />
 
-          <label className="block text-sm font-medium mb-1">
+          {/* <label className="block text-sm font-medium mb-1">
             Masukan Foto Jeep :
           </label>
           <input
@@ -276,7 +295,7 @@ export default function AddJeepForm({ onKembali }) {
             placeholder="Nama File Foto (contoh: jeep1.jpg)"
             onChange={handleChange}
             className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-          />
+          /> */}
 
           <label className="block text-sm font-medium mb-1">
             Masukan Merek Jeep :
@@ -308,6 +327,28 @@ export default function AddJeepForm({ onKembali }) {
             placeholder="Tahun Kendaraan"
             onChange={handleChange}
             className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+          />
+          <label className="block text-sm font-bold text-gray-700">
+            Foto Jeep (opsional)
+          </label>
+          <input
+            type="file"
+            name="foto_jeep"
+            accept=".jpeg, .jpg, .png"
+            onChange={handleFileChange}
+            className="mt-2 p-2 pr-10 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+            style={{ paddingRight: "2.5rem" }} // kasih space kanan buat icon
+          />
+          <Upload
+            size={15}
+            style={{
+              position: "absolute",
+              top: "70%",
+              right: "10px",
+              transform: "translateY(-50%)",
+              pointerEvents: "none",
+              color: "#9CA3AF", // warna abu-abu
+            }}
           />
           <label className="block text-sm font-medium mb-1">
             Pilih Status :

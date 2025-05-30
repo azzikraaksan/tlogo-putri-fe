@@ -13,9 +13,12 @@ const JeepPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [modeTambah, setModeTambah] = useState(false);
   const router = useRouter();
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchDriversAndJeeps = async () => {
+      setLoading(true);
       const token = localStorage.getItem("access_token");
       if (!token) return;
 
@@ -60,6 +63,8 @@ const JeepPage = () => {
         setJeepData(mergedData);
       } catch (error) {
         console.error("Gagal mengambil data driver dan jeep:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -115,10 +120,27 @@ const JeepPage = () => {
   const handleKembali = () => setModeTambah(false);
   const handleTambahJeep = () => setModeTambah(true);
 
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
+        <div className="shadow-md p-6 rounded-lg text-center">
+          <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex">
-      <UserMenu />
-      <Sidebar />
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+            
+                  <div
+                    className="transition-all duration-300 ease-in-out"
+                    style={{
+                      marginLeft: isSidebarOpen ? 290 : 70,
+                    }}
+                  ></div>
       <div className="flex-1 p-6">
         {modeTambah ? (
           <TambahJeep onKembali={handleKembali} />

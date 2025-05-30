@@ -5,12 +5,18 @@ import withAuth from "/src/app/lib/withAuth";
 import { CircleArrowLeft } from "lucide-react";
 import Sidebar from "/components/Sidebar";
 import UserMenu from "/components/Pengguna";
+import Hashids from "hashids";
 
 const DetailAnggota = () => {
   const [userDetails, setUserDetails] = useState(null);
   const router = useRouter();
   const params = useParams();
-  const id = params?.id;
+  // const id = params?.id;
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
+
+  const decoded = hashids.decode(params.id); // misal params.id = 'XyZ12abc', hasilnya [2]
+  const id = decoded[0];
 
   useEffect(() => {
     const fetchUserDetails = async () => {
@@ -27,8 +33,15 @@ const DetailAnggota = () => {
         const data = await res.json();
         const foundUser = data.find((u) => String(u.id) === String(id));
         if (foundUser) {
+          // console.log(
+          //   "Foto profil url:",
+          //   `http://localhost:8000/storage/profile_images/${foundUser.foto_profil}`
+          // );
           setUserDetails(foundUser);
         } else {
+          // if (foundUser) {
+          //   setUserDetails(foundUser);
+          // } else {
           console.error("User tidak ditemukan");
         }
       } catch (error) {
@@ -40,9 +53,7 @@ const DetailAnggota = () => {
   }, [id]);
 
   const handleEditClick = () => {
-    router.push(
-      `/dashboard/operasional/anggota/edit-anggota/${id}`
-    );
+    router.push(`/dashboard/operasional/anggota/edit-anggota/${params.id}`);
   };
 
   if (!userDetails) {
@@ -58,8 +69,14 @@ const DetailAnggota = () => {
 
   return (
     <div className="flex">
-      <UserMenu />
-      <Sidebar />
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+
+      <div
+        className="transition-all duration-300 ease-in-out"
+        style={{
+          marginLeft: isSidebarOpen ? 290 : 70,
+        }}
+      ></div>
       <div className="flex-1 p-6">
         {/* <button
           onClick={() => router.back()}
@@ -74,18 +91,28 @@ const DetailAnggota = () => {
           />
           <h1 className="text-[32px] font-semibold">Detail Anggota</h1>
         </div>
-      <div className="flex items-start bg-[#EAEAEA] p-6 rounded-xl shadow-md w-[1080px] mx-auto mt-16">
-          <div className="w-40 h-40 mr-8">
+        <div className="flex items-start bg-[#EAEAEA] p-6 rounded-xl shadow-md w-[1080px] mx-auto mt-16">
+          <div className="w-full h-full rounded-lg overflow-hidden border border-gray-300">
             {userDetails?.foto_profil ? (
               <img
-                src={`http://localhost/storage/${userDetails.foto_profil}`}
+                // src={`http://localhost:8000/storage/profile_images/${userDetails.foto_profil}`}
+                src={`http://localhost:8000/storage/${userDetails.foto_profil}`}
                 alt="Foto Profil"
-                className="w-full h-full object-cover rounded-lg"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  if (!e.target.dataset.error) {
+                    e.target.dataset.error = "true";
+                    e.target.src = "/default-profile.png";
+                  }
+                }}
               />
             ) : (
-              "-"
+              <div className="w-full h-full flex items-center justify-center bg-gray-100 text-gray-400 text-sm rounded-lg">
+                Tidak ada foto
+              </div>
             )}
           </div>
+
           <div className="flex-1 relative">
             <button
               onClick={handleEditClick}
@@ -100,7 +127,9 @@ const DetailAnggota = () => {
 
               <div className="font-semibold text-[#1C7AC8]">Username</div>
               <div className="text-[#808080]">:</div>
-              <div className="text-[#808080]">{userDetails?.username || "-"}</div>
+              <div className="text-[#808080]">
+                {userDetails?.username || "-"}
+              </div>
 
               <div className="font-semibold text-[#1C7AC8]">Role</div>
               <div className="text-[#808080]">:</div>
@@ -112,7 +141,9 @@ const DetailAnggota = () => {
 
               <div className="font-semibold text-[#1C7AC8]">No. Handphone</div>
               <div className="text-[#808080]">:</div>
-              <div className="text-[#808080]">{userDetails?.telepon || "-"}</div>
+              <div className="text-[#808080]">
+                {userDetails?.telepon || "-"}
+              </div>
 
               <div className="font-semibold text-[#1C7AC8]">Alamat</div>
               <div className="text-[#808080]">:</div>

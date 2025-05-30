@@ -466,9 +466,12 @@ const PenjadwalanPage = () => {
   const [data, setData] = useState([]);
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchDriversAndJeeps = async () => {
+      setLoading(true);
       const token = localStorage.getItem("access_token");
       if (!token) return;
 
@@ -494,6 +497,7 @@ const PenjadwalanPage = () => {
           console.log("matched driver:", driver);
 
           return {
+            jeep_id: jeep.jeep_id,
             users_id: driver?.id,
             name: driver?.name || "-",
             lambung: jeep.no_lambung,
@@ -517,6 +521,8 @@ const PenjadwalanPage = () => {
         console.log("Merged Data:", mergedData);
       } catch (error) {
         console.error("Gagal mengambil data driver dan jeep:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -573,12 +579,8 @@ const PenjadwalanPage = () => {
     return lambungMatch || nameMatch;
   });
 
-  const handleStatusUpdate = async (item) => {
-    if (item.status_jeep === "Tersedia") {
-      alert("Status Jeep sudah Tersedia, tidak bisa diubah.");
-      return;
-    }
-
+  const handleStatusUpdate = async (item, statusBaru) => {
+    console.log("Item diterima:", item);
     const token = localStorage.getItem("access_token");
     if (!token) {
       alert("Token tidak ditemukan");
@@ -587,30 +589,29 @@ const PenjadwalanPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/jeeps/update/${item.lambung}`, // pastikan item.lambung = id jeep
+        `http://localhost:8000/api/jeeps/update/${item.jeep_id}`, // ✅ perbaikan di sini
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ status: "Tersedia" }),
+          body: JSON.stringify({ status: statusBaru }),
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Gagal mengubah status");
-      }
+      if (!response.ok) throw new Error("Gagal mengubah status");
 
-      const updatedData = data.map((d) =>
-        d.lambung === item.lambung
-          ? { ...d, status_jeep: "Tersedia", konfirmasi: "-" }
-          : d
+      // update data lokal
+      const updatedData = data.map(
+        (d) =>
+          d.jeep_id === item.jeep_id ? { ...d, status_jeep: statusBaru } : d // ✅ ganti kondisi
       );
 
+      // pindahkan item ke bawah
       const reordered = [
-        ...updatedData.filter((d) => d.lambung !== item.lambung),
-        updatedData.find((d) => d.lambung === item.lambung),
+        ...updatedData.filter((d) => d.jeep_id !== item.jeep_id),
+        updatedData.find((d) => d.jeep_id === item.jeep_id),
       ];
 
       setData(reordered);
@@ -620,13 +621,75 @@ const PenjadwalanPage = () => {
     }
   };
 
+  // const handleStatusUpdate = async (item) => {
+  //   if (item.status_jeep === "Tersedia") {
+  //     alert("Status Jeep sudah Tersedia, tidak bisa diubah.");
+  //     return;
+  //   }
+
+  //   const token = localStorage.getItem("access_token");
+  //   if (!token) {
+  //     alert("Token tidak ditemukan");
+  //     return;
+  //   }
+
+  //   try {
+  //     const response = await fetch(
+  //       `http://localhost:8000/api/jeeps/update/${item.lambung}`, // pastikan item.lambung = id jeep
+  //       {
+  //         method: "PUT",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //         body: JSON.stringify({ status: "Tersedia" }),
+  //       }
+  //     );
+
+  //     if (!response.ok) {
+  //       throw new Error("Gagal mengubah status");
+  //     }
+
+  //     const updatedData = data.map((d) =>
+  //       d.lambung === item.lambung
+  //         ? { ...d, status_jeep: "Tersedia", konfirmasi: "-" }
+  //         : d
+  //     );
+
+  //     const reordered = [
+  //       ...updatedData.filter((d) => d.lambung !== item.lambung),
+  //       updatedData.find((d) => d.lambung === item.lambung),
+  //     ];
+
+  //     setData(reordered);
+  //   } catch (error) {
+  //     console.error("Error:", error);
+  //     alert("Gagal mengubah status Jeep.");
+  //   }
+  // };
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
+        <div className="shadow-md p-6 rounded-lg text-center">
+          <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="flex">
-      <UserMenu />
-      <Sidebar />
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+
+      <div
+        className="transition-all duration-300 ease-in-out"
+        style={{
+          marginLeft: isSidebarOpen ? 290 : 70,
+        }}
+      ></div>
       <div className="flex-1 p-6">
         <h1 className="text-[32px] font-semibold mb-6 text-black">
-          Atur Driver
+          Kelola Driver
         </h1>
 
         <div className="flex justify-end mb-7">
@@ -647,7 +710,7 @@ const PenjadwalanPage = () => {
                 <th className="p-2 text-center font-normal">Status Jeep</th>
                 <th className="p-2 text-center font-normal">Kontak</th>
                 <th className="p-2 text-center font-normal">Konfirmasi</th>
-                <th className="p-2 text-center font-normal">Keberangkatan</th>
+                {/* <th className="p-2 text-center font-normal">Keberangkatan</th> */}
                 <th className="p-2 text-center font-normal">Ubah Status</th>
               </tr>
             </thead>
@@ -681,14 +744,22 @@ const PenjadwalanPage = () => {
                       </div>
                     </td>
                     <td className="p-2 text-center text-gray-750">
-                      <button className="px-3 bg-[#B8D4F9] rounded-[10px] text-[#1C7AC8] hover:bg-[#7ba2d0] cursor-pointer">
-                        {item.kontak}
+                      <button
+                        onClick={() =>
+                          window.open(
+                            `https://wa.me/${item.kontak.replace(/^0/, "62")}`,
+                            "_blank"
+                          )
+                        }
+                        className="px-3 rounded-[10px] text-white bg-green-500 hover:bg-green-600 cursor-pointer inline-block"
+                      >
+                        WhatsApp
                       </button>
                     </td>
                     <td className="p-2 text-center text-gray-750">
                       {item.konfirmasi}
                     </td>
-                    <td className="p-2 text-center text-gray-750">
+                    {/* <td className="p-2 text-center text-gray-750">
                       <button
                         onClick={() => handleDepartureClick(item)}
                         disabled={item.status_jeep !== "Tersedia"}
@@ -700,42 +771,25 @@ const PenjadwalanPage = () => {
                       >
                         {item.departure}
                       </button>
-                    </td>
+                    </td> */}
                     <td className="p-2 text-center text-gray-750">
                       {item.status_jeep === "Tersedia" ? (
                         <button
-                          disabled
-                          className="bg-gray-300 text-gray-600 rounded-[10px] px-3 cursor-not-allowed"
+                          onClick={() => handleStatusUpdate(item, "On Track")}
+                          className="bg-red-500 hover:bg-red-600 text-white rounded-[10px] px-3 cursor-pointer"
                         >
-                          Tidak Bisa
+                          On Track
                         </button>
                       ) : item.status_jeep === "On Track" ? (
                         <button
-                          onClick={() => {
-                            // update status_jeep item jadi "Selesai"
-                            const updatedData = data.map((d) =>
-                              d.lambung === item.lambung
-                                ? { ...d, status_jeep: "Tersedia" }
-                                : d
-                            );
-                            // pindahkan item yang baru diupdate ke paling bawah
-                            const reordered = [
-                              ...updatedData.filter(
-                                (d) => d.lambung !== item.lambung
-                              ),
-                              updatedData.find(
-                                (d) => d.lambung === item.lambung
-                              ),
-                            ];
-                            setData(reordered);
-                          }}
+                          onClick={() => handleStatusUpdate(item, "Tersedia")}
                           className="bg-green-500 hover:bg-green-600 text-white rounded-[10px] px-3 cursor-pointer"
                         >
                           Tersedia
                         </button>
                       ) : (
                         <button
-                          onClick={() => handleStatusUpdate(item)}
+                          onClick={() => handleStatusUpdate(item, "Tersedia")}
                           className="bg-green-500 hover:bg-green-600 text-white rounded-[10px] px-3 cursor-pointer"
                         >
                           Tersedia
