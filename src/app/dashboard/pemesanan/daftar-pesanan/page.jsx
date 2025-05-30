@@ -21,6 +21,7 @@ const DaftarPesanan = () => {
   const [loading, setLoading] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
   const router = useRouter();
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,7 +62,7 @@ const DaftarPesanan = () => {
       (item.order_id || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.created_at || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.customer_phone || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.custoner_email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.customer_email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.customer_name || "").toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
@@ -74,11 +75,14 @@ const DaftarPesanan = () => {
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar />
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <div
+        className="transition-all duration-300 ease-in-out"
+        style={{ marginLeft: isSidebarOpen ? 290 : 70 }}
+      />
+
       <div className="flex-1 p-6 overflow-y-auto">
-        <div className="w-full flex justify-end mb-4">
-          <UserMenu />
-        </div>
+
 
         <h1 className="text-5xl font-semibold mb-6 text-black">Daftar Pesanan</h1>
 
@@ -125,6 +129,7 @@ const DaftarPesanan = () => {
                   <th className="p-3 text-center font-semibold">Waktu Pemesanan</th>
                   <th className="p-3 text-center font-semibold">Paket</th>
                   <th className="p-3 text-center font-semibold">Status Pembayaran</th>
+                  <th className="p-3 text-center font-semibold">Booking Status</th>
                   <th className="p-3 text-center font-semibold">Aksi</th>
                 </tr>
               </thead>
@@ -147,10 +152,22 @@ const DaftarPesanan = () => {
                           {item.payment_status === "paid" ? "Sudah Bayar" : "DP 30%"}
                         </span>
                       </td>
+                      <td className="p-2">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          item.booking_status === "confirmed"
+                            ? "bg-green-100 text-green-800"
+                            : item.booking_status === "pending"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : item.booking_status === "expire"
+                            ? "bg-red-100 text-red-800"
+                            : "bg-gray-200 text-gray-700"
+                        }`}>
+                          {item.booking_status}
+                        </span>
+                      </td>
                       <td className="p-2 flex justify-center gap-2">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
+                          onClick={() => {
                             setSelectedOrder(item);
                             setIsModalOpen(true);
                           }}
@@ -159,19 +176,13 @@ const DaftarPesanan = () => {
                           <Eye size={16} />
                         </button>
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            router.push(`/dashboard/pemesanan/daftar-pesanan/${item.booking_id}`);
-                          }}
+                          onClick={() => router.push(`/dashboard/pemesanan/daftar-pesanan/${item.booking_id}`)}
                           className="text-blue-600 hover:text-blue-800 cursor-pointer"
                         >
                           <Pencil size={16} />
                         </button>
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(item.booking_id);
-                          }}
+                          onClick={() => handleDelete(item.booking_id)}
                           className="text-red-600 hover:text-red-800 cursor-pointer"
                         >
                           <Trash size={16} />
@@ -181,43 +192,7 @@ const DaftarPesanan = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="8" className="p-4 text-center text-gray-500">Data tidak ditemukan.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {showHistory && (
-          <div className="overflow-x-auto bg-white rounded-xl shadow mt-6">
-            <table className="min-w-[1000px] w-full table-auto">
-              <thead className="bg-[#3D6CB9] text-white">
-                <tr>
-                  {deletedOrders.length > 0 &&
-                    Object.keys(deletedOrders[0] || {}).map((key) => (
-                      <th key={key} className="p-3 text-center font-semibold border-b">
-                        {key}
-                      </th>
-                    ))}
-                </tr>
-              </thead>
-              <tbody>
-                {deletedOrders.length > 0 ? (
-                  deletedOrders.map((item, index) => (
-                    <tr key={index} className="text-center hover:bg-gray-50 border-b">
-                      {Object.keys(item).map((key) => (
-                        <td key={key} className="p-2">
-                          {typeof item[key] === "object" && item[key] !== null
-                            ? JSON.stringify(item[key])
-                            : item[key]?.toString() || "-"}
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="100%" className="p-4 text-center text-gray-500">Belum ada histori penghapusan.</td>
+                    <td colSpan="9" className="p-4 text-center text-gray-500">Data tidak ditemukan.</td>
                   </tr>
                 )}
               </tbody>
@@ -235,17 +210,42 @@ const DaftarPesanan = () => {
                 &times;
               </button>
               <h2 className="text-xl font-bold mb-4">Detail Pesanan</h2>
-              <div className="space-y-2 text-sm">
-                <p><strong>Kode Pemesanan:</strong> {selectedOrder.order_id}</p>
-                <p><strong>Nama:</strong> {selectedOrder.customer_name}</p>
-                <p><strong>Email:</strong> {selectedOrder.customer_email}</p>
-                <p><strong>No. HP:</strong> {selectedOrder.customer_phone}</p>
-                <p><strong>Paket:</strong> {selectedOrder.package?.package_name}</p>
-                <p><strong>Waktu Pemesanan:</strong> {selectedOrder.created_at}</p>
-                <p><strong>Status Pembayaran:</strong> {selectedOrder.payment_status === "paid" ? "Sudah Bayar" : "DP 30%"}</p>
-                <p><strong>Tanggal Tour:</strong> {selectedOrder.tour_date}</p>
-                <p><strong>Jumlah Pesanan:</strong> {selectedOrder.qty}</p>
-                <div className="text-center mt-4">
+
+                {/* Info Pemesanan */}
+                <div className="border p-3 rounded-lg bg-gray-50">
+                  <p><strong>Kode Pemesanan:</strong> {selectedOrder.order_id}</p>
+                  <p><strong>Nama:</strong> {selectedOrder.customer_name}</p>
+                  <p><strong>Email:</strong> {selectedOrder.customer_email}</p>
+                  <p><strong>No. HP:</strong> {selectedOrder.customer_phone}</p>
+                  <p><strong>Paket:</strong> {selectedOrder.package?.package_name}</p>
+                  <p><strong>Waktu Pemesanan:</strong> {selectedOrder.created_at}</p>
+                  <p><strong>Status Booking:</strong> {selectedOrder.booking_status}</p>
+                  <p><strong>Tanggal Tour:</strong> {selectedOrder.tour_date}</p>
+                  <p><strong>Jumlah Pesanan:</strong> {selectedOrder.qty}</p>
+                </div>
+
+              <div className="space-y-4 text-sm">
+
+                {/* Pembayaran */}
+                <div className="border p-3 rounded-lg bg-gray-50">
+                  <p className="text-base font-semibold mb-2">Status Pembayaran</p>
+                  <p><strong>Status:</strong> {selectedOrder.payment_status === "paid" ? "Lunas" : "Belum Lunas"}</p>
+                  <p><strong>Metode Pembayaran:</strong> {selectedOrder.payment_type}</p>
+                  <p><strong>Jenis Pembayaran:</strong> {selectedOrder.payment_type === "dp" ? "DP" : "Full"}</p>
+                  <p><strong>Total Tagihan:</strong> Rp {Number(selectedOrder.gross_amount).toLocaleString("id-ID")}</p>
+
+                  {selectedOrder.payment_type === "dp" && (
+                    <>
+                      <p><strong>Dibayar (DP):</strong> Rp {Number(selectedOrder.dp_amount).toLocaleString("id-ID")}</p>
+                      <p><strong>Sisa Pembayaran:</strong> Rp {(Number(selectedOrder.gross_amount) - Number(selectedOrder.dp_amount)).toLocaleString("id-ID")}</p>
+                      <p className="text-red-600 text-sm mt-2">
+                        Ini adalah pembayaran DP. Silakan selesaikan pelunasan sebelum <strong>{selectedOrder.due_date}</strong>
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                <div className="text-center">
                   <a
                     href={`https://wa.me/${formatNomorWA(selectedOrder.customer_phone)}?text=Halo ${selectedOrder.customer_name}, kami dari tim admin ingin mengonfirmasi pesanan Anda dengan kode ${selectedOrder.order_id}`}
                     target="_blank"
