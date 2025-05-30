@@ -88,7 +88,7 @@ const DetailPemesanan = () => {
       <div className="flex-1 p-6">
         <ToastContainer />
         <button
-          onClick={() => router.push("/dashboard/pemesanan/daftar-pesanan")}
+          onClick={() => router.push('/dashboard/pemesanan/daftar-pesanan')}
           className="flex items-center text-black hover:text-black mb-6 cursor-pointer"
         >
           <ArrowLeft className="mr-2" size={20} />
@@ -100,147 +100,132 @@ const DetailPemesanan = () => {
           Booking Code: {pesanan.bookingCode}
         </h3>
 
-        <div className="bg-white p-6 rounded-xl shadow-md space-y-4 max-w-full max-h-[65vh] overflow-y-auto">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Nama</label>
-            <input
-              type="text"
-              value={pesanan.nama}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, nama: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md bg-gray-100"
-            />
-          </div>
+        <div className="bg-white p-6 rounded-xl shadow-md max-w-full max-h-[70vh] overflow-y-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Nama</label>
+              <input
+                type="text"
+                value={pesanan.nama}
+                onChange={(e) => setPesanan({ ...pesanan, nama: e.target.value })}
+                className="mt-1 w-full p-2 border rounded-md bg-gray-100"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
-              value={pesanan.email}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, email: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md bg-gray-100"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <input
+                type="email"
+                value={pesanan.email}
+                onChange={(e) => setPesanan({ ...pesanan, email: e.target.value })}
+                className="mt-1 w-full p-2 border rounded-md bg-gray-100"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">No. HP</label>
-            <input
-              type="text"
-              value={pesanan.phone}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, phone: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md bg-gray-100"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">No. HP</label>
+              <input
+                type="text"
+                value={pesanan.phone}
+                onChange={(e) => setPesanan({ ...pesanan, phone: e.target.value })}
+                className="mt-1 w-full p-2 border rounded-md bg-gray-100"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 cursor-pointer">Waktu Pemesanan</label>
-            <input
-              type="date"
-              value={pesanan.waktupemesanan}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, waktupemesanan: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md cursor-pointer"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Waktu Pemesanan</label>
+              <input
+                type="date"
+                value={pesanan.waktupemesanan}
+                onChange={(e) => setPesanan({ ...pesanan, waktupemesanan: e.target.value })}
+                className="mt-1 w-full p-2 border rounded-md cursor-pointer"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Jenis Paket</label>
-            <select
-              value={pesanan.jenispaket}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, jenispaket: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md cursor-pointer"
-            >
-              <option value="Paket 1">Paket 1</option>
-              <option value="Paket 2">Paket 2</option>
-              <option value="Paket 3">Paket 3</option>
-              <option value="Paket 4">Paket 4</option>
-              <option value="Paket 5">Paket 5</option>
-              <option value="Paket Sunrise">Paket Sunrise</option>
-            </select>
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Jenis Paket</label>
+              <select
+                value={pesanan.jenispaket}
+                onChange={(e) => setPesanan({ ...pesanan, jenispaket: e.target.value })}
+                className="mt-1 w-full p-2 border rounded-md cursor-pointer"
+              >
+                <option value="Paket 1">Paket 1</option>
+                <option value="Paket 2">Paket 2</option>
+                <option value="Paket 3">Paket 3</option>
+                <option value="Paket 4">Paket 4</option>
+                <option value="Paket 5">Paket 5</option>
+                <option value="Paket Sunrise">Paket Sunrise</option>
+              </select>
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Tanggal Tour</label>
-            <input
-              type="date"
-              value={pesanan.tanggaltour}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, tanggaltour: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md cursor-pointer"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Tanggal Tour</label>
+              <input
+                type="date"
+                value={pesanan.tanggaltour}
+                onChange={(e) => setPesanan({ ...pesanan, tanggaltour: e.target.value })}
+                className="mt-1 w-full p-2 border rounded-md cursor-pointer"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Status Pembayaran</label>
-            <select
-              value={pesanan.statuspembayaran}
-              onChange={(e) =>
-                setPesanan({ ...pesanan, statuspembayaran: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md cursor-pointer"
-            >
-              <option value="Sudah Bayar">Sudah Bayar</option>
-              <option value="DP 50%">DP 50%</option>
-            </select>
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Status Pembayaran</label>
+              <select
+                value={pesanan.statuspembayaran}
+                onChange={(e) => setPesanan({ ...pesanan, statuspembayaran: e.target.value })}
+                className="mt-1 w-full p-2 border rounded-md cursor-pointer"
+              >
+                <option value="Sudah Bayar">Sudah Bayar</option>
+                <option value="DP 50%">DP 50%</option>
+              </select>
+            </div>
 
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Waktu Tour</label>
-            <input
-            type="time"
-            value={pesanan.waktutour}
-            onChange={(e) =>
-              setPesanan({ ...pesanan, waktutour: e.target.value })
-              }
-              className="mt-1 w-full p-2 border rounded-md cursor-pointer"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Waktu Tour</label>
+              <input
+                type="time"
+                value={pesanan.waktutour}
+                onChange={(e) => setPesanan({ ...pesanan, waktutour: e.target.value })}
+                className="mt-1 w-full p-2 border rounded-md cursor-pointer"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Jumlah Pesanan</label>
-            <input
-              type="text"
-              value={pesanan.jumlahpesanan}
-              readOnly
-              className="mt-1 w-full p-2 border rounded-md bg-gray-100"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Jumlah Pesanan</label>
+              <input
+                type="text"
+                value={pesanan.jumlahpesanan}
+                readOnly
+                className="mt-1 w-full p-2 border rounded-md bg-gray-100"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Kode Referral</label>
-            <input
-              type="text"
-              value={pesanan.kodeReffeal}
-              readOnly
-              className="mt-1 w-full p-2 border rounded-md"
-            />
-          </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Kode Referral</label>
+              <input
+                type="text"
+                value={pesanan.kodeReffeal}
+                readOnly
+                className="mt-1 w-full p-2 border rounded-md"
+              />
+            </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Kode Voucher</label>
-            <input
-              type="text"
-              value={pesanan.kodeVoucher}
-              readOnly
-              className="mt-1 w-full p-2 border rounded-md"
-            />
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Kode Voucher</label>
+              <input
+                type="text"
+                value={pesanan.kodeVoucher}
+                readOnly
+                className="mt-1 w-full p-2 border rounded-md"
+              />
+            </div>
           </div>
         </div>
 
         <div className="flex justify-end mt-6">
           <button
             onClick={handleSave}
-            className="px-4 py-2 bg-[#3D6CB9] text-white rounded-md hover:bg-[#3D6CB9] cursor-pointer"
+            className="px-4 py-2 bg-[#3D6CB9] text-white rounded-md hover:bg-[#2f56a3] cursor-pointer"
           >
             Simpan Perubahan
           </button>
