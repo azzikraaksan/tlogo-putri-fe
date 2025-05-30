@@ -223,13 +223,7 @@ const PengeluaranPage = ({ children }) => {
         const currentMonth = today.getMonth() + 1;
         const currentYear = today.getFullYear();
         const currentMonthKey = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
-        const lastDayOfMonth = new Date(currentYear, currentMonth, 0).getDate();
-
-        // Pengecekan apakah tanggal sudah melewati akhir bulan
-        // if (today.getDate() < lastDayOfMonth) {
-        //     alert("Laporan hanya dapat dibuat setelah bulan berakhir.");
-        //     return;
-        // }
+        // const lastDayOfMonth = new Date(currentYear, currentMonth, 0).getDate(); // Tidak digunakan lagi untuk logika disabled
 
         // Pengecekan apakah bulan ini sudah pernah dilaporkan
         if (reportedMonths[currentMonthKey]) {
@@ -237,6 +231,7 @@ const PengeluaranPage = ({ children }) => {
             return;
         }
 
+        // Pengecekan apakah ada data untuk dilaporkan
         if (currentMonthExpenditures.length === 0) {
             alert("Tidak ada pengeluaran untuk bulan ini yang dapat dilaporkan.");
             return;
@@ -443,24 +438,24 @@ const PengeluaranPage = ({ children }) => {
     }, []);
 
     const isDataAvailableForExport = !isLoading && Array.isArray(filteredData) && filteredData.length > 0;
-    // Tombol "Buat Laporan" hanya aktif jika ada data bulan ini yang belum dilaporkan
-    const isReportGenerationAvailable = !isLoading && Array.isArray(currentMonthExpenditures) && currentMonthExpenditures.length > 0;
-    const today = new Date();
-    const currentMonthKey = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}`;
-    const isCurrentMonthReported = reportedMonths[currentMonthKey];
+    // Logika untuk disabled tidak lagi digunakan di tombol, tapi masih bisa berguna untuk logika lain jika perlu
+    // const isReportGenerationAvailable = !isLoading && Array.isArray(currentMonthExpenditures) && currentMonthExpenditures.length > 0;
+    // const today = new Date();
+    // const currentMonthKey = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}`;
+    // const isCurrentMonthReported = reportedMonths[currentMonthKey];
     const [isSidebarOpen, setSidebarOpen] = useState(true);
 
     return (
      <div className="flex">
-      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
-      <div
-        className="flex-1 p-6 transition-all duration-300 ease-in-out"
-        style={{
-          marginLeft: isSidebarOpen ? 290 : 70,
-        }}
-      >
+       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+       <div
+         className="flex-1 p-6 transition-all duration-300 ease-in-out"
+         style={{
+           marginLeft: isSidebarOpen ? 290 : 70,
+         }}
+       >
             <div className="flex-1 p-4 md:p-6 overflow-x-hidden">
-                <h1 className="text-[28px] md:text-[32px] font-bold mb-6 text-black">
+                <h1 className="text-[28px] md:text-[32px] font-semibold text-black mb-6">
                     Pengeluaran
                 </h1>
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
@@ -516,12 +511,13 @@ const PengeluaranPage = ({ children }) => {
                         >
                             <PlusCircle size={20} /> <span>Tambah</span>
                         </button>
+                        {/* Tombol Buat Laporan diubah di sini */}
                         <button
                             onClick={handleGenerateReport}
-                            disabled={!isReportGenerationAvailable || isCurrentMonthReported} // Nonaktifkan jika sudah dilaporkan atau tidak ada data
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${isReportGenerationAvailable && !isCurrentMonthReported ? "bg-blue-100 text-black hover:bg-[#B8D4F9]" : "bg-gray-200 text-gray-500 cursor-not-allowed"}`}
+                            className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
                         >
-                            <Zap size={20} color={isReportGenerationAvailable && !isCurrentMonthReported ? "blue" : "gray"} /> <span>Buat Laporan</span>
+                            <Zap size={20} /> {/* Warna ikon akan mengikuti warna teks */}
+                            <span>Buat Laporan</span>
                         </button>
                     </div>
                     <div className="flex gap-4">
@@ -568,7 +564,7 @@ const PengeluaranPage = ({ children }) => {
                                 <tbody>
                                     {filteredData.length === 0 ? (
                                         <tr>
-                                            <td colSpan={5} className="text-center p-4 text-gray-500 font-medium">Data Tidak Ditemukan {selectedDateForFilter ? `untuk tanggal ${formatDateToDisplay(selectedDateForFilter)}` : isCurrentMonthReported ? "untuk bulan ini (sudah dilaporkan)" : ""}</td>
+                                            <td colSpan={5} className="text-center p-4 text-gray-500 font-medium">Data Tidak Ditemukan {selectedDateForFilter ? `untuk tanggal ${formatDateToDisplay(selectedDateForFilter)}` : (reportedMonths[`${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}`] ? "untuk bulan ini (sudah dilaporkan)" : "")}</td>
                                         </tr>
                                     ) : (
                                         filteredData.map((item) => (

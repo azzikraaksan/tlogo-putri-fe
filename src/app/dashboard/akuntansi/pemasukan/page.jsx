@@ -343,7 +343,7 @@ const PemasukanPage = () => {
             <div className="flex-1 p-4 md:p-6 relative overflow-y-auto">
                 {/* --- Header Halaman --- */}
                 <h1 className="text-[28px] md:text-[32px] font-semibold text-black mb-6">
-                    Laporan Pemasukan
+                    Pemasukan
                 </h1>
 
                 {/* --- Toolbar: Filter & Export --- */}

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
 import withAuth from "/src/app/lib/withAuth";
-import { FileText, FileSpreadsheet, ArrowLeft, Zap } from "lucide-react"; // Import Zap icon
+import { FileText, FileSpreadsheet, ArrowLeft } from "lucide-react"; // Menghapus import Zap
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -88,31 +88,7 @@ const TahunanPage = ({ children }) => {
         return dataTahunan.reduce((sum, item) => sum + (item.netCash || 0), 0);
     }, [dataTahunan]);
 
-    // Fungsi handleGenerateReport menggunakan endpoint /reports/generate yang sudah ada
-    const handleGenerateReport = async () => {
-        if (!confirm("Apakah Anda yakin ingin memicu pembuatan laporan (kemungkinan bulanan) otomatis dari backend?")) {
-            return;
-        }
-        setIsLoading(true);
-        try {
-            const response = await fetch(`${API_BASE_URL}/reports/generate`, {
-                method: 'GET',
-                headers: { 'Accept': 'application/json' },
-            });
-
-            if (!response.ok) {
-                throw new Error(`Gagal memicu generate laporan: ${response.statusText || 'Unknown Error'}`);
-            }
-
-            alert("Proses pembuatan laporan berhasil dipicu di backend. Memuat data terbaru...");
-            await loadDataFromBackend();
-        } catch (error) {
-            console.error("Error saat memicu generate laporan:", error);
-            alert(`Gagal memicu generate laporan: ${error.message}`);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    // Bagian handleGenerateReport telah dihapus
 
     const getExportFileName = (ext) => {
         return `laporan_tahunan_${selectedYear}.${ext}`;
@@ -157,7 +133,7 @@ const TahunanPage = ({ children }) => {
                 "Pengeluaran", "Operasional Bersih", "Kas Bersih","Jumlah Jeep"
             ];
             const tableRows = dataTahunan.map((item) => [
-                item.reportId,
+                // item.reportId, // Dihapus karena tidak ada di header Excel
                 formatYearForReport(selectedYear),
                 formatRupiah(item.operational),
                 formatRupiah(item.cash),
@@ -192,12 +168,11 @@ const TahunanPage = ({ children }) => {
         "Pengeluaran", "Operasional Bersih","Kas Bersih", "Jumlah Jeep"
     ];
 
-    // Generate years dynamically: from 1900 to currentYear + 100 years in the future
     const currentYear = new Date().getFullYear();
     const years = useMemo(() => {
         const yearsArray = [];
         const startYear = 2015;
-        const endYear = currentYear + 5; // Extend far into the future
+        const endYear = currentYear + 5;
 
         for (let i = startYear; i <= endYear; i++) {
             yearsArray.push(i);
@@ -205,19 +180,18 @@ const TahunanPage = ({ children }) => {
         return yearsArray;
     }, [currentYear]);
 
-    // Tentukan kondisi untuk warna tombol "Buat Laporan"
-    const isGenerateButtonDisabled = isLoading || dataTahunan.length === 0;
+    // Variabel isGenerateButtonDisabled dihapus karena tombolnya dihilangkan
     const [isSidebarOpen, setSidebarOpen] = useState(true);
 
     return (
      <div className="flex">
-      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
-      <div
+       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+       <div
         className="flex-1 p-6 transition-all duration-300 ease-in-out"
         style={{
-          marginLeft: isSidebarOpen ? 290 : 70,
+         marginLeft: isSidebarOpen ? 290 : 70,
         }}
-      >
+       >
             <div className="flex-1 p-4 md:p-6 relative overflow-y-auto">
                 <h1
                     className="text-[28px] md:text-[32px] font-semibold text-black flex items-center gap-3 cursor-pointer hover:text-[#3D6CB9] transition-colors mb-6"
@@ -242,19 +216,7 @@ const TahunanPage = ({ children }) => {
                                 ))}
                             </select>
                         </div>
-                        {/* Tombol "Buat Laporan Otomatis" menggunakan endpoint /reports/generate */}
-                        <button
-                            onClick={handleGenerateReport}
-                            disabled={isGenerateButtonDisabled}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
-                                isGenerateButtonDisabled
-                                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                    : "bg-[#3D6CB9] hover:bg-[#B8D4F9] text-white hover:text-black cursor-pointer"
-                            }`}
-                        >
-                            <Zap size={20} color={isGenerateButtonDisabled ? "gray" : "white"} />
-                            <span>Buat Laporan</span>
-                        </button>
+                        {/* Tombol "Buat Laporan Otomatis" telah dihapus */}
                     </div>
                     <div className="flex gap-4">
                         <button
@@ -289,7 +251,6 @@ const TahunanPage = ({ children }) => {
                 ) : (
                     <div className="overflow-x-auto rounded-lg shadow">
                         <div className="max-h-[600px] overflow-y-auto">
-                            {/* Pastikan tidak ada whitespace di sini */}
                             <table className="min-w-full table-auto bg-white text-sm">
                                 <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
                                     <tr>
