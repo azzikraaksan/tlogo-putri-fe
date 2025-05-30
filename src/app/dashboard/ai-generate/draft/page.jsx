@@ -6,6 +6,7 @@ import SearchInput from '/components/Search.jsx';
 import EditorArtikel from '/components/EditArtikel.jsx';
 import { FiEdit, FiRotateCcw, FiTrash2 } from 'react-icons/fi';
 import Sidebar from "/components/Sidebar";
+import Hashids from 'hashids';
 
 function formatStatus(status) {
   if (!status) return 'Konsep'; // default
@@ -23,11 +24,15 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const selectedId = searchParams.get('id');
-  const selectedArticle = data.find((item) => item.id === Number(selectedId));
+  const selectedIdHash = searchParams.get('id');
+  const decodedIds = selectedIdHash ? hashids.decode(selectedIdHash) : [];
+  const selectedId = decodedIds.length > 0 ? decodedIds[0] : null;
+  const selectedArticle = data.find((item) => item.id === selectedId);
+
 
   const tabs = [
     { label: 'Semua', value: 'semua' },
@@ -312,7 +317,10 @@ export default function Page() {
                         ) : (
                           <>
                         <button
-                          onClick={() => router.push(`/dashboard/ai-generate/draft?id=${item.id}`)}
+                          onClick={() => {
+                            const encodedId = hashids.encode(item.id);
+                            router.push(`/dashboard/ai-generate/draft?id=${encodedId}`);
+                          }}
                           title="Edit"
                           className="text-blue-600 hover:text-blue-800 leading-none flex items-center justify-center cursor-pointer"
                           >
