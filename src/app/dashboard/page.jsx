@@ -199,6 +199,7 @@ const DashboardPage = () => {
   const [jumlahAnggota, setJumlahAnggota] = useState(0);
   const [jumlahDriver, setJumlahDriver] = useState(0);
   const [jumlahJeep, setJumlahJeep] = useState(0);
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     const fetchDataCounts = async () => {
@@ -269,17 +270,20 @@ const DashboardPage = () => {
   
 
   return (
-    <div className="flex">
-      <UserMenu />
-      <Sidebar />
-      <div className="flex-1 p-6 pl-10 ml-10">
+     <div className="flex">
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+
+      <div
+        className="flex-1 p-6 transition-all duration-300 ease-in-out"
+        style={{
+          marginLeft: isSidebarOpen ? 290 : 70,
+        }}
+      >
         <div className="mb-16 flex items-center gap-4 mt-8">
-          <h1 className="text-[32px] font-normal text-gray-700">
-            Selamat datang,
-          </h1>
+          <h1 className="text-[32px] font-normal text-gray-700">Selamat datang,</h1>
           <p className="text-[32px] font-bold text-[#3D6CB9]">{userRole}</p>
         </div>
-        <div className="flex flex-row gap-16 items-start">
+        <div className="flex flex-row ">
           <div className="w-[700px] h-110 bg-white p-6 rounded-2xl shadow-lg">
             <h2 className="text-xl font-semibold mb-4 text-[#3D6CB9]">
               Grafik Pemesanan

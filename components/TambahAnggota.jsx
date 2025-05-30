@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CircleArrowLeft } from "lucide-react";
+import { CircleArrowLeft, Upload } from "lucide-react";
 
 const TambahAnggota = ({ onKembali }) => {
   const router = useRouter();
@@ -13,7 +13,7 @@ const TambahAnggota = ({ onKembali }) => {
     role: "",
     alamat: "",
     telepon: "",
-    status: "",
+    status: "Aktif",
     tanggal_bergabung: "",
     jumlah_jeep: "",
     jabatan: "",
@@ -25,9 +25,31 @@ const TambahAnggota = ({ onKembali }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // const handleFileChange = (e) => {
+  //   const { name, files } = e.target;
+  //   setFormData((prev) => ({ ...prev, [name]: files[0] }));
+  // };
   const handleFileChange = (e) => {
     const { name, files } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: files[0] }));
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
+    const maxSize = 3 * 1024 * 1024; // 3MB dalam byte
+
+    if (!allowedTypes.includes(file.type)) {
+      alert("Format file tidak valid. Harus jpeg, jpg, atau png.");
+      e.target.value = ""; // reset input file supaya bisa upload ulang
+      return;
+    }
+
+    if (file.size > maxSize) {
+      alert("Ukuran file maksimal 3MB.");
+      e.target.value = ""; // reset input file
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: file }));
   };
 
   const handleSubmit = async (e) => {
@@ -189,7 +211,7 @@ const TambahAnggota = ({ onKembali }) => {
                 />
               </div>
 
-              <div>
+              {/* <div>
                 <label className="block text-sm font-bold text-gray-700">
                   Status
                 </label>
@@ -203,9 +225,45 @@ const TambahAnggota = ({ onKembali }) => {
                   <option value="Aktif">Aktif</option>
                   <option value="Tidak Aktif">Tidak Aktif</option>
                 </select>
-              </div>
+              </div> */}
 
-              <div>
+              {/* <div>
+                <label className="block text-sm font-bold text-gray-700">
+                  Foto Profil (opsional)
+                </label>
+                <input
+                  type="file"
+                  name="foto_profil"
+                  accept=".jpeg, .jpg, .png"
+                  onChange={handleFileChange}
+                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                />
+              </div> */}
+              <div style={{ position: "relative", width: "100%" }}>
+                <label className="block text-sm font-bold text-gray-700">
+                  Foto Profil (opsional)
+                </label>
+                <input
+                  type="file"
+                  name="foto_profil"
+                  accept=".jpeg, .jpg, .png"
+                  onChange={handleFileChange}
+                  className="mt-2 p-2 pr-10 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  style={{ paddingRight: "2.5rem" }} // kasih space kanan buat icon
+                />
+                <Upload
+                  size={15}
+                  style={{
+                    position: "absolute",
+                    top: "70%",
+                    right: "10px",
+                    transform: "translateY(-50%)",
+                    pointerEvents: "none",
+                    color: "#9CA3AF", // warna abu-abu
+                  }}
+                />
+              </div>
+              {/* <div>
                 <label className="block text-sm font-bold text-gray-700">
                   Foto Profil (opsional)
                 </label>
@@ -215,7 +273,7 @@ const TambahAnggota = ({ onKembali }) => {
                   onChange={handleFileChange}
                   className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                 />
-              </div>
+              </div> */}
             </>
           )}
 
@@ -262,7 +320,7 @@ const TambahAnggota = ({ onKembali }) => {
                 />
               </div>
 
-              <div>
+              {/* <div>
                 <label className="block text-sm font-bold text-gray-700">
                   Status
                 </label>
@@ -276,17 +334,30 @@ const TambahAnggota = ({ onKembali }) => {
                   <option value="Aktif">Aktif</option>
                   <option value="Tidak Aktif">Tidak Aktif</option>
                 </select>
-              </div>
+              </div> */}
 
-              <div>
+              <div style={{ position: "relative", width: "100%" }}>
                 <label className="block text-sm font-bold text-gray-700">
                   Foto Profil (opsional)
                 </label>
                 <input
                   type="file"
                   name="foto_profil"
+                  accept=".jpeg, .jpg, .png"
                   onChange={handleFileChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="mt-2 p-2 pr-10 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  style={{ paddingRight: "2.5rem" }} // kasih space kanan buat icon
+                />
+                <Upload
+                  size={15}
+                  style={{
+                    position: "absolute",
+                    top: "70%",
+                    right: "10px",
+                    transform: "translateY(-50%)",
+                    pointerEvents: "none",
+                    color: "#9CA3AF", // warna abu-abu
+                  }}
                 />
               </div>
             </>
@@ -335,7 +406,7 @@ const TambahAnggota = ({ onKembali }) => {
                 />
               </div>
 
-              <div>
+              {/* <div>
                 <label className="block text-sm font-bold text-gray-700">
                   Status
                 </label>
@@ -349,17 +420,30 @@ const TambahAnggota = ({ onKembali }) => {
                   <option value="Aktif">Aktif</option>
                   <option value="Tidak Aktif">Tidak Aktif</option>
                 </select>
-              </div>
+              </div> */}
 
-              <div>
+              <div style={{ position: "relative", width: "100%" }}>
                 <label className="block text-sm font-bold text-gray-700">
                   Foto Profil (opsional)
                 </label>
                 <input
                   type="file"
                   name="foto_profil"
+                  accept=".jpeg, .jpg, .png"
                   onChange={handleFileChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="mt-2 p-2 pr-10 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  style={{ paddingRight: "2.5rem" }} // kasih space kanan buat icon
+                />
+                <Upload
+                  size={15}
+                  style={{
+                    position: "absolute",
+                    top: "70%",
+                    right: "10px",
+                    transform: "translateY(-50%)",
+                    pointerEvents: "none",
+                    color: "#9CA3AF", // warna abu-abu
+                  }}
                 />
               </div>
             </>

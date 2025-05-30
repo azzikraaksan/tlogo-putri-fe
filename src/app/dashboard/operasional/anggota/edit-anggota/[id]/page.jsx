@@ -174,10 +174,12 @@ import withAuth from "/src/app/lib/withAuth";
 import Sidebar from "/components/Sidebar";
 import UserMenu from "/components/Pengguna";
 import { CircleArrowLeft } from "lucide-react";
+import Hashids from "hashids";
 
 const EditAnggota = () => {
   const router = useRouter();
-  const { id } = useParams();
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  // const { id } = useParams();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -189,6 +191,11 @@ const EditAnggota = () => {
     foto_profil: null,
     foto_jeep: null,
   });
+  const params = useParams();
+  const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
+
+  const decoded = hashids.decode(params.id);
+  const id = decoded[0];
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -273,7 +280,7 @@ const EditAnggota = () => {
       const result = await res.json();
       if (res.ok) {
         alert("Data berhasil diperbarui!");
-        router.push(`/dashboard/operasional/anggota/detail-anggota/${id}`);
+        router.push(`/dashboard/operasional/anggota/detail-anggota/${params.id}`);
       } else {
         alert("Gagal update: " + (result.message || "Terjadi kesalahan."));
       }
@@ -383,8 +390,14 @@ const EditAnggota = () => {
 
   return (
     <div className="flex">
-      <UserMenu />
-      <Sidebar />
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+            
+                  <div
+                    className="transition-all duration-300 ease-in-out"
+                    style={{
+                      marginLeft: isSidebarOpen ? 290 : 70,
+                    }}
+                  ></div>
       <div className="flex-1 p-6">
         <div className="flex items-center gap-2">
           <CircleArrowLeft

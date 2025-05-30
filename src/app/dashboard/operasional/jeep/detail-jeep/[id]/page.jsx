@@ -11,6 +11,7 @@ const DetailJeep = () => {
   const router = useRouter();
   const params = useParams();
   const id = params?.id;
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     if (id) {
@@ -68,8 +69,14 @@ const DetailJeep = () => {
 
   return (
     <div className="flex">
-      <UserMenu />
-      <Sidebar />
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+            
+                  <div
+                    className="transition-all duration-300 ease-in-out"
+                    style={{
+                      marginLeft: isSidebarOpen ? 290 : 70,
+                    }}
+                  ></div>
       <div className="flex-1 p-6">
         <div className="flex items-center gap-2">
           <CircleArrowLeft
