@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Sidebar from '/components/Sidebar.jsx';
-import UserMenu from '/components/Pengguna.jsx';
 import SearchInput from '/components/Search.jsx';
 import EditorArtikel from '/components/EditArtikel.jsx';
 import { FiEdit, FiRotateCcw, FiTrash2 } from 'react-icons/fi';
+import Sidebar from "/components/Sidebar";
 
 function formatStatus(status) {
   if (!status) return 'Konsep'; // default
@@ -23,6 +22,7 @@ export default function Page() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -181,7 +181,14 @@ export default function Page() {
     return (
       <div className="min-h-screen flex bg-white font-poppins">
         <aside className="w-64">
-          <Sidebar />
+          <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+          
+                <div
+                  className="transition-all duration-300 ease-in-out"
+                  style={{
+                    marginLeft: isSidebarOpen ? 290 : 70,
+                  }}
+                ></div>
         </aside>
         <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
           <EditorArtikel
@@ -197,15 +204,19 @@ export default function Page() {
   }
 
   return (
-    <div className="min-h-screen flex bg-white font-poppins">
-      <aside className="w-64">
-        <Sidebar />
-      </aside>
+    <div className="flex bg-white font-poppins">
+        <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+          
+                <div
+                  className="transition-all duration-300 ease-in-out"
+                  style={{
+                    marginLeft: isSidebarOpen ? 290 : 70,
+                  }}
+                ></div>
 
-      <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
+      <main className="md:px-10 py-6 space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-black">Daftar Artikel</h1>
-          <UserMenu />
         </div>
 
         <div className="flex flex-wrap justify-between items-center gap-1">
