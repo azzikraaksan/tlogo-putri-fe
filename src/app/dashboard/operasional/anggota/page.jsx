@@ -278,8 +278,10 @@ import DetailAnggota from "/components/LihatDetail";
 import SearchInput from "/components/Search";
 import withAuth from "/src/app/lib/withAuth";
 import { Trash2, Plus, ListFilter } from "lucide-react";
+import Hashids from "hashids";
 
 const AnggotaPage = () => {
+  const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
   const [searchTerm, setSearchTerm] = useState("");
   const [modeTambah, setModeTambah] = useState(false);
   const [users, setUsers] = useState([]);
@@ -287,9 +289,12 @@ const AnggotaPage = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [roleFilter, setRoleFilter] = useState("");
   const router = useRouter();
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchUsers = async () => {
+      setLoading(true);
       if (typeof window === "undefined") return;
 
       const token = localStorage.getItem("access_token");
@@ -310,6 +315,8 @@ const AnggotaPage = () => {
         setUsers(data);
       } catch (err) {
         console.error("Gagal ambil data users:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -335,7 +342,11 @@ const AnggotaPage = () => {
 
   const handleLihatDetail = (user) => {
     if (user?.id) {
-      router.push(`/dashboard/operasional/anggota/detail-anggota/${user.id}`);
+      const encryptedId = hashids.encode(user.id);
+      router.push(
+        `/dashboard/operasional/anggota/detail-anggota/${encryptedId}`
+      );
+      // router.push(`/dashboard/operasional/anggota/detail-anggota/${user.id}`);
     }
   };
 
@@ -377,10 +388,27 @@ const AnggotaPage = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
+        <div className="shadow-md p-6 rounded-lg text-center">
+          <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex">
-      <UserMenu />
-      <Sidebar />
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+
+      <div
+        className="transition-all duration-300 ease-in-out"
+        style={{
+          marginLeft: isSidebarOpen ? 290 : 70,
+        }}
+      ></div>
 
       <div className="flex-1 p-6">
         {modeTambah ? (

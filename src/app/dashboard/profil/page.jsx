@@ -7,6 +7,7 @@ import UserMenu from "/components/Pengguna";
 export default function ProfilPage() {
   const [user, setUser] = useState(null);
   const router = useRouter();
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -53,8 +54,14 @@ export default function ProfilPage() {
 
   return (
     <div className="flex">
-      <UserMenu />
-      <Sidebar />
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+      
+            <div
+              className="transition-all duration-300 ease-in-out"
+              style={{
+                marginLeft: isSidebarOpen ? 275 : 80,
+              }}
+            ></div>
       <div className="flex-1 p-6">
         <div className="flex items-center gap-2">
           <h1 className="text-[32px] font-semibold">Profil Saya</h1>

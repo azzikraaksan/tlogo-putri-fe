@@ -255,11 +255,17 @@ const BulananPage = ({ children }) => {
 
     // Tentukan kondisi untuk warna tombol "Buat Laporan"
     const isGenerateButtonDisabled = isLoading;
+    const [isSidebarOpen, setSidebarOpen] = useState(true);
 
     return (
-        <div className="flex relative bg-white-50 min-h-screen">
-            <UserMenu />
-            <Sidebar />
+     <div className="flex">
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <div
+        className="flex-1 p-6 transition-all duration-300 ease-in-out"
+        style={{
+          marginLeft: isSidebarOpen ? 290 : 70,
+        }}
+      >
             <div className="flex-1 p-4 md:p-6 relative overflow-y-auto">
                 <h1
                     className="text-[28px] md:text-[32px] font-semibold text-black flex items-center gap-3 cursor-pointer hover:text-[#3D6CB9] transition-colors mb-6"
@@ -410,6 +416,7 @@ const BulananPage = ({ children }) => {
             </div>
 
             {children}
+        </div>
         </div>
     );
 };

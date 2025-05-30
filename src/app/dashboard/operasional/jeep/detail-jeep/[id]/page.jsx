@@ -11,6 +11,7 @@ const DetailJeep = () => {
   const router = useRouter();
   const params = useParams();
   const id = params?.id;
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     if (id) {
@@ -22,7 +23,7 @@ const DetailJeep = () => {
             fetch(`http://localhost:8000/api/jeeps/id/${id}`, {
               headers: { Authorization: `Bearer ${token}` },
             }),
-            fetch("http://localhost:8000/api/users/by-role?role=DRIVER", {
+            fetch("http://localhost:8000/api/users/by-role?role=Driver", {
               headers: { Authorization: `Bearer ${token}` },
             }),
           ]);
@@ -33,7 +34,7 @@ const DetailJeep = () => {
           const driversData = await driversRes.json();
 
           const driver = driversData?.data?.find(
-            (d) => d.id === jeepData.data.users_id
+            (d) => d.id === jeepData.data.driver_id
           );
 
           const combinedData = {
@@ -68,8 +69,14 @@ const DetailJeep = () => {
 
   return (
     <div className="flex">
-      <UserMenu />
-      <Sidebar />
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+            
+                  <div
+                    className="transition-all duration-300 ease-in-out"
+                    style={{
+                      marginLeft: isSidebarOpen ? 290 : 70,
+                    }}
+                  ></div>
       <div className="flex-1 p-6">
         <div className="flex items-center gap-2">
           <CircleArrowLeft

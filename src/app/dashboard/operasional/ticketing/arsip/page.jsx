@@ -4,8 +4,10 @@ import Sidebar from '/components/Sidebar.jsx';
 import UserMenu from '/components/Pengguna.jsx';
 import { CircleArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from "react";
 
 const ArsipPage = () => {
+    const [isSidebarOpen, setSidebarOpen] = useState(true);
     const router = useRouter();
 
     const handleKembali = () => {
@@ -14,13 +16,19 @@ const ArsipPage = () => {
 
     return (
         <div className="flex">
-            <UserMenu />
-            <Sidebar />
+            <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+                  
+                        <div
+                          className="transition-all duration-300 ease-in-out"
+                          style={{
+                            marginLeft: isSidebarOpen ? 290 : 70,
+                          }}
+                        ></div>
             <div className="flex-1 p-6">
                 <div className="flex items-center gap-3 mb-6">
                     <CircleArrowLeft
                         onClick={handleKembali}
-                        className="text-gray-600 hover:text-black cursor-pointer"
+                        className="cursor-pointer"
                         size={28}
                     />
                     <h1 className="text-[32px] font-semibold text-black">Arsip Tiket</h1>

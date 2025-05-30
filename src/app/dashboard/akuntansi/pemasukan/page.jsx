@@ -57,7 +57,7 @@ const formatDateToDisplay = (dateString) => {
 };
 
 /**
- * Memformat objek Date atau string tanggal ke format ISO YYYY-MM-DD.
+ * Memformat objek Date atau string tanggal ke format YYYY-MM-DD.
  * @param {Date|string} date - Objek Date atau string tanggal.
  * @returns {string|null} - Tanggal dalam format YYYY-MM-DD atau null.
  */
@@ -109,21 +109,22 @@ const PemasukanPage = () => {
             const cleanedData = fetchedRawData.map(item => ({
                 booking_date: item.booking_date ? formatDateToDisplay(item.booking_date) : '-',
                 income: parseFloat(item.income || 0),
-                expenditure: parseFloat(item.expenditure || 0),
+                expediture: parseFloat(item.expediture || 0),
                 cash: parseFloat(item.cash || 0),
             }));
 
-            setDataPemasukan(cleanedData);
+            setDataPemasukan(cleanedData); // Simpan data asli yang sudah dibersihkan
 
             if (selectedDateForFilter) {
                 const formattedFilterDate = formatToISODate(selectedDateForFilter);
+                // Filter dari cleanedData (data asli yang sudah diproses)
                 setFilteredData(
                     cleanedData.filter(
-                        (item) => item.booking_date && formatToISODate(item.booking_date) === formattedFilterDate
+                        (item) => item.booking_date && formatToISODate(new Date(item.booking_date.split('-').reverse().join('-'))) === formattedFilterDate
                     )
                 );
             } else {
-                setFilteredData(cleanedData);
+                setFilteredData(cleanedData); // Tampilkan semua data jika tidak ada filter tanggal
             }
 
         } catch (error) {
@@ -134,7 +135,7 @@ const PemasukanPage = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [selectedDateForFilter]);
+    }, [selectedDateForFilter]); // Hanya bergantung pada selectedDateForFilter
 
     // Efek samping: Muat data awal saat komponen dimuat atau filter berubah
     useEffect(() => {
@@ -147,6 +148,7 @@ const PemasukanPage = () => {
     const applyDateFilter = () => {
         setSelectedDateForFilter(tempDateForPicker);
         setIsDatePickerOpen(false);
+        // Pemanggilan fetchAndFilterIncomeData akan otomatis terjadi karena perubahan selectedDateForFilter (dependency di useEffect)
     };
 
     /**
@@ -156,6 +158,7 @@ const PemasukanPage = () => {
         setSelectedDateForFilter(null);
         setTempDateForPicker(null);
         setIsDatePickerOpen(false);
+        // Pemanggilan fetchAndFilterIncomeData akan otomatis terjadi
     };
 
     // --- Laporan & Export Logic ---
@@ -191,7 +194,7 @@ const PemasukanPage = () => {
             const exportData = filteredData.map(item => ({
                 'Tanggal Pemesanan': item.booking_date,
                 'Pemasukan (Rp)': item.income,
-                'Pengeluaran (Rp)': item.expenditure,
+                'Pengeluaran (Rp)': item.expediture,
                 'Kas (Rp)': item.cash,
             }));
             const ws = XLSX.utils.json_to_sheet(exportData);
@@ -223,7 +226,7 @@ const PemasukanPage = () => {
             const tableRows = filteredData.map((item) => [
                 item.booking_date,
                 formatRupiah(item.income),
-                formatRupiah(item.expenditure),
+                formatRupiah(item.expediture),
                 formatRupiah(item.cash),
             ]);
 
@@ -273,7 +276,7 @@ const PemasukanPage = () => {
         if (!confirm("Apakah Anda yakin ingin memicu perhitungan laporan pemasukan otomatis dari backend? Proses ini mungkin memerlukan waktu.")) {
             return;
         }
-        setIsLoading(true);
+        setIsLoading(true); // Tetap set isLoading di awal
         try {
             const response = await fetch(`${API_BASE_URL}/income/create`, {
                 method: 'POST',
@@ -296,12 +299,12 @@ const PemasukanPage = () => {
 
             const result = await response.json();
             alert(`Proses perhitungan laporan pemasukan berhasil dipicu di backend. ${result.message || 'Memuat data terbaru...'}`);
-            await fetchAndFilterIncomeData();
+            await fetchAndFilterIncomeData(); // Muat ulang data setelah laporan dibuat
         } catch (error) {
             console.error("Error saat memicu generate laporan pemasukan:", error);
             alert(`Gagal memicu generate laporan pemasukan: ${error.message}`);
         } finally {
-            setIsLoading(false);
+            setIsLoading(false); // Set isLoading false di akhir, baik sukses maupun gagal
         }
     };
 
@@ -326,11 +329,17 @@ const PemasukanPage = () => {
         "Pengeluaran",
         "Kas",
     ];
+    const [isSidebarOpen, setSidebarOpen] = useState(true);
 
     return (
-        <div className="flex relative bg-white-50 min-h-screen">
-            <UserMenu />
-            <Sidebar />
+     <div className="flex">
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <div
+        className="flex-1 p-6 transition-all duration-300 ease-in-out"
+        style={{
+          marginLeft: isSidebarOpen ? 290 : 70,
+        }}
+      >
             <div className="flex-1 p-4 md:p-6 relative overflow-y-auto">
                 {/* --- Header Halaman --- */}
                 <h1 className="text-[28px] md:text-[32px] font-semibold text-black mb-6">
@@ -392,15 +401,14 @@ const PemasukanPage = () => {
                             )}
                         </div>
 
-                        {/* Tombol Generate Laporan */}
+                        {/* Tombol Generate Laporan --- MODIFIKASI DI SINI --- */}
                         <button
                             onClick={handleGenerateIncomeReport}
-                            // Dinonaktifkan jika sedang loading atau tidak ada data pemasukan
-                            disabled={isLoading || dataPemasukan.length === 0}
+                            disabled={isLoading} // Hanya dinonaktifkan jika isLoading
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
-                                isLoading || dataPemasukan.length === 0
+                                isLoading // Kondisi className juga hanya bergantung pada isLoading
                                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                    : "bg-[#3D6CB9] text-white hover:bg-[#B8D4F9] hover:text-black cursor-pointer" // Warna disamakan
+                                    : "bg-[#3D6CB9] text-white hover:bg-[#B8D4F9] hover:text-black cursor-pointer"
                             }`}
                         >
                             <Zap size={20} />
@@ -438,7 +446,7 @@ const PemasukanPage = () => {
                 </div>
 
                 {/* --- Tabel Data Pemasukan --- */}
-                {isLoading ? (
+                {isLoading && !isDatePickerOpen ? ( // Sembunyikan loading utama jika date picker terbuka
                     <div className="text-center p-10 text-lg font-medium text-gray-700">
                         Memuat data laporan pemasukan, mohon tunggu...
                     </div>
@@ -471,12 +479,12 @@ const PemasukanPage = () => {
                                     ) : (
                                         filteredData.map((item, index) => (
                                             <tr
-                                                key={`row-${index}`}
+                                                key={`row-${index}-${item.booking_date}`} // Tambahkan booking_date untuk key yang lebih unik
                                                 className="border-b text-center border-blue-200 hover:bg-blue-100 transition duration-200"
                                             >
                                                 <td className="p-3 whitespace-nowrap">{item.booking_date}</td>
                                                 <td className="p-3 whitespace-nowrap">{formatRupiah(item.income)}</td>
-                                                <td className="p-3 whitespace-nowrap">{formatRupiah(item.expenditure)}</td>
+                                                <td className="p-3 whitespace-nowrap">{formatRupiah(item.expediture)}</td>
                                                 <td className="p-3 whitespace-nowrap">{formatRupiah(item.cash)}</td>
                                             </tr>
                                         ))
@@ -493,6 +501,7 @@ const PemasukanPage = () => {
                     <span className="text-lg font-semibold text-[#3D6CB9]">{calculateTotalKas()}</span>
                 </div>
             </div>
+        </div>
         </div>
     );
 };

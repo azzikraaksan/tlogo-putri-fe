@@ -1,474 +1,268 @@
-// "use client";
-
-// import { useState, useEffect } from "react";
-// import Sidebar from "/components/Sidebar.jsx";
-// import UserMenu from "/components/Pengguna.jsx";
-// import withAuth from "/src/app/lib/withAuth";
-// import { useRouter } from "next/navigation";
-// import {
-//     LineChart,
-//     Line,
-//     XAxis,
-//     YAxis,
-//     CartesianGrid,
-//     Tooltip,
-//     Legend,
-//     ResponsiveContainer
-// } from "recharts";
-
-// // Dummy generator, nanti ganti fetch backend
-// const generateChartData = (period) => {
-//     const today = new Date();
-//     const data = [];
-
-//     const range = {
-//         Harian: 7,
-//         Bulanan: 6,
-//         Triwulan: 4,
-//         Tahunan: 12
-//     };
-
-//     const count = range[period] || 6;
-
-//     for (let i = count - 1; i >= 0; i--) {
-//         const date = new Date(today);
-//         if (period === "Harian") {
-//             date.setDate(today.getDate() - i);
-//         } else {
-//             date.setMonth(today.getMonth() - i);
-//         }
-
-//         const label =
-//             period === "Harian"
-//                 ? date.toLocaleDateString("id-ID", { day: "2-digit", month: "short" })
-//                 : date.toLocaleString("id-ID", { month: "short", year: "2-digit" });
-
-//         // Contoh data dummy dengan rentang yang lebih besar untuk pengujian
-//         // Pastikan nilai data tidak melebihi 100 juta jika ingin domain 0-100 juta terlihat rapi
-//         const pemasukan = Math.floor(Math.random() * 80000000 + 10000000); // 10jt - 90jt
-//         const pengeluaran = Math.floor(Math.random() * 60000000 + 5000000); // 5jt - 65jt
-//         const kas = pemasukan - pengeluaran;
-
-//         data.push({ label, pemasukan, pengeluaran, kas });
-//     }
-
-//     return data;
-// };
-
-// // Fungsi untuk format angka pada YAxis
-// const formatCurrencyAxis = (tickItem) => {
-//     if (tickItem === 0) return '0'; // Handle nol secara khusus
-//     if (tickItem >= 1000000000) {
-//         return `${(tickItem / 1000000000).toLocaleString('id-ID')} M`; // Miliar
-//     }
-//     if (tickItem >= 1000000) {
-//         return `${(tickItem / 1000000).toLocaleString('id-ID')} Jt`; // Juta
-//     }
-//     if (tickItem >= 1000) {
-//         return `${(tickItem / 1000).toLocaleString('id-ID')} Rb`; // Ribu
-//     }
-//     return tickItem.toLocaleString('id-ID');
-// };
-
-// const KeuanganPage = () => {
-//     const [activePeriod, setActivePeriod] = useState("Bulanan");
-//     const [chartData, setChartData] = useState([]);
-//     const [filteredTotal, setFilteredTotal] = useState({ pemasukan: 0, pengeluaran: 0 });
-//     const [currentTotal, setCurrentTotal] = useState({ pemasukan: 0, pengeluaran: 0 });
-//     const router = useRouter();
-
-//     useEffect(() => {
-//         const nowData = generateChartData("Harian");
-//         const pemasukan = nowData.reduce((sum, item) => sum + item.pemasukan, 0);
-//         const pengeluaran = nowData.reduce((sum, item) => sum + item.pengeluaran, 0);
-//         setCurrentTotal({ pemasukan, pengeluaran });
-//     }, []);
-
-//     useEffect(() => {
-//         const data = generateChartData(activePeriod);
-//         setChartData(data);
-
-//         const pemasukan = data.reduce((sum, item) => sum + item.pemasukan, 0);
-//         const pengeluaran = data.reduce((sum, item) => sum + item.pengeluaran, 0);
-//         setFilteredTotal({ pemasukan, pengeluaran });
-//     }, [activePeriod]);
-
-//     const handleRedirect = (period) => {
-//         const routes = {
-//             Harian: "harian",
-//             Bulanan: "bulanan",
-//             Triwulan: "triwulan",
-//             Tahunan: "tahunan"
-//         };
-//         router.push(`/dashboard/akuntansi/laporan-keuangan/${routes[period]}`);
-//     };
-
-//     return (
-//         <div className="flex h-screen overflow-hidden">
-//             <Sidebar />
-//             <div className="flex-1 flex flex-col overflow-hidden">
-//                 <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-white-50">
-//                     <UserMenu />
-//                     <h1 className="text-[28px] md:text-[32px] font-bold mb-6 text-black">
-//                         Laporan Keuangan
-//                     </h1>
-
-//                     {/* Total Saat Ini */}
-//                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-//                         <div className="p-4 rounded-md shadow-sm bg-blue-50">
-//                             <p className="text-sm text-gray-600">Total Pemasukan Saat Ini</p>
-//                             <p className="text-xl font-bold text-blue-700">
-//                                 Rp {currentTotal.pemasukan.toLocaleString("id-ID")}
-//                             </p>
-//                         </div>
-//                         <div className="p-4 rounded-md shadow-sm bg-red-50">
-//                             <p className="text-sm text-gray-600">Total Pengeluaran Saat Ini</p>
-//                             <p className="text-xl font-bold text-red-700">
-//                                 Rp {currentTotal.pengeluaran.toLocaleString("id-ID")}
-//                             </p>
-//                         </div>
-//                         <div className="p-4 rounded-md shadow-sm bg-green-50">
-//                             <p className="text-sm text-gray-600">Kas Bersih Saat Ini</p>
-//                             <p className="text-xl font-bold text-green-700">
-//                                 Rp {(currentTotal.pemasukan - currentTotal.pengeluaran).toLocaleString("id-ID")}
-//                             </p>
-//                         </div>
-//                     </div>
-
-//                     {/* PILIH PERIODE */}
-//                     <div className="mb-6">
-//                         <p className="font-medium mb-2">Pilih Periode:</p>
-//                         <div className="flex flex-wrap justify-between items-center gap-2">
-//                             <div className="flex gap-2 flex-wrap">
-//                                 {["Harian", "Bulanan", "Triwulan", "Tahunan"].map((period) => (
-//                                     <button
-//                                         key={period}
-//                                         onClick={() => setActivePeriod(period)}
-//                                         className={`px-3 py-1.5 text-sm rounded-md shadow-sm font-medium ${
-//                                             activePeriod === period
-//                                                 ? "bg-blue-600 text-white"
-//                                                 : "bg-gray-200 text-gray-800"
-//                                         }`}
-//                                     >
-//                                         {period}
-//                                     </button>
-//                                 ))}
-//                             </div>
-
-//                             <div className="text-right">
-//                                 <button
-//                                     onClick={() => handleRedirect(activePeriod)}
-//                                     className="text-blue-600 hover:underline font-medium text-sm whitespace-nowrap"
-//                                 >
-//                                     Lihat Tabel {activePeriod}
-//                                 </button>
-//                             </div>
-//                         </div>
-//                     </div>
-
-//                     {/* GRAFIK */}
-//                     <div className="bg-white shadow-md rounded-lg p-8 mb-6">
-//                         <h3 className="text-lg font-semibold mb-4">Grafik {activePeriod}</h3>
-//                         <ResponsiveContainer width="100%" height={375}>
-//                             <LineChart data={chartData}>
-//                                 <CartesianGrid strokeDasharray="3 3" />
-//                                 <XAxis dataKey="label" />
-//                                 <YAxis
-//                                     domain={[0, 100000000]} // Mengatur domain dari 0 hingga 100 juta
-//                                     ticks={[0, 10000000, 20000000, 30000000, 40000000, 50000000, 60000000, 70000000, 80000000, 90000000, 100000000]} // Menentukan ticks setiap 10 juta
-//                                     tickFormatter={formatCurrencyAxis} // Menggunakan formatter untuk tampilan lebih ringkas
-//                                     width={80} // Memberikan lebar yang cukup untuk label
-//                                 />
-//                                 <Tooltip formatter={(value) => `Rp ${value.toLocaleString("id-ID")}`} />
-//                                 <Legend />
-//                                 <Line type="linear" dataKey="pemasukan" stroke="#2563eb" strokeWidth={2} name="Pemasukan" />
-//                                 <Line type="linear" dataKey="pengeluaran" stroke="#dc2626" strokeWidth={2} name="Pengeluaran" />
-//                                 <Line type="linear" dataKey="kas" stroke="#16a34a" strokeWidth={2} name="Kas Bersih" />
-//                             </LineChart>
-//                         </ResponsiveContainer>
-//                     </div>
-//                 </div>
-//             </div>
-//         </div>
-//     );
-// };
-
-// export default withAuth(KeuanganPage);
-
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react"; // Tambahkan useMemo
 import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
 import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
 import {
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-    Legend,
-    ResponsiveContainer
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from "recharts";
+import { TrendingUp, TrendingDown, DollarSign, FileText, BarChart2, ChevronRight } from "lucide-react";
 
-// Base URL untuk API backend Anda
-const API_BASE_URL = "http://localhost:8000/api";
+// Base URL (tidak terpakai karena simulasi, tapi tetap ada untuk struktur)
+// const API_BASE_URL = "http://localhost:8000/api"; // Bisa di-uncomment jika API sudah ada
 
-// Fungsi untuk format angka pada YAxis
-const formatCurrencyAxis = (tickItem) => {
-    if (tickItem === 0) return '0';
-    if (tickItem >= 1000000000) {
-        return `${(tickItem / 1000000000).toLocaleString('id-ID')} M`; // Miliar
+// Fungsi untuk format angka (Rupiah) - sudah di luar komponen
+const formatCurrency = (value, type = "full") => {
+    if (typeof value !== 'number' || isNaN(value)) return type === "axis" ? '0' : 'Rp 0';
+
+    if (type === "axis") {
+        if (value === 0) return '0';
+        if (Math.abs(value) >= 1000000000) return `${(value / 1000000000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} M`;
+        if (Math.abs(value) >= 1000000) return `${(value / 1000000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} Jt`;
+        if (Math.abs(value) >= 1000) return `${(value / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} Rb`;
+        return value.toLocaleString('id-ID');
     }
-    if (tickItem >= 1000000) {
-        return `${(tickItem / 1000000).toLocaleString('id-ID')} Jt`; // Juta
-    }
-    if (tickItem >= 1000) {
-        return `${(tickItem / 1000).toLocaleString('id-ID')} Rb`; // Ribu
-    }
-    return tickItem.toLocaleString('id-ID');
+    return `Rp ${value.toLocaleString("id-ID", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 };
 
+// Definisikan monthNames di luar komponen agar stabil referensinya
+const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"];
+
+// Helper untuk merender kartu ringkasan - pindahkan ke luar komponen karena pure
+const SummaryCard = ({ title, value, percentage, icon: IconComponent, colorTheme, isLoading }) => {
+    const percentageText = title === "Kas Bersih" ? "Margin dari Pemasukan" : "Dari Total Aktivitas";
+    return (
+        <div className={`p-5 rounded-lg shadow-md flex flex-col justify-between ${colorTheme.bgFaint} border-l-4 ${colorTheme.border}`}>
+            <div>
+                <div className="flex items-center justify-between mb-1">
+                    <h3 className={`text-sm font-medium ${colorTheme.textHard}`}>{title}</h3>
+                    <IconComponent className={`w-6 h-6 ${colorTheme.icon}`} />
+                </div>
+                {isLoading ? (
+                    <>
+                        <div className="h-7 bg-gray-300 rounded animate-pulse w-3/4 my-1"></div>
+                        <div className="h-4 bg-gray-300 rounded animate-pulse w-1/2 mt-2"></div>
+                    </>
+                ) : (
+                    <>
+                        <p className={`text-2xl font-bold ${colorTheme.textHard}`}>{formatCurrency(value)}</p>
+                        {percentage !== null && typeof percentage === 'number' && (
+                            <p className={`text-xs ${colorTheme.textSoft} mt-1`}>
+                                <span className={`${percentage >= 0 ? 'text-green-600' : 'text-red-500'} font-semibold`}>
+                                    {percentage >= 0 ? `▲` : `▼`} {Math.abs(percentage).toFixed(1)}%
+                                </span>
+                                &nbsp;{percentageText}
+                            </p>
+                        )}
+                    </>
+                )}
+            </div>
+        </div>
+    );
+};
+
+// Daftar laporan untuk navigasi - pindahkan ke luar atau memoize jika di dalam
+// Karena menggunakan FileText (import) secara langsung, lebih baik di memoize jika tetap di dalam
+// Atau jika FileText stabil (seperti import dari library), bisa juga di luar.
+// Untuk kasus ini, kita bisa memoize di dalam komponen.
+const initialReportNavigations = [
+    { label: "Harian", route: "harian", icon: FileText, description: "Lihat transaksi harian." },
+    { label: "Bulanan", route: "bulanan", icon: FileText, description: "Rekapitulasi per bulan." },
+    { label: "Triwulan", route: "triwulan", icon: FileText, description: "Laporan per tiga bulan." },
+    { label: "Tahunan", route: "tahunan", icon: FileText, description: "Ringkasan keuangan tahunan." },
+];
+
+
 const KeuanganPage = () => {
-    const [activePeriod, setActivePeriod] = useState("Bulanan");
-    const [chartData, setChartData] = useState([]);
-    const [isLoadingChart, setIsLoadingChart] = useState(false);
-    const [currentTotal, setCurrentTotal] = useState({ pemasukan: 0, pengeluaran: 0 });
-    const [isLoadingTotals, setIsLoadingTotals] = useState(true);
+    const [summaryCardData, setSummaryCardData] = useState({
+        totalPemasukan: 0,
+        totalPengeluaran: 0,
+        totalKas: 0,
+        persenPemasukan: null, // Optimasi: Gunakan null untuk state awal persentase
+        persenPengeluaran: null,
+        marginKasBersih: null,
+    });
+    const [chartData12Months, setChartData12Months] = useState([]);
+    const [isLoadingSummary, setIsLoadingSummary] = useState(true);
+    const [isLoadingChart, setIsLoadingChart] = useState(true);
     const router = useRouter();
 
-    // Fungsi untuk mengambil total pemasukan dan pengeluaran saat ini
-    const fetchCurrentTotals = useCallback(async () => {
-        setIsLoadingTotals(true);
-        let totalIncome = 0;
-        let totalExpenditure = 0;
+    // Memoize reportNavigations karena mengandung komponen (FileText)
+    // Meskipun FileText adalah import yang stabil, ini adalah praktik yang baik jika struktur datanya kompleks.
+    const reportNavigations = useMemo(() => initialReportNavigations, []);
+
+
+    // 1. Fungsi SIMULASI untuk mengambil dan mengkalkulasi data untuk Kartu Ringkasan
+    const fetchAndCalculateSummaryDataSimulated = useCallback(async () => {
+        setIsLoadingSummary(true);
+        await new Promise(resolve => setTimeout(resolve, 800));
 
         try {
-            // Fetch total income
-            const incomeResponse = await fetch(`${API_BASE_URL}/income/all`);
-            if (incomeResponse.ok) {
-                const incomeResult = await incomeResponse.json();
-                // Memastikan incomeResult adalah array atau memiliki properti 'data' yang merupakan array
-                const incomeArray = Array.isArray(incomeResult) ? incomeResult : (incomeResult && Array.isArray(incomeResult.data) ? incomeResult.data : []);
-                totalIncome = incomeArray.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
-            } else {
-                console.error("Failed to fetch income data:", incomeResponse.status, incomeResponse.statusText);
-            }
+            const totalPemasukan = Math.random() * 1.5e9 + 0.5e9; 
+            const totalPengeluaran = Math.random() * (totalPemasukan * 0.8) + (totalPemasukan * 0.2); // Pengeluaran antara 20% - 80% Pemasukan
+            
+            const totalKas = totalPemasukan - totalPengeluaran;
+            const totalAktivitasFinansial = totalPemasukan + totalPengeluaran;
 
-            // Fetch total expenditure
-            const expenditureResponse = await fetch(`${API_BASE_URL}/expenditures/all`);
-            if (expenditureResponse.ok) {
-                const expenditureResult = await expenditureResponse.json();
-                // Memastikan expenditureResult adalah array atau memiliki properti 'data' yang merupakan array
-                const expenditureArray = Array.isArray(expenditureResult) ? expenditureResult : (expenditureResult && Array.isArray(expenditureResult.data) ? expenditureResult.data : []);
-                totalExpenditure = expenditureArray.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
-            } else {
-                console.error("Failed to fetch expenditure data:", expenditureResponse.status, expenditureResponse.statusText);
-            }
+            const persenPemasukan = totalAktivitasFinansial > 0 ? (totalPemasukan / totalAktivitasFinansial) * 100 : 0;
+            const persenPengeluaran = totalAktivitasFinansial > 0 ? (totalPengeluaran / totalAktivitasFinansial) * 100 : 0;
+            const marginKasBersih = totalPemasukan > 0 ? (totalKas / totalPemasukan) * 100 : 0;
 
-            setCurrentTotal({ pemasukan: totalIncome, pengeluaran: totalExpenditure });
-
+            setSummaryCardData({
+                totalPemasukan,
+                totalPengeluaran,
+                totalKas,
+                persenPemasukan,
+                persenPengeluaran,
+                marginKasBersih,
+            });
         } catch (error) {
-            console.error("Error fetching current totals:", error);
-            setCurrentTotal({ pemasukan: 0, pengeluaran: 0 });
+            console.error("Error (simulated) fetching summary data:", error);
+            setSummaryCardData({ totalPemasukan: 0, totalPengeluaran: 0, totalKas: 0, persenPemasukan: null, persenPengeluaran: null, marginKasBersih: null });
         } finally {
-            setIsLoadingTotals(false);
+            setIsLoadingSummary(false);
         }
     }, []);
 
-    // Fungsi untuk mengambil data grafik berdasarkan periode aktif
-    const fetchChartData = useCallback(async () => {
+    // 2. Fungsi SIMULASI untuk mengambil data Grafik 12 Bulan Terakhir
+    const fetchChartData12MonthsSimulated = useCallback(async () => {
         setIsLoadingChart(true);
-        let endpoint = '';
-        const currentYear = new Date().getFullYear();
-        const currentMonth = new Date().getMonth() + 1; // getMonth() is 0-indexed
-        const currentQuarter = Math.ceil(currentMonth / 3);
-
-        switch (activePeriod) {
-            case "Harian":
-                endpoint = `${API_BASE_URL}/dailyreports/alldaily`;
-                break;
-            case "Bulanan":
-                endpoint = `${API_BASE_URL}/reports/bulan?month=${currentMonth}&year=${currentYear}`;
-                break;
-            case "Triwulan":
-                endpoint = `${API_BASE_URL}/reports/triwulan?quarter=${currentQuarter}&year=${currentYear}`;
-                break;
-            case "Tahunan":
-                endpoint = `${API_BASE_URL}/reports/tahun?year=${currentYear}`;
-                break;
-            default:
-                endpoint = `${API_BASE_URL}/reports/bulan?month=${currentMonth}&year=${currentYear}`;
-                break;
-        }
+        await new Promise(resolve => setTimeout(resolve, 1200));
 
         try {
-            const response = await fetch(endpoint);
-            if (!response.ok) {
-                console.error(`Failed to fetch ${activePeriod} chart data:`, response.status, response.statusText);
-                setChartData([]);
-                return;
+            const data = [];
+            const today = new Date();
+            for (let i = 11; i >= 0; i--) {
+                const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                const monthPemasukan = Math.random() * 80000000 + 20000000;
+                const monthPengeluaran = Math.random() * (monthPemasukan * 0.7) + (monthPemasukan * 0.1); // Pengeluaran bulanan antara 10-70% Pemasukan bulan itu
+                data.push({
+                    year: date.getFullYear(),
+                    month: date.getMonth() + 1, 
+                    total_pemasukan: monthPemasukan,
+                    total_pengeluaran: monthPengeluaran,
+                });
             }
-            const rawData = await response.json();
-            const fetchedData = Array.isArray(rawData) ? rawData : (rawData && Array.isArray(rawData.data) ? rawData.data : []);
-
-            // Transform fetchedData to chartData format { label, pemasukan, pengeluaran, kas }
-            const transformedData = fetchedData.map(item => {
-                let label = '';
-                // Asumsi nama properti dari API sesuai dengan skema 'report'
-                const pemasukan = parseFloat(item.cash || 0);
-                const pengeluaran = parseFloat(item.expenditure || 0);
-                const kas = parseFloat(item.net_cash || (pemasukan - pengeluaran)); // Jika net_cash tidak langsung ada, hitung
-
-                if (activePeriod === "Harian") {
-                    // Asumsi dailyreports/alldaily memiliki 'report_date' atau 'created_at'
-                    label = new Date(item.report_date || item.created_at).toLocaleDateString("id-ID", { day: "2-digit", month: "short" });
-                } else if (activePeriod === "Bulanan") {
-                    // Asumsi reports/bulan memiliki 'report_date'
-                    label = new Date(item.report_date).toLocaleString("id-ID", { month: "short", year: "2-digit" });
-                } else if (activePeriod === "Triwulan") {
-                    // Asumsi reports/triwulan memiliki 'quarter' dan 'year'
-                    label = `T${item.quarter || currentQuarter} ${item.year || currentYear}`;
-                } else if (activePeriod === "Tahunan") {
-                    // Asumsi reports/tahun memiliki 'year'
-                    label = `${item.year || currentYear}`;
-                }
-
-                return { label, pemasukan, pengeluaran, kas };
-            });
-
-            setChartData(transformedData);
-
+            
+            const transformedData = data.map(item => ({
+                label: `${monthNames[item.month - 1]} '${String(item.year).slice(-2)}`,
+                pemasukan: parseFloat(item.total_pemasukan || 0),
+                pengeluaran: parseFloat(item.total_pengeluaran || 0),
+                kas: parseFloat(item.total_pemasukan || 0) - parseFloat(item.total_pengeluaran || 0),
+            }));
+            setChartData12Months(transformedData);
         } catch (error) {
-            console.error(`Error fetching ${activePeriod} chart data:`, error);
-            setChartData([]);
+            console.error("Error (simulated) fetching 12-month chart data:", error);
+            setChartData12Months([]);
         } finally {
             setIsLoadingChart(false);
         }
-    }, [activePeriod]);
+    }, []); // monthNames diambil dari scope luar yang stabil, jadi dependensi bisa kosong
 
-    // Initial fetch for current totals
     useEffect(() => {
-        fetchCurrentTotals();
-    }, [fetchCurrentTotals]);
+        fetchAndCalculateSummaryDataSimulated();
+        fetchChartData12MonthsSimulated();
+    }, [fetchAndCalculateSummaryDataSimulated, fetchChartData12MonthsSimulated]);
 
-    // Fetch chart data whenever activePeriod changes
-    useEffect(() => {
-        fetchChartData();
-    }, [activePeriod, fetchChartData]);
-
-    const handleRedirect = (period) => {
-        const routes = {
-            Harian: "harian",
-            Bulanan: "bulanan",
-            Triwulan: "triwulan",
-            Tahunan: "tahunan"
-        };
-        router.push(`/dashboard/akuntansi/laporan-keuangan/${routes[period]}`);
-    };
+    // 3. Fungsi untuk navigasi ke halaman tabel detail
+    const handleNavigateToReport = useCallback((reportType) => {
+        router.push(`/dashboard/akuntansi/laporan-keuangan/${reportType}`);
+    }, [router]); // router dari useRouter() stabil
+    const [isSidebarOpen, setSidebarOpen] = useState(true);
 
     return (
-        <div className="flex h-screen overflow-hidden">
-            <Sidebar />
+     <div className="flex">
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <div
+        className="flex-1 p-6 transition-all duration-300 ease-in-out"
+        style={{
+          marginLeft: isSidebarOpen ? 290 : 70,
+        }}
+      >
             <div className="flex-1 flex flex-col overflow-hidden">
-                <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-white-50">
-                    <UserMenu />
-                    <h1 className="text-[28px] md:text-[32px] font-bold mb-6 text-black">
+                <main className="flex-1 overflow-x-hidden overflow-y-auto p-4 md:p-6">
+                    <h1 className="text-2xl md:text-3xl font-semibold text-slate-800 mb-6">
                         Laporan Keuangan
                     </h1>
 
-                    {/* Total Saat Ini */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div className="p-4 rounded-md shadow-sm bg-blue-50">
-                            <p className="text-sm text-gray-600">Total Pemasukan Saat Ini</p>
-                            {isLoadingTotals ? (
-                                <p className="text-xl font-bold text-blue-700">Memuat...</p>
-                            ) : (
-                                <p className="text-xl font-bold text-blue-700">
-                                    Rp {currentTotal.pemasukan.toLocaleString("id-ID")}
-                                </p>
-                            )}
-                        </div>
-                        <div className="p-4 rounded-md shadow-sm bg-red-50">
-                            <p className="text-sm text-gray-600">Total Pengeluaran Saat Ini</p>
-                            {isLoadingTotals ? (
-                                <p className="text-xl font-bold text-red-700">Memuat...</p>
-                            ) : (
-                                <p className="text-xl font-bold text-red-700">
-                                    Rp {currentTotal.pengeluaran.toLocaleString("id-ID")}
-                                </p>
-                            )}
-                        </div>
-                        <div className="p-4 rounded-md shadow-sm bg-green-50">
-                            <p className="text-sm text-gray-600">Kas Bersih Saat Ini</p>
-                            {isLoadingTotals ? (
-                                <p className="text-xl font-bold text-green-700">Memuat...</p>
-                            ) : (
-                                <p className="text-xl font-bold text-green-700">
-                                    Rp {(currentTotal.pemasukan - currentTotal.pengeluaran).toLocaleString("id-ID")}
-                                </p>
-                            )}
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-4 mb-4 md:mb-4">
+                        <SummaryCard title="Total Pemasukan" value={summaryCardData.totalPemasukan} percentage={summaryCardData.persenPemasukan} icon={TrendingUp}
+                            colorTheme={{ bgFaint: "bg-emerald-50", border: "border-emerald-500", textHard: "text-emerald-700", textSoft: "text-emerald-600", icon: "text-emerald-500" }} isLoading={isLoadingSummary} />
+                        <SummaryCard title="Total Pengeluaran" value={summaryCardData.totalPengeluaran} percentage={summaryCardData.persenPengeluaran} icon={TrendingDown}
+                            colorTheme={{ bgFaint: "bg-rose-50", border: "border-rose-500", textHard: "text-rose-700", textSoft: "text-rose-600", icon: "text-rose-500" }} isLoading={isLoadingSummary} />
+                        <SummaryCard title="Kas Bersih" value={summaryCardData.totalKas} percentage={summaryCardData.marginKasBersih} icon={DollarSign}
+                            colorTheme={{ bgFaint: "bg-sky-50", border: "border-sky-500", textHard: "text-sky-700", textSoft: "text-sky-600", icon: "text-sky-500" }} isLoading={isLoadingSummary} />
                     </div>
 
-                    {/* PILIH PERIODE */}
-                    <div className="mb-6">
-                        <p className="font-medium mb-2">Pilih Periode:</p>
-                        <div className="flex flex-wrap justify-between items-center gap-2">
-                            <div className="flex gap-2 flex-wrap">
-                                {["Harian", "Bulanan", "Triwulan", "Tahunan"].map((period) => (
-                                    <button
-                                        key={period}
-                                        onClick={() => setActivePeriod(period)}
-                                        className={`px-3 py-1.5 text-sm rounded-md shadow-sm font-medium ${
-                                            activePeriod === period
-                                                ? "bg-blue-600 text-white"
-                                                : "bg-gray-200 text-gray-800"
-                                        }`}
-                                    >
-                                        {period}
-                                    </button>
-                                ))}
-                            </div>
-
-                            <div className="text-right">
-                                <button
-                                    onClick={() => handleRedirect(activePeriod)}
-                                    className="text-blue-600 hover:underline font-medium text-sm whitespace-nowrap"
-                                >
-                                    Lihat Tabel {activePeriod}
-                                </button>
-                            </div>
+                    <div className="bg-white shadow-lg rounded-lg p-4 md:p-6 mb-6 md:mb-8">
+                        <div className="flex justify-between items-center mb-1">
+                             <h2 className="text-lg font-semibold text-slate-700">Ringkasan Keuangan</h2>
+                             {/* Opsional: Tombol refresh manual */}
+                             {/* <button onClick={fetchChartData12MonthsSimulated} className="text-xs text-sky-600 hover:text-sky-800">Refresh Grafik</button> */}
                         </div>
-                    </div>
-
-                    {/* GRAFIK */}
-                    <div className="bg-white shadow-md rounded-lg p-8 mb-6">
-                        <h3 className="text-lg font-semibold mb-4">Grafik {activePeriod}</h3>
+                        <p className="text-sm text-slate-500 mb-4">
+                            Tren 12 bulan terakhir ({chartData12Months.length > 0 && chartData12Months[0].label ? chartData12Months[0].label : ''} - {chartData12Months.length > 0 && chartData12Months[chartData12Months.length-1].label ? chartData12Months[chartData12Months.length-1].label: ''})
+                        </p>
+                        
                         {isLoadingChart ? (
-                            <div className="text-center p-10 text-lg font-medium text-gray-700">Memuat data grafik, mohon tunggu...</div>
-                        ) : (
-                            <ResponsiveContainer width="100%" height={375}>
-                                <LineChart data={chartData}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="label" />
-                                    <YAxis
-                                        domain={[0, 'auto']}
-                                        tickFormatter={formatCurrencyAxis}
-                                        width={80}
+                            <div className="flex flex-col justify-center items-center h-[350px] text-slate-500">
+                                <BarChart2 className="w-10 h-10 text-slate-400 animate-pulse mb-2" />
+                                Memuat data grafik...
+                            </div>
+                        ) : chartData12Months.length > 0 ? (
+                            <ResponsiveContainer width="100%" height={350}>
+                                <LineChart data={chartData12Months} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                    <XAxis dataKey="label" stroke="#6b7280" tick={{ fontSize: 10 }} />
+                                    <YAxis stroke="#6b7280" tickFormatter={(value) => formatCurrency(value, "axis")} tick={{ fontSize: 10 }} />
+                                    <Tooltip 
+                                        formatter={(value, name) => [formatCurrency(value), name]} 
+                                        labelStyle={{ fontWeight: 'bold', color: '#374151' }} 
+                                        itemStyle={{ color: '#4b5563'}}
+                                        wrapperClassName="rounded-md shadow-lg !border-slate-200 !bg-white/90 backdrop-blur-sm !text-xs" 
                                     />
-                                    <Tooltip formatter={(value) => `Rp ${value.toLocaleString("id-ID")}`} />
-                                    <Legend />
-                                    <Line type="linear" dataKey="pemasukan" stroke="#2563eb" strokeWidth={2} name="Pemasukan" />
-                                    <Line type="linear" dataKey="pengeluaran" stroke="#dc2626" strokeWidth={2} name="Pengeluaran" />
-                                    <Line type="linear" dataKey="kas" stroke="#16a34a" strokeWidth={2} name="Kas Bersih" />
+                                    <Legend iconSize={10} wrapperStyle={{ fontSize: '12px', paddingTop: '15px' }} />
+                                    <Line type="monotone" dataKey="pemasukan" stroke="#10b981" strokeWidth={2} dot={{ r: 3, strokeWidth:1, fill: "#10b981" }} activeDot={{ r: 5, strokeWidth:1 }} name="Pemasukan" />
+                                    <Line type="monotone" dataKey="pengeluaran" stroke="#f43f5e" strokeWidth={2} dot={{ r: 3, strokeWidth:1, fill: "#f43f5e" }} activeDot={{ r: 5, strokeWidth:1 }} name="Pengeluaran" />
+                                    <Line type="monotone" dataKey="kas" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3, strokeWidth:1, fill: "#3b82f6" }} activeDot={{ r: 5, strokeWidth:1 }} name="Kas Bersih" />
                                 </LineChart>
                             </ResponsiveContainer>
+                        ) : (
+                             <div className="flex flex-col justify-center items-center h-[350px] text-slate-500">
+                                <BarChart2 className="w-10 h-10 text-slate-400 opacity-50 mb-2" />
+                                Tidak ada data untuk ditampilkan pada grafik.
+                            </div>
                         )}
                     </div>
-                </div>
+
+                    <div className="bg-white shadow-lg rounded-lg p-4 md:p-6">
+                        <h2 className="text-lg font-semibold text-slate-700 mb-4">Laporan Keuangan Rinci</h2>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            {reportNavigations.map((report) => {
+                                const Icon = report.icon; // Icon diambil dari objek report
+                                return (
+                                    <button
+                                        key={report.route}
+                                        onClick={() => handleNavigateToReport(report.route)}
+                                        className="group flex items-center justify-between p-4 rounded-md bg-slate-50 hover:bg-sky-100 border border-slate-200 hover:border-sky-300 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-opacity-50"
+                                    >
+                                        <div className="flex items-center">
+                                            <Icon className="w-5 h-5 text-sky-600 mr-3 transition-colors duration-200 group-hover:text-sky-700" />
+                                            <div>
+                                                <p className="text-sm font-medium text-slate-700 group-hover:text-sky-800 text-left">{report.label}</p>
+                                                <p className="text-xs text-slate-500 group-hover:text-sky-600 text-left">{report.description}</p>
+                                            </div>
+                                        </div>
+                                        <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-sky-500 transition-transform duration-200 group-hover:translate-x-1" />
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </main>
+            </div>
             </div>
         </div>
     );

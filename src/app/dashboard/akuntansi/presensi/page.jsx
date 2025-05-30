@@ -1,15 +1,15 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import Sidebar from "/components/Sidebar.jsx";
-import UserMenu from "/components/Pengguna.jsx";
-import withAuth from "/src/app/lib/withAuth";
+import Sidebar from "/components/Sidebar.jsx"; // Sesuaikan path jika diperlukan
+import UserMenu from "/components/Pengguna.jsx"; // Sesuaikan path jika diperlukan
+import withAuth from "/src/app/lib/withAuth"; // Sesuaikan path jika diperlukan
 import {
     CalendarDays,
     FileText,
     FileSpreadsheet,
     RotateCcw,
-    Zap, // Mengimpor ikon Zap (petir)
+    Zap // Icon untuk generate laporan (Buat Laporan)
 } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -17,230 +17,185 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-// Base URL for your API
-const API_BASE_URL = 'http://localhost:8000/api';
+// --- Base URL untuk API backend Anda ---
+const API_BASE_URL = "http://localhost:8000/api";
 
-// Fungsi helper untuk memformat tanggal ke format 'YYYY-MM-DD' untuk perbandingan yang konsisten
-const formatToISODate = (date) => {
-    if (!date) return null;
-    const d = date instanceof Date ? date : new Date(date);
-    if (isNaN(d.getTime())) return null;
-    return d.toISOString().split('T')[0]; // Ambil hanya YYYY-MM-DD
-};
+// --- Helper Functions ---
 
-// Fungsi helper untuk memformat tanggal untuk tampilan (DD-MM-YYYY)
+/**
+ * Memformat string tanggal atau objek Date ke tampilan DD-MM-YYYY.
+ * @param {string|Date} dateInput - String tanggal dari backend atau objek Date.
+ * @returns {string} - Tanggal dalam format DD-MM-YYYY atau '-'.
+ */
 const formatDateToDisplay = (dateInput) => {
-    if (!dateInput) return "";
+    if (!dateInput) return "-";
     let d;
-    // Handle string date, convert to Date object if it's not already
     if (typeof dateInput === 'string') {
-        // Check if it's already in 'YYYY-MM-DD' format (from backend often)
-        if (dateInput.includes('T')) {
-            d = new Date(dateInput); // ISO string
-        } else {
-            // Assume 'YYYY-MM-DD' or similar format, parse manually for safety
-            const parts = dateInput.split('-');
-            if (parts.length === 3 && parts[0].length === 4) { // YYYY-MM-DD
+        if (dateInput.includes('T')) { // Menangani format ISO seperti "2025-05-30T04:29:48.000000Z"
+            d = new Date(dateInput);
+        } else { // Mencoba menangani format seperti "2025-05-30 00:00:00" atau "2025-05-30"
+            const parts = dateInput.split(' ')[0].split('-'); // Ambil bagian tanggal saja jika ada waktu
+            if (parts.length === 3 && parts[0].length === 4) {
                 d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
             } else {
-                d = new Date(dateInput); // Try to parse other string formats
+                d = new Date(dateInput); // Fallback jika format tidak dikenal
             }
         }
     } else if (dateInput instanceof Date) {
         d = dateInput;
     } else {
-        return ""; // Invalid date type
+        return "-"; // Tipe tidak valid
     }
 
-    if (isNaN(d.getTime())) return ""; // Check for invalid Date object
-
+    if (isNaN(d.getTime())) {
+        return dateInput.toString(); // Kembalikan input asli jika tidak valid Date
+    }
     const day = d.getDate().toString().padStart(2, "0");
     const month = (d.getMonth() + 1).toString().padStart(2, "0");
     const year = d.getFullYear();
     return `${day}-${month}-${year}`;
 };
 
-// Komponen utama halaman Presensi
-const PresensiPage = ({ children }) => {
-    const [dataPresensi, setDataPresensi] = useState([]); // Data mentah dari API
-    const [filteredData, setFilteredData] = useState([]); // Data setelah filter tanggal
-    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-    const [selectedDateForFilter, setSelectedDateForFilter] = useState(null); // Objek Date untuk filter
-    const [tempDateForPicker, setTempDateForPicker] = useState(null); // Objek Date untuk DatePicker sementara
+/**
+ * Memformat objek Date atau string tanggal ke format YYYY-MM-DD.
+ * @param {Date|string} date - Objek Date atau string tanggal.
+ * @returns {string|null} - Tanggal dalam format YYYY-MM-DD atau null.
+ */
+const formatToISODate = (date) => {
+    if (!date) return null;
+    const d = date instanceof Date ? date : new Date(date);
+    if (isNaN(d.getTime())) return null;
+    return d.toISOString().split('T')[0];
+};
+
+
+// --- Komponen PresensiPage ---
+const PresensiPage = ({ children }) => { // children ditambahkan untuk konsistensi jika ada intercepting routes
+    // State untuk menyimpan data presensi mentah dari backend
+    const [dataPresensi, setDataPresensi] = useState([]);
+    // State untuk menyimpan data yang sudah difilter (untuk ditampilkan di tabel)
+    const [filteredData, setFilteredData] = useState([]);
+    // State untuk indikator loading data
     const [isLoading, setIsLoading] = useState(true);
+    // State untuk mengontrol tampilan date picker
+    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+    // State untuk tanggal yang dipilih sebagai filter (setelah dikonfirmasi)
+    const [selectedDateForFilter, setSelectedDateForFilter] = useState(null);
+    // State sementara untuk tanggal di dalam date picker sebelum diterapkan
+    const [tempDateForPicker, setTempDateForPicker] = useState(null);
+    // Ref untuk elemen date picker, digunakan untuk mendeteksi klik di luar
     const calendarRef = useRef(null);
 
-    // Fungsi untuk menerapkan filter ke data
-    const applyFilterToData = useCallback((rawData, dateFilter) => {
-        if (!Array.isArray(rawData)) {
-            console.warn("Data mentah untuk filter bukan array, mengatur filteredData menjadi array kosong.");
-            setFilteredData([]);
-            return;
-        }
-
-        if (dateFilter) {
-            const formattedFilterDate = formatToISODate(dateFilter);
-            const filtered = rawData.filter(item => {
-                // Pastikan item.tanggal_bergabung adalah string yang valid sebelum diformat
-                return item.tanggal_bergabung && formatToISODate(item.tanggal_bergabung) === formattedFilterDate;
-            });
-            setFilteredData(filtered);
-        } else {
-            setFilteredData(rawData); // Tampilkan semua jika tidak ada filter
-        }
-    }, []);
-
-    // Fungsi untuk memuat data dari API
-    const fetchDataPresensi = useCallback(async () => {
+    /**
+     * Mengambil data presensi dari backend dan menerapkan filter jika ada.
+     * Menggunakan useCallback agar fungsi tidak dibuat ulang pada setiap render kecuali dependensinya berubah.
+     */
+    const fetchAndFilterPresensiData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/rekap-presensi/all`, {
-                headers: {
-                    'Accept': 'application/json',
-                },
-            });
-
+            // 1. Fetch data dari endpoint /rekap-presensi/all
+            const response = await fetch(`${API_BASE_URL}/rekap-presensi/all`);
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const errorText = await response.text();
+                throw new Error(`HTTP error! Status: ${response.status}. Detail: ${errorText || 'Tidak ada detail error.'}`);
+            }
+            const result = await response.json(); // Asumsi backend mengembalikan { data: [...] } atau langsung [...]
+
+            // Pastikan data yang diambil adalah array
+            const fetchedRawData = Array.isArray(result) ? result : result.data || [];
+            if (!Array.isArray(fetchedRawData)) {
+                console.error("Data dari backend (/rekap-presensi/all) bukan array atau tidak memiliki properti 'data':", fetchedRawData);
+                throw new Error("Format data dari backend tidak valid.");
             }
 
-            const result = await response.json();
-            console.log("Data dari API rekap presensi:", result.data);
+            // Simpan data mentah yang sudah divalidasi (tidak ada cleaning khusus di sini seperti PemasukanPage)
+            setDataPresensi(fetchedRawData);
 
-            const fetchedData = Array.isArray(result.data) ? result.data : []; // Pastikan ini array
-            setDataPresensi(fetchedData); // Simpan data mentah
-            applyFilterToData(fetchedData, selectedDateForFilter); // Terapkan filter saat data dimuat
+            // 2. Terapkan filter berdasarkan selectedDateForFilter
+            if (selectedDateForFilter) {
+                const formattedFilterDate = formatToISODate(selectedDateForFilter);
+                setFilteredData(
+                    fetchedRawData.filter(
+                        (item) => item.tanggal_bergabung && formatToISODate(item.tanggal_bergabung) === formattedFilterDate
+                    )
+                );
+            } else {
+                setFilteredData(fetchedRawData); // Tampilkan semua data jika tidak ada filter tanggal
+            }
+
         } catch (error) {
-            console.error("Gagal memuat data presensi:", error);
-            alert("Gagal memuat data presensi. Silakan coba lagi.");
-            setDataPresensi([]);
+            console.error("Gagal memuat data presensi dari backend:", error);
+            alert(`Terjadi kesalahan saat memuat data presensi: ${error.message}.`);
+            setDataPresensi([]); // Reset state jika error
             setFilteredData([]);
         } finally {
             setIsLoading(false);
         }
-    }, [applyFilterToData, selectedDateForFilter]); // Dependency untuk useCallback adalah selectedDateForFilter dan applyFilterToData
+    }, [selectedDateForFilter]); // Bergantung pada selectedDateForFilter untuk memicu re-fetch/re-filter
 
-    // Efek samping untuk memuat data saat komponen dimuat dan saat filter tanggal berubah
+    // Efek samping: Muat data awal saat komponen dimuat atau filter (selectedDateForFilter) berubah
     useEffect(() => {
-        fetchDataPresensi();
+        fetchAndFilterPresensiData();
 
-        const handleDataUpdate = () => fetchDataPresensi();
-        window.addEventListener("dataPresensiUpdated", handleDataUpdate);
+        // Listener untuk event kustom jika ada pembaruan data dari tempat lain
+        const handleDataUpdateListener = () => fetchAndFilterPresensiData();
+        window.addEventListener("dataPresensiUpdated", handleDataUpdateListener);
         return () => {
-            window.removeEventListener("dataPresensiUpdated", handleDataUpdate);
+            window.removeEventListener("dataPresensiUpdated", handleDataUpdateListener);
         };
-    }, [fetchDataPresensi]);
+    }, [fetchAndFilterPresensiData]); // fetchAndFilterPresensiData sudah useCallback dan punya dependency
 
-    // Efek samping untuk menerapkan filter ketika dataPresensi atau selectedDateForFilter berubah
-    useEffect(() => {
-        applyFilterToData(dataPresensi, selectedDateForFilter);
-    }, [dataPresensi, selectedDateForFilter, applyFilterToData]);
-
-    // Fungsi untuk menerapkan filter tanggal
+    /**
+     * Menerapkan tanggal yang dipilih dari date picker sebagai filter.
+     */
     const applyDateFilter = () => {
-        setSelectedDateForFilter(tempDateForPicker);
+        setSelectedDateForFilter(tempDateForPicker); // Ini akan memicu useEffect di atas
         setIsDatePickerOpen(false);
     };
 
-    // Fungsi untuk mereset filter tanggal
+    /**
+     * Mereset filter tanggal dan menampilkan semua data.
+     */
     const resetFilter = () => {
-        setSelectedDateForFilter(null);
+        setSelectedDateForFilter(null); // Ini akan memicu useEffect di atas
         setTempDateForPicker(null);
         setIsDatePickerOpen(false);
     };
 
-    // Fungsi untuk membuat laporan rekap presensi (dengan API backend)
-    const handleGenerateReport = async () => {
-        if (!Array.isArray(filteredData) || filteredData.length === 0) {
-            alert("Tidak ada data untuk dibuat laporan rekap presensi. Silakan pilih tanggal atau pastikan ada data yang difilter.");
-            return;
-        }
+    // --- Laporan & Export Logic ---
 
-        if (confirm("Apakah Anda yakin ingin membuat laporan rekap presensi?")) {
-            try {
-                // Backend Anda mungkin membutuhkan bulan dan tahun, atau tanggal spesifik.
-                // Sesuaikan data yang dikirim sesuai dengan kebutuhan endpoint /rekap di backend.
-                // Contoh jika backend hanya membutuhkan bulan dan tahun dari selectedDateForFilter:
-                let payload = {};
-                if (selectedDateForFilter) {
-                    const month = (selectedDateForFilter.getMonth() + 1).toString(); // Bulan (1-12)
-                    const year = selectedDateForFilter.getFullYear().toString(); // Tahun
-                    payload = { bulan: month, tahun: year };
-                } else {
-                    // Jika tidak ada filter tanggal, Anda mungkin ingin mengirim bulan/tahun saat ini
-                    // atau mengirimkan sinyal ke backend untuk merekap semua data.
-                    // Sesuaikan ini dengan logika backend Anda.
-                    const now = new Date();
-                    payload = {
-                        bulan: (now.getMonth() + 1).toString(),
-                        tahun: now.getFullYear().toString()
-                    };
-                    alert("Membuat laporan rekap presensi untuk bulan dan tahun saat ini (jika tidak ada filter tanggal spesifik).");
-                }
-
-                console.log("Mengirim payload untuk generate laporan:", payload);
-
-                const response = await fetch(`${API_BASE_URL}/rekap-presensi/rekap`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    let errorMessage = `Kesalahan HTTP saat membuat laporan rekap presensi! Status: ${response.status}`;
-                    try {
-                        const errorJson = JSON.parse(errorText);
-                        errorMessage += `, Pesan: ${errorJson.message || JSON.stringify(errorJson)}`;
-                    } catch {
-                        errorMessage += `, Respons Mentah: ${errorText.substring(0, 200)}...`;
-                    }
-                    throw new Error(errorMessage);
-                }
-
-                const result = await response.json();
-                console.log("Respons dari rekap presensi:", result);
-                alert("Laporan rekap presensi berhasil dibuat.");
-
-                // Jika backend setelah rekap mengembalikan data yang diperbarui,
-                // Anda mungkin perlu memuat ulang data di frontend.
-                fetchDataPresensi();
-            } catch (error) {
-                console.error("Gagal membuat laporan rekap presensi:", error);
-                alert(`Gagal membuat laporan rekap presensi: ${error.message}`);
-            }
-        }
-    };
-
-    // Fungsi untuk mendapatkan nama file export
+    /**
+     * Mendapatkan nama file untuk ekspor Excel atau PDF.
+     * @param {string} ext - Ekstensi file ('xlsx' atau 'pdf').
+     * @returns {string} - Nama file.
+     */
     const getExportFileName = (ext) => {
-        const date = new Date().toISOString().split("T")[0];
-        const filterInfo = selectedDateForFilter ? `_${formatDateToDisplay(selectedDateForFilter).replace(/\-/g, '')}` : '_all';
-        return `laporan_rekap_presensi${filterInfo}_${date}.${ext}`;
+        const dateSuffix = selectedDateForFilter ? formatToISODate(selectedDateForFilter).replace(/-/g, '') : "all";
+        const currentDate = new Date().toISOString().split("T")[0].replace(/-/g, '');
+        return `laporan_rekap_presensi_${dateSuffix}_${currentDate}.${ext}`;
     };
 
-    // Fungsi untuk export data ke Excel
-    const handleExportExcelAction = () => {
-        if (!Array.isArray(filteredData) || filteredData.length === 0) {
-            alert("Data kosong (sesuai filter saat ini), tidak bisa export Excel!");
+    /**
+     * Menangani ekspor data ke format Excel (XLSX).
+     */
+    const handleExportExcel = () => {
+        if (filteredData.length === 0) {
+            alert("Data kosong, tidak bisa export Excel!");
             return;
         }
         try {
             const dataToExport = filteredData.map(item => ({
                 'Nama Lengkap': item.nama_lengkap,
-                'No. HP': item.no_hp,
-                'Role': item.role,
-                'Tanggal Bergabung': item.tanggal_bergabung ? formatDateToDisplay(item.tanggal_bergabung) : '',
+                'No. HP': item.no_hp || '-',
+                'Role': item.role || '-',
+                'Tanggal Bergabung': item.tanggal_bergabung ? formatDateToDisplay(item.tanggal_bergabung) : '-',
                 'Bulan': item.bulan,
                 'Tahun': item.tahun,
                 'Jumlah Kehadiran': item.jumlah_kehadiran,
             }));
             const ws = XLSX.utils.json_to_sheet(dataToExport);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Presensi");
+            XLSX.utils.book_append_sheet(wb, ws, "Rekap Presensi");
             XLSX.writeFile(wb, getExportFileName("xlsx"));
         } catch (error) {
             console.error("Export Excel error:", error);
@@ -248,22 +203,18 @@ const PresensiPage = ({ children }) => {
         }
     };
 
-    // Fungsi untuk export data ke PDF
-    const handleExportPDFAction = () => {
-        if (!Array.isArray(filteredData) || filteredData.length === 0) {
-            alert("Data kosong (sesuai filter saat ini), tidak bisa export PDF!");
+    /**
+     * Menangani ekspor data ke format PDF.
+     */
+    const handleExportPDF = () => {
+        if (filteredData.length === 0) {
+            alert("Data kosong, tidak bisa export PDF!");
             return;
         }
         try {
-            const doc = new jsPDF();
+            const doc = new jsPDF('landscape'); // Mungkin landscape lebih cocok untuk banyak kolom
             const tableColumn = [
-                "Nama Lengkap",
-                "No. HP",
-                "Role",
-                "Tgl. Bergabung",
-                "Bulan",
-                "Tahun",
-                "Jml. Hadir",
+                "Nama Lengkap", "No. HP", "Role", "Tgl. Bergabung", "Bulan", "Tahun", "Jml. Hadir"
             ];
             const tableRows = filteredData.map((item) => [
                 item.nama_lengkap,
@@ -274,30 +225,25 @@ const PresensiPage = ({ children }) => {
                 item.tahun,
                 item.jumlah_kehadiran,
             ]);
+
             doc.text(
-                `Laporan Rekap Presensi ${
-                    selectedDateForFilter
-                        ? `(Tanggal Bergabung: ${formatDateToDisplay(selectedDateForFilter)})`
-                        : "(Semua Data)"
-                }`,
-                14,
-                15
+                `Laporan Rekap Presensi ${selectedDateForFilter ? `(Filter: ${formatDateToDisplay(selectedDateForFilter)})` : "(Semua Data)"}`,
+                14, 15
             );
+
             autoTable(doc, {
                 head: [tableColumn],
                 body: tableRows,
                 startY: 20,
-                styles: {
-                    fontSize: 8,
-                    cellPadding: 2,
-                },
-                headStyles: {
-                    fillColor: [61, 108, 185],
-                },
-                didDrawPage: function(data) {
-                    let str = "Page " + doc.internal.getNumberOfPages()
-                    doc.setFontSize(8)
-                    doc.text(str, data.settings.margin.left, doc.internal.pageSize.height - 10)
+                theme: 'grid', // Tema agar lebih rapi
+                styles: { fontSize: 8, cellPadding: 2, halign: 'center' },
+                headStyles: { fillColor: [61, 108, 185], textColor: 255, fontStyle: 'bold', halign: 'center' },
+                alternateRowStyles: { fillColor: [240, 240, 240] },
+                didDrawPage: function (data) { // Penomoran halaman
+                    let str = "Halaman " + doc.internal.getNumberOfPages();
+                    doc.setFontSize(8);
+                    const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+                    doc.text(str, data.settings.margin.left, pageHeight - 10);
                 }
             });
             doc.save(getExportFileName("pdf"));
@@ -307,73 +253,150 @@ const PresensiPage = ({ children }) => {
         }
     };
 
+    /**
+     * Memicu pembuatan/rekap laporan presensi di backend.
+     * Menggunakan endpoint '/rekap-presensi/rekap' dengan metode POST.
+     */
+    const handleGeneratePresensiReport = async () => {
+        // Tombol ini dibuat selalu aktif (kecuali saat isLoading),
+        // jadi konfirmasi penting.
+        if (!confirm("Apakah Anda yakin ingin memicu rekapitulasi laporan presensi dari backend?")) {
+            return;
+        }
+        
+        // Menggunakan setIsLoading untuk memberi feedback visual bahwa proses sedang berjalan
+        const originalIsLoading = isLoading; // Simpan state isLoading sebelumnya
+        setIsLoading(true); 
+
+        try {
+            let payload = {};
+            if (selectedDateForFilter) {
+                const month = (selectedDateForFilter.getMonth() + 1).toString();
+                const year = selectedDateForFilter.getFullYear().toString();
+                payload = { bulan: month, tahun: year };
+            } else {
+                const now = new Date();
+                payload = {
+                    bulan: (now.getMonth() + 1).toString(),
+                    tahun: now.getFullYear().toString()
+                };
+                // Tidak perlu alert di sini jika tombolnya memang dimaksudkan untuk selalu bisa diklik
+            }
+
+            const response = await fetch(`${API_BASE_URL}/rekap-presensi/rekap`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                throw new Error(`Gagal memicu rekap presensi: ${response.status}. ${errorData.message || ''}`);
+            }
+
+            const result = await response.json();
+            alert(`Proses rekapitulasi presensi berhasil dipicu di backend. ${result.message || 'Memuat data terbaru...'}`);
+            
+            // Penting: Panggil fetchAndFilterPresensiData untuk memuat ulang data setelah rekap berhasil.
+            // Tidak perlu setIsLoading(false) di sini karena fetchAndFilterPresensiData akan menanganinya.
+            await fetchAndFilterPresensiData(); 
+
+        } catch (error) {
+            console.error("Error saat memicu rekap presensi:", error);
+            alert(`Gagal memicu rekap presensi: ${error.message}`);
+            setIsLoading(originalIsLoading); // Kembalikan state isLoading jika terjadi error di sini
+        }
+        // setIsLoading(false) akan dihandle oleh fetchAndFilterPresensiData jika berhasil,
+        // atau di blok catch jika error sebelum fetchAndFilterPresensiData.
+        // Namun untuk memastikan, jika fetchAndFilterPresensiData tidak sempat mengubahnya,
+        // kita bisa set di sini, tapi lebih baik biarkan fetchAndFilterPresensiData yang mengontrol.
+    };
+
+    // Efek samping: Menutup date picker saat mengklik di luar area date picker
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (
-                calendarRef.current &&
-                !calendarRef.current.contains(event.target)
-            ) {
+            if (calendarRef.current && !calendarRef.current.contains(event.target)) {
                 setIsDatePickerOpen(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    }, [calendarRef]); // Hanya bergantung pada calendarRef
 
-    // Tentukan apakah ada data yang tersedia untuk diekspor atau dibuat laporan
-    const isDataAvailableForAction = !isLoading && Array.isArray(filteredData) && filteredData.length > 0;
+    // Header kolom yang akan ditampilkan di tabel
+    const tableDisplayHeaders = [
+        "Nama Lengkap", "No. HP", "Role", "Tanggal Bergabung", "Bulan", "Tahun", "Jumlah Kehadiran"
+    ];
+
+    // Kondisi untuk menonaktifkan tombol export, mirip PemasukanPage
+    const isExportDisabled = filteredData.length === 0 || isLoading;
+    const [isSidebarOpen, setSidebarOpen] = useState(true);
 
     return (
-        <div className="flex relative bg-white-50 min-h-screen">
-            <UserMenu />
-            <Sidebar />
-            <div className="flex-1 p-4 md:p-6 overflow-x-hidden">
-                <h1 className="text-[28px] md:text-[32px] font-bold mb-6 text-black">
+     <div className="flex">
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <div
+        className="flex-1 p-6 transition-all duration-300 ease-in-out"
+        style={{
+          marginLeft: isSidebarOpen ? 290 : 70,
+        }}
+      >
+            <div className="flex-1 p-4 md:p-6 relative overflow-y-auto"> {/* Tambahkan overflow-y-auto */}
+                {/* --- Header Halaman --- */}
+                <h1 className="text-[28px] md:text-[32px] font-semibold text-black mb-6">
                     Rekap Presensi
                 </h1>
 
-                {/* Toolbar */}
+                {/* --- Toolbar: Filter, Generate Report & Export --- */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
-                    <div className="flex gap-4">
-                        {/* Date Picker */}
+                    {/* Filter & Generate Section */}
+                    <div className="flex flex-wrap gap-4 items-center"> {/* Tambahkan flex-wrap dan items-center */}
+                        {/* Tombol Pilih Tanggal / Set Ulang Filter */}
                         <div className="relative" ref={calendarRef}>
                             {!selectedDateForFilter ? (
                                 <button
                                     onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                                    className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
+                                    className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black cursor-pointer"
                                 >
-                                    <CalendarDays size={20} /> <span>Pilih Tanggal</span>
+                                    <CalendarDays size={20} />
+                                    <span>Pilih Tanggal</span>
                                 </button>
                             ) : (
                                 <button
                                     onClick={resetFilter}
-                                    className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
+                                    className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black cursor-pointer"
                                 >
-                                    <RotateCcw size={20} /> <span>Atur Ulang</span>
+                                    <RotateCcw size={20} />
+                                    <span>Atur Ulang</span>
                                 </button>
                             )}
+
+                            {/* DatePicker Popup */}
                             {isDatePickerOpen && (
-                                <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-12 left-0">
+                                <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-12 left-0 md:left-auto" style={{minWidth: '280px'}}>
                                     <DatePicker
                                         selected={tempDateForPicker}
                                         onChange={(date) => setTempDateForPicker(date)}
                                         inline
-                                        dateFormat="dd/MM/yyyy"
+                                        dateFormat="dd-MM-yyyy" // Format tampilan di picker
                                         showPopperArrow={false}
                                     />
                                     <div className="mt-4 flex justify-between">
                                         <button
                                             onClick={() => {
-                                                setTempDateForPicker(selectedDateForFilter);
+                                                // setTempDateForPicker(selectedDateForFilter); // Opsional: reset temp ke yg terpilih
                                                 setIsDatePickerOpen(false);
                                             }}
-                                            className="px-4 py-2 bg-red-200 text-black rounded hover:bg-red-500 hover:text-white"
+                                            className="px-4 py-2 bg-red-200 text-black rounded hover:bg-red-500 hover:text-white cursor-pointer"
                                         >
                                             Batal
                                         </button>
                                         <button
                                             onClick={applyDateFilter}
-                                            className="px-4 py-2 bg-[#B8D4F9] text-black rounded hover:bg-[#3D6CB9] hover:text-white"
+                                            className="px-4 py-2 bg-[#B8D4F9] text-black rounded hover:bg-[#3D6CB9] hover:text-white cursor-pointer"
                                         >
                                             Pilih Tanggal
                                         </button>
@@ -382,122 +405,105 @@ const PresensiPage = ({ children }) => {
                             )}
                         </div>
 
-                        {/* Tombol Buat Laporan */}
+                        {/* Tombol Buat Laporan (Generate Presensi Report) */}
                         <button
-                            onClick={handleGenerateReport}
-                            disabled={!isDataAvailableForAction} // Nonaktifkan jika tidak ada data
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${isDataAvailableForAction ? "bg-blue-100 text-black hover:bg-[#B8D4F9]" : "bg-gray-200 text-gray-500 cursor-not-allowed"}`}
+                            onClick={handleGeneratePresensiReport}
+                            disabled={isLoading} // Menonaktifkan tombol jika isLoading true, sesuai struktur PemasukanPage
+                            className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
+                                isLoading
+                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed" // Gaya saat disabled
+                                    : "bg-blue-500 text-white hover:bg-blue-600 cursor-pointer" // Gaya saat aktif (sesuaikan warna jika perlu)
+                            }`}
                         >
-                            <Zap size={20} color={isDataAvailableForAction ? "blue" : "gray"} /> <span>Buat Laporan</span>
+                            <Zap size={20} />
+                            <span>Buat Laporan</span>
                         </button>
                     </div>
 
-                    {/* Tombol Export */}
-                    <div className="flex gap-4">
+                    {/* Export Section */}
+                    <div className="flex flex-wrap gap-4 items-center"> {/* Tambahkan flex-wrap dan items-center */}
                         <button
-                            onClick={handleExportExcelAction}
-                            disabled={!isDataAvailableForAction}
+                            onClick={handleExportExcel}
+                            disabled={isExportDisabled}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
-                                !isDataAvailableForAction
+                                isExportDisabled
                                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                    : "bg-green-100 text-black hover:bg-[#B8D4F9]"
+                                    : "bg-green-100 text-black hover:bg-green-200 cursor-pointer"
                             }`}
                         >
-                            <FileSpreadsheet
-                                size={20}
-                                color={!isDataAvailableForAction ? "gray" : "green"}
-                            />{" "}
+                            <FileSpreadsheet size={20} color={isExportDisabled ? "gray" : "green"} />
                             <span>Ekspor Excel</span>
                         </button>
                         <button
-                            onClick={handleExportPDFAction}
-                            disabled={!isDataAvailableForAction}
+                            onClick={handleExportPDF}
+                            disabled={isExportDisabled}
                             className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
-                                !isDataAvailableForAction
+                                isExportDisabled
                                     ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                    : "bg-red-100 text-black hover:bg-[#B8D4F9]"
+                                    : "bg-red-100 text-black hover:bg-red-200 cursor-pointer"
                             }`}
                         >
-                            <FileText
-                                size={20}
-                                color={!isDataAvailableForAction ? "gray" : "red"}
-                            />{" "}
+                            <FileText size={20} color={isExportDisabled ? "gray" : "red"} />
                             <span>Ekspor PDF</span>
                         </button>
                     </div>
                 </div>
 
-                {/* Tabel */}
-                {isLoading ? (
-                    <div className="text-center p-10">Memuat data presensi...</div>
+                {/* --- Tabel Data Presensi --- */}
+                {isLoading && !isDatePickerOpen ? (
+                    <div className="text-center p-10 text-lg font-medium text-gray-700">
+                        Memuat data rekap presensi, mohon tunggu...
+                    </div>
                 ) : (
-                    <div className="overflow-y-auto max-h-[541px] rounded-lg shadow mb-8">
-                        <table className="min-w-full table-auto bg-white text-sm">
-                            <thead className="bg-[#3D6CB9] text-white">
-                                <tr>
-                                    {[
-                                        "Nama Lengkap",
-                                        "No. HP",
-                                        "Role",
-                                        "Tanggal Bergabung",
-                                        "Bulan",
-                                        "Tahun",
-                                        "Jumlah Kehadiran",
-                                    ].map((header, index, arr) => (
-                                        <th
-                                            key={header}
-                                            className={`p-2 text-center sticky top-0 z-10 bg-[#3D6CB9]`}
-                                            style={{
-                                                borderTopLeftRadius: index === 0 ? "0.5rem" : undefined,
-                                                borderTopRightRadius:
-                                                    index === arr.length - 1 ? "0.5rem" : undefined,
-                                            }}
-                                        >
-                                            {header}
-                                        </th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredData.length === 0 ? (
+                    <div className="overflow-x-auto rounded-lg shadow">
+                        <div className="max-h-[calc(100vh-280px)] overflow-y-auto"> {/* Sesuaikan max-h jika perlu */}
+                            <table className="min-w-full table-auto bg-white text-sm">
+                                <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
                                     <tr>
-                                        <td
-                                            colSpan={7} // Sesuaikan dengan jumlah kolom
-                                            className="text-center p-4 text-gray-500 font-medium"
-                                        >
-                                            Data Tidak Ditemukan
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    filteredData.map((item) => {
-                                        if (!item || !item.id_presensi) {
-                                            console.error("[PresensiPage] Item tidak valid atau missing id_presensi, melewatkan baris:", item);
-                                            return null;
-                                        }
-                                        return (
-                                            <tr
-                                                key={item.id_presensi}
-                                                className="border-b text-center border-blue-200 hover:bg-blue-100 transition duration-200"
+                                        {tableDisplayHeaders.map((header, index, arr) => (
+                                            <th
+                                                key={header}
+                                                className={`p-3 text-center whitespace-nowrap`} // p-3 untuk padding lebih
+                                                style={{
+                                                    borderTopLeftRadius: index === 0 ? "0.5rem" : undefined,
+                                                    borderTopRightRadius: index === arr.length - 1 ? "0.5rem" : undefined,
+                                                }}
                                             >
-                                                <td className="p-3">{item.nama_lengkap}</td>
-                                                <td className="p-3">{item.no_hp || '-'}</td>
-                                                <td className="p-3">{item.role || '-'}</td>
-                                                <td className="p-3">{item.tanggal_bergabung ? formatDateToDisplay(item.tanggal_bergabung) : '-'}</td>
-                                                <td className="p-3">{item.bulan}</td>
-                                                <td className="p-3">{item.tahun}</td>
-                                                <td className="p-3">{item.jumlah_kehadiran}</td>
+                                                {header}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredData.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={tableDisplayHeaders.length} className="text-center p-4 text-gray-500 font-medium">Data Tidak Ditemukan</td>
+                                        </tr>
+                                    ) : (
+                                        filteredData.map((item, idx) => ( // item.id_presensi mungkin tidak selalu ada jika data dari API berbeda
+                                            <tr
+                                                key={item.id_presensi || `presensi-${idx}`} // Fallback key jika id_presensi tidak ada
+                                                className="border-b text-center border-gray-200 hover:bg-gray-100 transition duration-150 ease-in-out"
+                                            >
+                                                <td className="p-3 whitespace-nowrap">{item.nama_lengkap || '-'}</td>
+                                                <td className="p-3 whitespace-nowrap">{item.no_hp || '-'}</td>
+                                                <td className="p-3 whitespace-nowrap">{item.role || '-'}</td>
+                                                <td className="p-3 whitespace-nowrap">{formatDateToDisplay(item.tanggal_bergabung)}</td>
+                                                <td className="p-3 whitespace-nowrap">{item.bulan || '-'}</td>
+                                                <td className="p-3 whitespace-nowrap">{item.tahun || '-'}</td>
+                                                <td className="p-3 whitespace-nowrap">{item.jumlah_kehadiran == null ? '-' : item.jumlah_kehadiran}</td>
                                             </tr>
-                                        );
-                                    })
-                                )}
-                            </tbody>
-                        </table>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
+                {/* Slot untuk Intercepting Routes jika digunakan */}
+                {children}
             </div>
-
-            {/* Ini adalah slot untuk Intercepting Route. Ini harus ada! */}
-            {children}
+        </div>
         </div>
     );
 };
