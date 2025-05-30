@@ -1,414 +1,341 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Sidebar from "/components/Sidebar.jsx";
-import UserMenu from "/components/Pengguna.jsx";
-import SearchInput from "/components/Search.jsx";
-import { FiEdit, FiTrash2, FiImage, FiEdit3, FiList } from "react-icons/fi";
-import 'react-quill/dist/quill.snow.css';
-import ReactQuill from 'react-quill';
+import SearchInput from '/components/Search.jsx';
+import EditorArtikel from '/components/EditArtikel.jsx';
+import { FiEdit, FiRotateCcw, FiTrash2 } from 'react-icons/fi';
+import Sidebar from "/components/Sidebar";
 
+function formatStatus(status) {
+  if (!status) return 'Konsep'; // default
+  const s = status.toLowerCase();
+  if (s === 'terbit' || s === 'diterbitkan') return 'Diterbitkan';
+  if (s === 'sampah') return 'Sampah';
+  if (s === 'konsep') return 'Konsep';
+  return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
+}
 
-export default function Home() {
-  const [activeTab, setActiveTab] = useState("semua");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [imagePreview, setImagePreview] = useState(null);
-  const fileInputRef = useRef();
-
-  const [editorContent, setEditorContent] = useState('');
-  const judulRef = useRef(null);
-  const deskripsiRef = useRef(null);
+export default function Page() {
+  const [activeTab, setActiveTab] = useState('semua');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedId = searchParams.get('id');
-
-  const applyFormatting = (ref, formatType) => {
-    const input = ref.current;
-    if (!input) return;
-
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-    const selectedText = input.value.substring(start, end);
-
-    let formatted = selectedText;
-
-    switch (formatType) {
-      case "bold":
-        formatted = `**${selectedText}**`;
-        break;
-      case "italic":
-        formatted = `*${selectedText}*`;
-        break;
-      case "underline":
-        formatted = `<u>${selectedText}</u>`;
-        break;
-      case "link":
-        formatted = `[${selectedText}](https://)`;
-        break;
-      default:
-        break;
-    }
-
-    input.setRangeText(formatted, start, end, "end");
-    input.focus();
-  };
-
-
-  const [data] = useState([
-    {
-      id: 1,
-      status: "Konsep",
-      date: "02/02/2025",
-      title: "Weekend Santai? Ke Tlogo Putri Aja, Udara Segar dan Alam Terbuka",
-      owner: "Aisyah Dwi A",
-      category: "Udara Segar",
-      detail: {
-        judul: "Weekend Santai? Ke Tlogo Putri Aja, Udara Segar...",
-        deskripsi: "Libur-libur enaknya merefresh otak..."
-      }
-    },
-    {
-      id: 2,
-      status: "Diterbitkan",
-      date: "27/01/2025",
-      title: "Weekend Seru di Tlogo Putri Kaliurang, Wisata Alam Plus Hiburan Lengkap",
-      owner: "Rekanita Yunia",
-      category: "Wisata Alam",
-      detail: {
-        judul: "Weekend Seru di Tlogo Putri Kaliurang, Wisata Alam...",
-        deskripsi: "Menikmati suasana sejuk..."
-      }
-    },
-    {
-      id: 3,
-      status: "Konsep",
-      date: "27/01/2025",
-      title: "Tlogo Putri Kaliurang : Daya Tarik, Harga Tiket, Jam Buka, dan Rute",
-      owner: "Mita Aprilia D",
-      category: "Daya Tarik",
-      detail: {
-        judul: "Tlogo Putri Kaliurang: Daya Tarik, Harga Tiket, Jam...",
-        deskripsi: "Wisata Alam dengan panorama indah di..."
-      }
-    },
-    {
-      id: 4,
-      status: "Diterbitkan",
-      date: "15/01/2025",
-      title: "Nyalimu Seberapa? Uji di Medan Ekstrem Jeep Tlogo Putri Kaliurang!",
-      owner: "Deviana Dyah",
-      category: "Medan Ekstrem",
-      detail: {
-        judul: "Nyalimu Seberapa? Uji di Medan Ekstrem Jeep T...",
-        deskripsi: "Kamu pecinta tantangan dan p..."
-      }
-    },
-    {
-      id: 5,
-      status: "Diterbitkan",
-      date: "10/01/2025",
-      title: "Tlogo Putri Kaliurang: 2 Alasan Untuk Berkunjung, Info Tiket, dan Jam Buka",
-      owner: "Irene Jeny",
-      category: "Pesona Alam",
-      detail: {
-        judul: "Tlogo Putri Kaliurang 2: Alasan Untuk Berkunjung, In...",
-        deskripsi: "Banyak alasan buat balik lagi, su..."
-      }
-    },
-    {
-      id: 6,
-      status: "Diterbitkan",
-      date: "05/01/2025",
-      title: "Tlogo Putri Kaliurang - Tiket Masuk, Lokasi, dan Rutenya",
-      owner: "Aldo Susilo",
-      category: "Tiket Masuk",
-      detail: {
-        judul: "Tlogo Putri Kaliurang - Tiket Masuk, Lokasi, dan Rut...",
-        deskripsi: "Sebelum ke sana, cek dulu harg..."
-      }
-    }, 
-    {
-      id: 7,
-      status: "Diterbitkan",
-      date: "05/01/2025",
-      title: "Rekomendasi Wisata Alam di Tlogo Putri Kaliurang: Telaga Para Bidadari",
-      owner: "Endin Syamsul",
-      category: "Telaga",
-      detail: {
-        judul: "Rekomendasi Wisata Alam di Tlogo Putri Kaliuran...",
-        deskripsi: "Pilihan Wisata alam terbaik untuk..."
-      }
-    },
-    {
-      id: 8,
-      status: "Diterbitkan",
-      date: "01/01/2025",
-      title: "Tlogo Putri Kaliurang Yogyakarta: Keajaiban Alam Tersembunyi Di Kaki Gunung",
-      owner: "Ajeng Yunia",
-      category: "Keajaiban Alam",
-      detail: {
-        judul: "Tlogo Putri Kaliurang Yogyakarta: Keajaiban Alam Terse...",
-        deskripsi: "Destinasi eksotis yang memaduk..."
-      }
-    }
-  ]);
+  const selectedArticle = data.find((item) => item.id === Number(selectedId));
 
   const tabs = [
-    { label: "Semua", value: "semua", count: 1024 },
-    { label: "Diterbitkan", value: "Diterbitkan", count: 834 },
-    { label: "Konsep", value: "Konsep", count: 368 },
-    { label: "Sampah", value: "Sampah", count: 0 },
+    { label: 'Semua', value: 'semua' },
+    { label: 'Diterbitkan', value: 'Diterbitkan' },
+    { label: 'Konsep', value: 'Konsep' },
+    { label: 'Sampah', value: 'Sampah' },
   ];
 
+  useEffect(() => {
+    fetchData();
+  }, [activeTab]);
+
+  async function fetchData() {
+    setLoading(true);
+    setError(null);
+
+    try {
+      let url = '';
+
+      switch (activeTab.toLowerCase()) {
+        case 'terbit':
+          url = 'http://127.0.0.1:8000/api/content-generate/articleterbit';
+          break;
+        case 'konsep':
+          url = 'http://127.0.0.1:8000/api/content-generate/articlekonsep';
+          break;
+        case 'sampah':
+          url = 'http://127.0.0.1:8000/api/content-generate/articlesampah';
+          break;
+        default:
+          url = 'http://127.0.0.1:8000/api/content-generate/draft';
+          break;
+      }
+
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Gagal mengambil data');
+      const result = await res.json();
+      const sorted = result.data.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+      setData(sorted);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const filteredData = data.filter((item) => {
-    const tabMatch = activeTab === "semua" || item.status.toLowerCase() === activeTab.toLowerCase();
+    const status = item.status?.toLowerCase();
+
+    const tabMatch =
+      activeTab.toLowerCase() === 'semua' ||
+      (activeTab.toLowerCase() === 'diterbitkan' && (status === 'terbit' || status === 'diterbitkan')) ||
+      status === activeTab.toLowerCase();
+
     const searchMatch =
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.owner.toLowerCase().includes(searchTerm.toLowerCase());
+      item.judul?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.kategori?.toLowerCase().includes(searchTerm.toLowerCase());
+
     return tabMatch && searchMatch;
   });
 
-  const selectedArticle = data.find((item) => item.id === parseInt(selectedId));
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result);
+  const handleSave = async (updatedArticle, publish = false) => {
+    try {
+      const bodyData = {
+        ...updatedArticle,
+        status: publish ? 'terbit' : updatedArticle.status || 'konsep',
+        // thumbnail: typeof updatedArticle.thumbnail === 'string' ? updatedArticle.thumbnail : '',
       };
-      reader.readAsDataURL(file);
+
+      const res = await fetch(
+        `http://127.0.0.1:8000/api/content-generate/articleupdate/${updatedArticle.id}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bodyData),
+        }
+      );
+      if (!res.ok) throw new Error('Gagal menyimpan data');
+
+      alert(publish ? 'Artikel berhasil diterbitkan' : 'Artikel berhasil disimpan');
+
+      await fetchData();
+      router.push('/dashboard/ai-generate/draft');
+    } catch (err) {
+      alert(err.message);
     }
   };
 
-  if (selectedId && selectedArticle) {
+  const handlePublish = (article) => {
+    handleSave(article, true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Yakin ingin menghapus artikel ini?')) return;
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:8000/api/content-generate/articledelete/${id}`,
+        { method: 'POST' }
+      );
+      if (!res.ok) throw new Error('Gagal menghapus data');
+      alert('Artikel berhasil dihapus');
+      await fetchData();
+      if (selectedId && parseInt(selectedId) === id) {
+        router.push('/dashboard/ai-generate/draft');
+      }
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleRestore = async (id) => {
+    if (!confirm('Yakin ingin memulihkan artikel ini?')) return;
+    try {
+      const res = await fetch(
+        `http://127.0.0.1:8000/api/content-generate/articleupdate/${id}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'konsep' }),
+        }
+      );
+      if (!res.ok) throw new Error('Gagal memulihkan artikel');
+      alert('Artikel berhasil dipulihkan ke Konsep');
+      await fetchData();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const onBack = () => {
+    router.push('/dashboard/ai-generate/draft');
+  };
+
+  if (loading) return <div>Memuat data...</div>;
+  if (error) return <div>Terjadi kesalahan: {error}</div>;
+
+  if (selectedId && !selectedArticle) {
     return (
       <div className="min-h-screen flex bg-white font-poppins">
         <aside className="w-64">
           <Sidebar />
         </aside>
         <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
-          <h1 className="text-[32px] font-bold mb-4 text-black">Editor Artikel</h1>
-
-          {/* Header kanan atas */}
-          <div className="flex justify-end items-center space-x-4">
-            <span className="text-sm italic text-gray-500">Kutip Sumber Anda</span>
-            <button className="flex items-center space-x-1 text-blue-600 hover:underline">
-              <FiEdit3 className="w-4 h-4" />
-              <span>Edit</span>
-            </button>
-          </div>
-
-          <div className="space-y-6 mb-4">
-            {/* Tombol Unggah Gambar dan Toolbar*/}
-            <div className="flex flex-wrap gap-2 items-center">
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="p-2 bg-gray-100 rounded hover:bg-gray-200"
-              >
-                <FiImage className="w-6 h-6 text-gray-700" />
-              </button>
-              <input
-                type="file"
-                accept="image/*"
-                ref={fileInputRef}
-                onChange={handleImageChange}
-                className="hidden"
-              />
-
-              {/* Toolbar Editor */}
-              {/* Bold */}
-              <button
-                onClick={() => applyFormatting(judulRef, "bold")}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200"
-                title="Bold"
-              >
-                <strong>B</strong>
-              </button>
-
-              {/* Italic */}
-              <button
-                onClick={() => applyFormatting(judulRef, "italic")}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200 italic"
-                title="Italic"
-              >
-                I
-              </button>
-
-              {/* Underline */}
-              <button
-                onClick={() => applyFormatting(judulRef, "underline")}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200 underline"
-                title="Underline"
-              >
-                U
-              </button>
-
-              {/* Link */}
-              <button
-                onClick={() => applyFormatting(judulRef, "link")}
-                className="p-2 rounded bg-gray-100 hover:bg-gray-200"
-                title="Link Sumber"
-              >
-                🔗
-              </button>
-
-              <select className="p-1 border rounded text-sm" title="Ukuran Teks">
-                <option value="normal">Normal</option>
-                <option value="h1">H1</option>
-                <option value="h2">H2</option>
-                <option value="h3">H3</option>
-              </select>
-
-              <button className="p-2 rounded bg-gray-100 hover:bg-gray-200" title="Bullet List">
-                ••
-              </button>
-              
-              <button className="p-2 rounded bg-gray-100 hover:bg-gray-200" title="Number List">
-                1.
-              </button>
-            </div>
-
-            {/* Judul */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Judul</label>
-              <input
-                ref={judulRef}
-                className="w-full p-2 border rounded-md"
-                defaultValue={selectedArticle.detail.judul}
-              />    
-            </div>
-
-            {/* Deskripsi */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
-              <textarea
-                ref={deskripsiRef}
-                className="w-full p-2 border rounded-md"
-                rows={5}
-                defaultValue={selectedArticle.detail.deskripsi}
-              />
-            </div>
-
-            {/* Tombol kembali */}
-            <button
-              onClick={() => router.push('/dashboard/ai-generate/draft')}
-              className="mt-4 px-4 py-2 bg-[#3D6CB9] text-white rounded-md"
-            >
-              Kembali
-            </button>
-          </div>
+          <div>Memuat artikel...</div>
         </main>
       </div>
     );
   }
 
-  // Halaman list jika tidak ada ID
+  if (selectedId && selectedArticle) {
+    return (
+      <div className="min-h-screen flex bg-white font-poppins">
+        <aside className="w-64">
+          <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+          
+                <div
+                  className="transition-all duration-300 ease-in-out"
+                  style={{
+                    marginLeft: isSidebarOpen ? 290 : 70,
+                  }}
+                ></div>
+        </aside>
+        <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
+          <EditorArtikel
+            article={selectedArticle}
+            onSave={handleSave}
+            onPublish={handlePublish}
+            onBack={onBack}
+            
+          />
+        </main>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex bg-white font-poppins">
-      <aside className="w-64">
-        <Sidebar />
-      </aside>
+    <div className="flex bg-white font-poppins">
+        <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+          
+                <div
+                  className="transition-all duration-300 ease-in-out"
+                  style={{
+                    marginLeft: isSidebarOpen ? 290 : 70,
+                  }}
+                ></div>
 
-      <main className="flex-1 flex-col px-8 md:px-10 py-6 space-y-6">
-        <h1 className="text-[32px] font-bold mb-6 text-black">Draft</h1>
+      <main className="md:px-10 py-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-black">Daftar Artikel</h1>
+        </div>
 
-        <header className="flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center bg-[#3D6CB9] p-2 rounded-lg space-x-2">
+        <div className="flex flex-wrap justify-between items-center gap-1">
+          <div className="flex gap-2 bg-[#3D6CB9] p-2 rounded-lg">
             {tabs.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`px-3 py-1 rounded-[5px] text-sm font-normal ${
-                  activeTab === tab.value
-                    ? "bg-white text-[#3D6CB9]"
-                    : "bg-gray-100 text-gray-500"
+                className={`px-3 py-2 rounded cursor-pointer ${
+                  activeTab === tab.value ? 'bg-white text-[#3D6CB9]' : 'bg-gray-100 text-black'
                 }`}
               >
-                {tab.label} ({tab.count})
+                {tab.label}
               </button>
             ))}
           </div>
-          <div className="flex justify-end">
-            <SearchInput
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onClear={() => setSearchTerm("")}
-              placeholder="Cari"
-            />
-          </div>
 
-          <UserMenu />
-        </header>
+          <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+        </div>
 
-        <section className="bg-white rounded-lg shadow overflow-x-auto">
-          <table className="w-full text-sm text-gray-700">
+        <div className="overflow-x-auto rounded-md shadow-md max-h-125">
+          <table className="min-w-full text-sm text-left text-gray-600">
             <thead className="bg-[#3D6CB9] text-white">
               <tr>
-                <th className="p-3 text-center">Tanggal</th>
-                <th className="p-3 text-center">Judul</th>
-                <th className="p-3 text-center">Pemilik</th>
-                <th className="p-3 text-center">Kategori</th>
-                <th className="p-3 text-center">Detail AIOSEO</th>
-                <th className="p-3 text-center">Aksi</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Tanggal</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Judul</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Pemilik</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Kategori</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Detail AIOSEO</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              {filteredData.length > 0 ? (
-                filteredData.map((item) => (
-                  <tr key={item.id} className="border-t hover:bg-gray-100">
-                    <td className="p-3 text-center">
-                      <div className="text-sm text-gray-800">{item.date}</div>
-                      <div
-                        className={`mt-1 inline-block px-2 py-0.5 text-xs rounded-full ${
-                          item.status === "Diterbitkan"
-                            ? "bg-green-100 text-green-600"
-                            : item.status === "Konsep"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-gray-100 text-gray-500"
-                        }`}
-                      >
-                        {item.status}
-                      </div>
-                    </td>
-                    <td className="p-3">{item.title}</td>
-                    <td className="p-3">{item.owner}</td>
-                    <td className="p-3">{item.category}</td>
-                    <td className="p-3 whitespace-pre-wrap">
-                      <div><strong>Judul:</strong> {item.detail.judul}</div>
-                      <div><strong>Deskripsi:</strong> {item.detail.deskripsi}</div>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex justify-center space-x-2">
-                        <button
-                          onClick={() => router.push(`/dashboard/ai-generate/draft?id=${item.id}`)}
-                          className="p-2 rounded-md text-blue-500 hover:text-blue-700 hover:bg-blue-100"
-                        >
-                          <FiEdit />
-                        </button>
-                        <button
-                          onClick={() => alert(`Hapus artikel: ${item.title}`)}
-                          className="p-2 rounded-md text-red-500 hover:text-red-700 hover:bg-red-100"
-                        >
-                          <FiTrash2 />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              ) : (
+              {filteredData.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="text-center text-gray-500 py-6 italic">
-                    Data tidak ditemukan ya.
+                  <td colSpan="6" className="text-center py-4 text-gray-500">
+                    Tidak ada artikel yang ditemukan.
                   </td>
                 </tr>
+              ) : (
+                filteredData.map((item) => {
+                  const formattedStatus = formatStatus(item.status);
+
+                  const statusClass =
+                    formattedStatus === 'Diterbitkan'
+                      ? 'bg-green-100 text-green-700'
+                      : formattedStatus === 'Sampah'
+                      ? 'bg-red-100 text-red-700'
+                      : 'bg-yellow-100 text-yellow-700';
+
+                  return (
+                    <tr key={item.id} className="border-b hover:bg-gray-50">
+                      <td className="px-4 py-2">
+                        <div>{item.tanggal || '-'}</div>
+                        <div
+                          className={`inline-block mt-1 px-2 py-0.5 text-xs rounded-full font-medium ${statusClass}`}
+                        >
+                          {formattedStatus}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">{item.title || item.judul || '-'}</td>
+                      <td className="px-4 py-2">{item.owner || item.pemilik || '-'}</td>
+                      <td className="px-4 py-2 italic">
+                        {item.kategori
+                          ?.split(/\n|[-•]/)
+                          .map((i) => i.trim().replace(/^\d+\.\s*/, ''))
+                          .filter(Boolean)
+                          .slice(0, 1)
+                          .join(', ') || '-'}
+                      </td>
+                      <td className="px-4 py-2 max-w-xs">
+                        <div
+                          className="text-sm font-semibold truncate text-justify"
+                          title={item.judul}
+                        >
+                          {item.judul || '-'}
+                        </div>
+                        <div className="text-xs text-gray-500 truncate" title={item.isi_konten}>
+                          {item.isi_konten || '-'}
+                        </div>
+                      </td>
+                      <td className="px-6 py-3 align-middle">
+                        <div className="flex flex-row items-center justify-center space-x-3 h-full">
+
+                        {item.status?.toLowerCase() === 'sampah' ? (
+                          <button
+                          onClick={() => handleRestore(item.id)}
+                          title="Restore"
+                          className="text-green-600 hover:text-green-800 leading-none flex items-center justify-center cursor-pointer"
+                          >
+                            <FiRotateCcw size={18} />
+                          </button>
+                        ) : (
+                          <>
+                        <button
+                          onClick={() => router.push(`/dashboard/ai-generate/draft?id=${item.id}`)}
+                          title="Edit"
+                          className="text-blue-600 hover:text-blue-800 leading-none flex items-center justify-center cursor-pointer"
+                          >
+                          <FiEdit size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          title="Hapus"
+                          className="text-red-600 hover:text-blue-800 leading-none flex items-center justify-center cursor-pointer"
+                          >
+                          <FiTrash2 size={18} />
+                        </button>
+                        </>
+                        )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
-        </section>
+        </div>
       </main>
     </div>
   );

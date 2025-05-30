@@ -13,15 +13,18 @@ const JeepPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [modeTambah, setModeTambah] = useState(false);
   const router = useRouter();
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchDriversAndJeeps = async () => {
+      setLoading(true);
       const token = localStorage.getItem("access_token");
       if (!token) return;
 
       try {
         const [driversRes, jeepsRes] = await Promise.all([
-          fetch("http://localhost:8000/api/users/by-role?role=DRIVER", {
+          fetch("http://localhost:8000/api/users/by-role?role=Driver", {
             headers: { Authorization: `Bearer ${token}` },
           }),
           fetch("http://localhost:8000/api/jeeps/all", {
@@ -36,10 +39,10 @@ const JeepPage = () => {
         const jeeps = jeepsData.data || [];
 
         const mergedData = jeeps.map((jeep) => {
-          const driver = drivers.find((d) => d.id === jeep.users_id);
+          const driver = drivers.find((d) => d.id === jeep.driver_id);
 
           return {
-            users_id: driver?.id,
+            driver_id: driver?.id,
             driver_name: driver?.name || "-",
             lambung: jeep.no_lambung,
             jeep_id: jeep.jeep_id,
@@ -60,6 +63,8 @@ const JeepPage = () => {
         setJeepData(mergedData);
       } catch (error) {
         console.error("Gagal mengambil data driver dan jeep:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -115,10 +120,27 @@ const JeepPage = () => {
   const handleKembali = () => setModeTambah(false);
   const handleTambahJeep = () => setModeTambah(true);
 
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
+        <div className="shadow-md p-6 rounded-lg text-center">
+          <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex">
-      <UserMenu />
-      <Sidebar />
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+            
+                  <div
+                    className="transition-all duration-300 ease-in-out"
+                    style={{
+                      marginLeft: isSidebarOpen ? 290 : 70,
+                    }}
+                  ></div>
       <div className="flex-1 p-6">
         {modeTambah ? (
           <TambahJeep onKembali={handleKembali} />
@@ -127,11 +149,11 @@ const JeepPage = () => {
             <h1 className="text-[32px] font-semibold mb-6 text-black">
               Daftar Jeep
             </h1>
-
+          
             <div className="flex">
               <button
                 onClick={handleTambahJeep}
-                className="bg-[#1C7AC8] rounded-[10px] text-white py-1 px-3 mt-2 cursor-pointer hover:bg-[#7ba2d0] transition flex items-center"
+                className="bg-[#3D6CB9] rounded-[10px] text-white py-1 px-3 mt-2 cursor-pointer hover:bg-[#7ba2d0] transition flex items-center"
               >
                 <Plus size={18} className="mr-2 w-[20px] h-auto" />
                 Tambah Jeep
@@ -147,9 +169,9 @@ const JeepPage = () => {
               />
             </div>
 
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto bg-white rounded-xl shadow">
               <table className="w-full table-auto">
-                <thead className="text-gray-500">
+                <thead className="bg-[#3D6CB9] text-white ">
                   <tr>
                     <th className="p-2 text-center font-normal">Jeep ID</th>
                     <th className="p-2 text-center font-normal">No. Lambung</th>
@@ -189,7 +211,7 @@ const JeepPage = () => {
                         <td className="p-2 text-center">
                           <button
                             onClick={() => handleAturJeep(item.jeep_id)}
-                            className="w-[120px] bg-[#B8D4F9] rounded-[10px] text-[#1C7AC8] py-1 px-3 cursor-pointer hover:bg-[#7ba2d0] transition"
+                            className="w-[120px] bg-[#B8D4F9] rounded-[10px] text-[#1C7AC8] cursor-pointer hover:bg-[#7ba2d0] transition"
                           >
                             Lihat Detail
                           </button>

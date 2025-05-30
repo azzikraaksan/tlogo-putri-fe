@@ -1,0 +1,124 @@
+[33mca71734[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32makuntansi-eki[m[33m, [m[1;31morigin/akuntansi-eki[m[33m)[m Merge branch 'main' into akuntansi-eki
+[33ma4fa90e[m ngeupdate bagian akuntansi, banyak perubahan
+[33m2cda3fb[m[33m ([m[1;31mupstream/main[m[33m, [m[1;31mupstream/HEAD[m[33m)[m Merge pull request #36 from devianadyah/generate
+[33m5fe2a59[m Merge branch 'main' into generate
+[33m54bd99a[m Merge pull request #35 from siskuyy/penggajian-baru
+[33mcadec01[m memperbaiki logika generate
+[33m69b6394[m ubah sidebar, hak akses, kelola-driver
+[33mb86d148[m Resolve merge conflict in package-lock.json
+[33m319cd2e[m Perubahan pop up
+[33ma7141e2[m Merge branch 'main' of https://github.com/azzikraaksan/tlogo-putri-fe into akuntansi-eki
+[33m68494d8[m Merge pull request #32 from khmidnur/pemesanan
+[33mffb2b4d[m Merge branch 'main' into pemesanan
+[33m5ca50c7[m Merge pull request #34 from devianadyah/generate
+[33m9df85d8[m mengintegrasikan endpoint di generate
+[33me6c4211[m memperbaiki aksi di draft
+[33m6a4c497[m Merge pull request #33 from devianadyah/generate
+[33m868125a[m menambahkan icon back dan memperbaiki aksi edit
+[33m0e25484[m Menambahkan fitur hapus pesanan dan kursor pointer pada ikon aksi
+[33m2beb04a[m menyelesaikan konflik
+[33mf26a3e2[m Menambahkan perubahan lokal sebelum merge
+[33maf1bf7d[m Merge branch 'main' of https://github.com/azzikraaksan/tlogo-putri-fe into pemesanan
+[33m2e132f0[m Merge branch 'main' of https://github.com/azzikraaksan/tlogo-putri-fe into akuntansi-eki
+[33ma400f97[m Merge pull request #30 from SoyRoyyy/pemesanan
+[33maebc71d[m Merge pull request #31 from rekanitayunia/ai-nita
+[33mfa631d4[m Selesaikan konflik saat merge upstream/main ke generate
+[33mc50cde2[m WIP: simpan perubahan sebelum narik dari upstream
+[33m2067b25[m menambahkan sedikit icon di draft
+[33m3f00fdd[m Perubahan di menu detail pemesanan
+[33m9cefecf[m Merge branch 'main' of https://github.com/azzikraaksan/tlogo-putri-fe into ai-nita
+[33m90bcfca[m Reka perubahan lokal sebelum pull
+[33md33e6e7[m menambahkan loading di usermenu, dan beberapa halaman operasional
+[33mb0831e8[m Merge branch 'main' of https://github.com/azzikraaksan/tlogo-putri-fe
+[33mf4315c3[m perbaiki dashboard dan kelola driver
+[33m9d057f2[m Merge pull request #29 from maeniken/gaji-niken
+[33m9ccd9a1[m Perubahan daftar gaji, dan pencatatan
+[33m6ef6174[m Merge pull request #28 from rekanitayunia/ai-nita
+[33m5da96ea[m Merge pull request #27 from khmidnur/pemesanan
+[33mea73514[m Merge pull request #26 from EkiiiF/akuntansi-eki
+[33mec08c80[m perubahan khamid
+[33me4d56e1[m perubahan draft2
+[33mbef3514[m perubahan draft
+[33ma491673[m Merge branch 'main' of https://github.com/azzikraaksan/tlogo-putri-fe into akuntansi-eki
+[33m41d9b65[m tambah detail jeep, edit jeep, perbaiki anggota dan jeep
+[33mf641451[m Resolve conflict: delete page.jsx
+[33mde7e834[m membuat aksi sunting
+[33m60fcdf6[m popup detail pesanan di page daftar pesanan, dan page id kosong untuk edit
+[33meb20a89[m perubahan dari eki
+[33md5c8f5f[m devianadyah/generate; melakukan perubahan pada artikel di folder draft dan meperbaiki tampilan
+[33m16558c1[m Merge pull request #24 from Hariyono20/fitur-akuntansi
+[33m34a3127[m Merge pull request #23 from siskuyy/penggajian-baru
+[33m67c9130[m Merge branch 'main' into penggajian-baru
+[33m6c64263[m melakukan perubahan pada artikel di folder draft dan meperbaiki tampilan
+[33m42888c2[m Mengubah detail halaman pemasukan,pengeluaran, laporan keuangan dan data driver
+[33m1178770[m memperbaiki isi tabel
+[33m3ad2572[m perbaiki tampilan edit anggota
+[33mab8443b[m tambah halaman detail, edit anggota berdasarkan id, tambah halaman tambah jeep
+[33m8d0b417[m melakukan perbaikan di folder draft
+[33mc8e2d9b[m Merge pull request #22 from SoyRoyyy/pemesanan
+[33m5e07fea[m Merge pull request #21 from Hariyono20/fitur-akuntansi
+[33m047ea76[m perubahan nama variabel + penambahan halaman detail
+[33m55b97ee[m Update halaman pemasukan,pengeluaran, laporan ke uangan dan data driver
+[33m383b16f[m Merge pull request #20 from EkiiiF/akuntansi-eki
+[33m760cae2[m Merge pull request #19 from devianadyah/generate
+[33m20f17ee[m Merge pull request #18 from siskuyy/penggajian-baru
+[33mf1c80b0[m Merge pull request #17 from Hariyono20/fitur-akuntansi
+[33m8dcd766[m sayaaa menambahkan file di folder pengeluaran, ACC ya
+[33m2d5d755[m mengisi folder laporan gaji
+[33md0ff463[m melakukan perubahan pada header draft dan generate
+[33mebbf580[m Update halaman pemasukan, laporan keuangan, dan data driver
+[33m9ea8bd0[m Merge pull request #16 from devianadyah/generate
+[33meefd317[m melakukan perubahan dalam isi folder draft dan menambah folder artikel
+[33mc603682[m jangan di acc zik
+[33m8853ff3[m Merge branch 'main' of https://github.com/azzikraaksan/tlogo-putri-fe into akuntansi-eki
+[33m29faaee[m Merge pull request #15 from devianadyah/generate
+[33mde3daac[m mengisi file draft
+[33m8e89421[m Merge pull request #14 from maeniken/gaji-niken
+[33m28e9fea[m perubahan penggajian dan folder catat
+[33m1e86ac8[m tambah lihat detail anggota, dan perubahan login
+[33m6251216[m Merge pull request #13 from Hariyono20/fitur-akuntansi
+[33meaef193[m ubah api, tambah kompnen tambah anggota, rolling driver, aksi hapus anggota
+[33m9df4087[m install buat kalender
+[33m110a4be[m Merubah halaman pemasukan dan mengedit Halaman laporan ke uangan(harian, bulanan, triwulan dan tahunan
+[33m31472d2[m tambah menu laporan keuangan harian, bulanan, triwulan, tahunan
+[33m633b2c0[m tambah folder di akuntansi, sama perubahan di sidebar dan operasional
+[33m5892075[m perbaiki sidebar dan semua route
+[33mb5bf9b0[m ubah route dashboard_fo menjadi dashboard
+[33m73db669[m Merge pull request #5 from Hariyono20/fitur-akuntansi
+[33m4527edc[m Merge branch 'main' into fitur-akuntansi
+[33m4fdedb8[m Merge pull request #4 from EkiiiF/akuntansi-eki
+[33m8442dcf[m Merge pull request #6 from maeniken/gaji-niken
+[33md2f5fcc[m Merge pull request #7 from siskuyy/penggajian-baru
+[33mb57352e[m Merge pull request #8 from devianadyah/generate
+[33mcac1744[m Merge pull request #10 from SoyRoyyy/pemesanan
+[33me3d4635[m Selesaikan merge dari upstream/main
+[33mb6a4e32[m  membuat desin halaman dashbord
+[33ma70218e[m buat page daftar pesanan
+[33m00f7fa9[m saya coba coba, jangan di acccc
+[33m0fc2ea0[m mengisi file generate
+[33m9413672[m perubahan penggajian
+[33m1d38e36[m perubahan laporangaji awal
+[33md5de3fa[m Tambah fitur akuntansi
+[33mc17ce47[m Merge pull request #3 from devianadyah/generate
+[33m90a3ff4[m tambah page generate
+[33maef9038[m INI SAYA MENAMBAHKANN CODINGAN DI REPO PENGELUARAN YA, MASIH BELOM SELESAI TAPI
+[33m84e9d9a[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m update sidebar lagi
+[33m71b2ac7[m buat route orang gila
+[33m56d3aaf[m Merge branch 'main' of github.com:azzikraaksan/tlogo-putri-fe banyak folder
+[33m174dbcd[m buat banyak folder
+[33m512045b[m buat page kelola driver
+[33ma9ec8cb[m redirect login sesuai role (FO)
+[33m22d4716[m tambah component sidebargenerate dan menu generate
+[33ma3037b7[m login terbaru
+[33mdc49bcd[m tambah menu kelola-driver
+[33mf0013ab[m update menu penjadwalan, ticketing 20 april - operasional
+[33m2432c4f[m tambah menu anggota, jeep, ticketing, komponen search awal
+[33m4863a4d[m update rolling driver, logo, bg login
+[33m0c20615[m tombol pengguna dan logout
+[33md2bf5aa[m menu penjadwalan awal
+[33m3abfb7e[m logout otomatis ke halaman awal
+[33m7cc8961[m otomatis redirect ke login
+[33m996cfa6[m tampilan login tanpa bg
+[33m1eca733[m membuat login awal
+[33mef8b4ab[m commit kedua
+[33m217ccce[m repo awal
