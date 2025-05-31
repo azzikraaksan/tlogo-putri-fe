@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import Sidebar from "/components/Sidebar.jsx";
-import UserMenu from "/components/Pengguna.jsx";
-import withAuth from "/src/app/lib/withAuth";
+import Sidebar from "/components/Sidebar.jsx"; // Pastikan path ini benar
+// import UserMenu from "/components/Pengguna.jsx";
+import withAuth from "/src/app/lib/withAuth"; // Pastikan path ini benar
 import { useRouter } from 'next/navigation';
 import {
     CalendarDays,
@@ -11,7 +11,7 @@ import {
     FileSpreadsheet,
     RotateCcw,
     ArrowLeft,
-    Zap // Icon untuk generate laporan
+    Zap
 } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -27,7 +27,7 @@ const formatDateToDisplay = (dateString) => {
     if (!dateString) return "";
     const d = new Date(dateString);
     if (isNaN(d.getTime())) {
-        return dateString; // Kembali string asli jika tidak bisa di-parse
+        return dateString; 
     }
     const day = d.getDate().toString().padStart(2, "0");
     const month = (d.getMonth() + 1).toString().padStart(2, "0");
@@ -52,10 +52,11 @@ const formatRupiah = (number) => {
         style: 'currency',
         currency: 'IDR',
         minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
+        maximumFractionDigits: 2, 
     });
-    return formatter.format(number).replace(/,/g, '.').replace('Rp', 'Rp.');
+    return formatter.format(number).replace(/,00$/, '').replace(/,/g, '.').replace('Rp', 'Rp.');
 };
+
 
 const HarianPage = () => {
     const [dataHarian, setDataHarian] = useState([]);
@@ -68,12 +69,10 @@ const HarianPage = () => {
 
     const router = useRouter();
 
-    // Fungsi untuk kembali ke halaman sebelumnya
     const handleGoBack = () => {
         router.push("/dashboard/akuntansi/laporan-keuangan");
     };
 
-    // Fungsi untuk memuat dan memfilter data dari backend
     const loadAndFilterData = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -83,7 +82,6 @@ const HarianPage = () => {
                 throw new Error(`HTTP error! Status: ${response.status}. Detail: ${errorText || 'Tidak ada detail error.'}`);
             }
             const data = await response.json();
-
             const fetchedRawData = Array.isArray(data) ? data : data.data || [];
 
             if (!Array.isArray(fetchedRawData)) {
@@ -155,7 +153,6 @@ const HarianPage = () => {
             return;
         }
         setIsLoading(true);
-
         try {
             const response = await fetch(`${API_BASE_URL}/dailyreports/generate-report`, {
                 method: 'POST',
@@ -175,10 +172,9 @@ const HarianPage = () => {
                 }
                 throw new Error(errorMessage);
             }
-
             const result = await response.json();
             alert(`Proses perhitungan laporan harian berhasil dipicu di backend. ${result.message || 'Memuat data terbaru...'}`);
-            await loadAndFilterData();
+            await loadAndFilterData(); 
         } catch (error) {
             console.error("Error saat memicu generate laporan harian:", error);
             alert(`Gagal memicu generate laporan harian: ${error.message}`);
@@ -188,7 +184,7 @@ const HarianPage = () => {
     };
 
     const getExportFileName = (ext) => {
-        const date = selectedDateForFilter ? formatToISODate(selectedDateForFilter) : "all_dates";
+        const date = selectedDateForFilter ? formatToISODate(selectedDateForFilter) : "semua_tanggal";
         return `laporan_harian_${date}.${ext}`;
     };
 
@@ -206,21 +202,24 @@ const HarianPage = () => {
                 "Paket Tur": item.touringPacket,
                 "Keterangan": item.information,
                 "Kode": item.code,
-                "Marketing": item.marketing,
-                "Kas": item.cash,
-                "OPP": item.oop,
-                "Driver Bayar": item.payDriver,
-                "Total Kas": item.totalCash,
-                "Jumlah": item.amount,
-                "Harga": item.price,
-                "Driver Terima": item.driverAccept,
-                "Tamu Bayar": item.payingGuest,
+                "Marketing (Rp)": item.marketing,
+                "Kas (Rp)": item.cash,
+                "OPP (Rp)": item.oop,
+                "Driver Bayar (Rp)": item.payDriver,
+                "Total Kas (Rp)": item.totalCash,
+                "Jumlah (Pax/Unit)": item.amount,
+                "Harga (Rp)": item.price,
+                "Driver Terima (Rp)": item.driverAccept,
+                "Tamu Bayar (Rp)": item.payingGuest,
                 "Waktu Tiba": formatDateToDisplay(item.arrivalTime),
                 "Dibuat Pada": item.createdAt ? formatDateToDisplay(item.createdAt) : '-',
                 "Diperbarui Pada": item.updatedAt ? formatDateToDisplay(item.updatedAt) : '-',
             }));
 
             const ws = XLSX.utils.json_to_sheet(dataToExport);
+            const columnWidths = Object.keys(dataToExport[0] || {}).map(key => ({ wch: Math.max(key.length, ...dataToExport.map(row => (row[key]?.toString() || "").length)) + 2 }));
+            ws['!cols'] = columnWidths;
+
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Laporan Harian");
             XLSX.writeFile(wb, getExportFileName("xlsx"));
@@ -236,10 +235,10 @@ const HarianPage = () => {
             return;
         }
         try {
-            const doc = new jsPDF('landscape');
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
             const tableColumn = [
-                "No. LB", "Paket Tur", "Info", "Kode", "Marketing", "Kas", "OOP",
-                "Bayar Driver", "Total Kas", "Jumlah", "Harga", "Driver Terima",
+                "No. LB", "Paket Tur", "Info", "Kode", "Marketing", "Kas", "OPP",
+                "Bayar Drv", "Total Kas", "Jml", "Harga", "Drv Terima",
                 "Tamu Bayar", "Waktu Tiba"
             ];
             const tableRows = filteredData.map((item) => [
@@ -252,31 +251,41 @@ const HarianPage = () => {
                 formatRupiah(item.oop),
                 formatRupiah(item.payDriver),
                 formatRupiah(item.totalCash),
-                item.amount || 0,
+                item.amount !== null ? item.amount : 0,
                 formatRupiah(item.price),
                 formatRupiah(item.driverAccept),
                 formatRupiah(item.payingGuest),
                 formatDateToDisplay(item.arrivalTime),
             ]);
 
-            doc.text(`Laporan Data Harian`, 14, 15);
+            const title = `Laporan Data Harian ${selectedDateForFilter ? `(${formatDateToDisplay(selectedDateForFilter)})` : '(Semua Tanggal)'}`;
+            doc.setFontSize(14);
+            doc.text(title, 40, 40);
+
             autoTable(doc, {
                 head: [tableColumn],
                 body: tableRows,
-                startY: 20,
+                startY: 55,
+                theme: 'grid',
                 styles: {
-                    fontSize: 6,
-                    cellPadding: 1,
-                    overflow: 'linebreak',
+                    fontSize: 7,
+                    cellPadding: 2,
+                    overflow: 'ellipsize', 
+                    halign: 'center', // Perataan default untuk semua sel jika tidak di-override
+                    valign: 'middle'
                 },
                 headStyles: {
                     fillColor: [61, 108, 185],
-                    fontSize: 7,
+                    textColor: [255, 255, 255],
+                    fontSize: 8,
+                    fontStyle: 'bold',
+                    halign: 'center', // Header juga center
                 },
-                didDrawPage: function(data) {
-                    let str = "Page " + doc.internal.getNumberOfPages()
-                    doc.setFontSize(7)
-                    doc.text(str, data.settings.margin.left, doc.internal.pageSize.height - 10)
+                didDrawPage: function (data) {
+                    let str = "Halaman " + doc.internal.getNumberOfPages();
+                    doc.setFontSize(8);
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    doc.text(str, pageWidth - data.settings.margin.right - 40, doc.internal.pageSize.height - 30);
                 }
             });
             doc.save(getExportFileName("pdf"));
@@ -288,10 +297,7 @@ const HarianPage = () => {
 
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (
-                calendarRef.current &&
-                !calendarRef.current.contains(event.target)
-            ) {
+            if (calendarRef.current && !calendarRef.current.contains(event.target)) {
                 setIsDatePickerOpen(false);
             }
         };
@@ -305,195 +311,183 @@ const HarianPage = () => {
         "Tamu Bayar", "Waktu Tiba"
     ];
 
-    // Tentukan apakah ada data atau tidak
     const hasData = filteredData.length > 0;
     const [isSidebarOpen, setSidebarOpen] = useState(true);
 
     return (
-     <div className="flex">
-      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
-      <div
-        className="flex-1 p-6 transition-all duration-300 ease-in-out"
-        style={{
-          marginLeft: isSidebarOpen ? 290 : 70,
-        }}
-      >
-            <div className="flex-1 p-4 md:p-6 relative overflow-y-auto">
-                <h1
-                    className="text-[28px] md:text-[32px] font-semibold text-black flex items-center gap-3 cursor-pointer hover:text-[#3D6CB9] transition-colors mb-6"
-                    onClick={handleGoBack}
-                >
-                    <ArrowLeft size={28} />
-                    Laporan Harian
-                </h1>
+        <div className="flex">
+            <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+            <div
+                className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
+                style={{
+                    marginLeft: isSidebarOpen ? 290 : 70, 
+                }}
+            >
+                <div className="flex-1 p-4 md:p-6 relative overflow-y-auto">
+                    <h1
+                        className="text-[28px] md:text-[32px] font-semibold text-black flex items-center gap-3 cursor-pointer hover:text-[#3D6CB9] transition-colors mb-6"
+                        onClick={handleGoBack}
+                    >
+                        <ArrowLeft size={28} />
+                        Laporan Harian
+                    </h1>
 
-                {/* Toolbar */}
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
-                    {/* Filter Section */}
-                    <div className="flex gap-4">
-                        {/* Date Picker untuk Filter */}
-                        <div className="relative" ref={calendarRef}>
-                            {!selectedDateForFilter ? (
-                                <button
-                                    onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                                    className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
-                                >
-                                    <CalendarDays size={20} /> <span>Pilih Tanggal</span>
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={resetFilter}
-                                    className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
-                                >
-                                    <RotateCcw size={20} /> <span>Set Ulang Filter</span>
-                                </button>
-                            )}
-                            {isDatePickerOpen && (
-                                <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-12">
-                                    <DatePicker
-                                        selected={tempDateForPicker}
-                                        onChange={(date) => setTempDateForPicker(date)}
-                                        inline
-                                        dateFormat="dd/MM/yyyy"
-                                        showPopperArrow={false}
-                                    />
-                                    <div className="mt-4 flex justify-between">
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+                        <div className="flex flex-wrap gap-4">
+                            <div className="relative" ref={calendarRef}>
+                                {!selectedDateForFilter ? (
+                                    <button
+                                        onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+                                        className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black transition-colors"
+                                    >
+                                        <CalendarDays size={20} /> <span>Pilih Tanggal</span>
+                                    </button>
+                                ) : (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-gray-700">
+                                            Filter: {formatDateToDisplay(selectedDateForFilter)}
+                                        </span>
                                         <button
-                                            onClick={() => {
-                                                setTempDateForPicker(selectedDateForFilter);
-                                                setIsDatePickerOpen(false);
-                                            }}
-                                            className="px-4 py-2 bg-red-200 text-black rounded hover:bg-red-500 hover:text-white"
+                                            onClick={resetFilter}
+                                            className="flex items-center gap-1 bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-lg shadow text-gray-700 hover:text-black transition-colors text-sm"
+                                            title="Set Ulang Filter"
                                         >
-                                            Batal
-                                        </button>
-                                        <button
-                                            onClick={applyDateFilter}
-                                            className="px-4 py-2 bg-[#B8D4F9] text-black rounded hover:bg-[#3D6CB9] hover:text-white"
-                                        >
-                                            Pilih Tanggal
+                                            <RotateCcw size={16} /> <span>Reset</span>
                                         </button>
                                     </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Tombol Generate Laporan Harian */}
-                        <button
-                            onClick={handleGenerateDailyReport}
-                            disabled={isLoading}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
-                                isLoading || !hasData // Kondisi disesuaikan: abu-abu jika loading atau tidak ada data
-                                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                    : "bg-[#3D6CB9] text-white hover:bg-[#B8D4F9] hover:text-black"
-                            }`}
-                        >
-                            <Zap size={20} color={isLoading || !hasData ? "gray" : "white"} /> {/* Warna ikon disesuaikan */}
-                            <span>Buat Laporan</span>
-                        </button>
-                    </div>
-
-                    {/* Export Section */}
-                    <div className="flex gap-4">
-                        <button
-                            onClick={handleExportExcelAction}
-                            disabled={!hasData || isLoading}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
-                                !hasData || isLoading
-                                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                    : "bg-green-100 text-black hover:bg-[#B8D4F9]"
-                            }`}
-                        >
-                            <FileSpreadsheet
-                                size={20}
-                                color={!hasData || isLoading ? "gray" : "green"}
-                            />{" "}
-                            <span>Ekspor Excel</span>
-                        </button>
-                        <button
-                            onClick={handleExportPDFAction}
-                            disabled={!hasData || isLoading}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
-                                !hasData || isLoading
-                                    ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                    : "bg-red-100 text-black hover:bg-[#B8D4F9]"
-                            }`}
-                        >
-                            <FileText
-                                size={20}
-                                color={!hasData || isLoading ? "gray" : "red"}
-                            />{" "}
-                            <span>Ekspor PDF</span>
-                        </button>
-                    </div>
-                </div>
-
-                {/* Tabel dengan scrolling */}
-                {isLoading ? (
-                    <div className="text-center p-10 text-lg font-medium text-gray-700">
-                        Memuat data laporan harian, mohon tunggu...
-                    </div>
-                ) : (
-                    <div className="overflow-x-auto rounded-lg shadow">
-                        <div className="max-h-[600px] overflow-y-auto">
-                            <table className="min-w-full table-auto bg-white text-sm">
-                                <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
-                                    <tr>
-                                        {tableDisplayHeaders.map((header, index) => (
-                                            <th
-                                                key={header}
-                                                className={`p-2 text-center whitespace-nowrap`}
-                                                style={{
-                                                    borderTopLeftRadius: index === 0 ? "0.5rem" : undefined,
-                                                    borderTopRightRadius:
-                                                        index === tableDisplayHeaders.length - 1 ? "0.5rem" : undefined,
+                                )}
+                                {isDatePickerOpen && (
+                                    <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-full">
+                                        <DatePicker
+                                            selected={tempDateForPicker}
+                                            onChange={(date) => setTempDateForPicker(date)}
+                                            inline
+                                            dateFormat="dd/MM/yyyy"
+                                            showPopperArrow={false}
+                                        />
+                                        <div className="mt-4 flex justify-between">
+                                            <button
+                                                onClick={() => {
+                                                    setTempDateForPicker(selectedDateForFilter); 
+                                                    setIsDatePickerOpen(false);
                                                 }}
+                                                className="px-4 py-2 bg-red-200 text-black rounded hover:bg-red-500 hover:text-white transition-colors"
                                             >
-                                                {header}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredData.length === 0 ? (
-                                        <tr>
-                                            <td
-                                                colSpan={tableDisplayHeaders.length}
-                                                className="text-center p-4 text-gray-500 font-medium bg-white-100"
+                                                Batal
+                                            </button>
+                                            <button
+                                                onClick={applyDateFilter}
+                                                className="px-4 py-2 bg-[#B8D4F9] text-black rounded hover:bg-[#3D6CB9] hover:text-white transition-colors"
+                                                disabled={!tempDateForPicker}
                                             >
-                                                Data Tidak Ditemukan
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        filteredData.map((item) => (
-                                            <tr
-                                                key={item.idDailyReport}
-                                                className="border-b text-center border-blue-200 hover:bg-blue-100 transition duration-200"
-                                            >
-                                                <td className="p-3 whitespace-nowrap">{item.stomachNo || '-'}</td>
-                                                <td className="p-3 whitespace-nowrap">{item.touringPacket || '-'}</td>
-                                                <td className="p-3 whitespace-nowrap">{item.information || '-'}</td>
-                                                <td className="p-3 whitespace-nowrap">{item.code || '-'}</td>
-                                                <td className="p-3 whitespace-nowrap">{formatRupiah(item.marketing)}</td>
-                                                <td className="p-3 whitespace-nowrap">{formatRupiah(item.cash)}</td>
-                                                <td className="p-3 whitespace-nowrap">{formatRupiah(item.oop)}</td>
-                                                <td className="p-3 whitespace-nowrap">{formatRupiah(item.payDriver)}</td>
-                                                <td className="p-3 whitespace-nowrap">{formatRupiah(item.totalCash)}</td>
-                                                <td className="p-3 whitespace-nowrap">{item.amount !== null ? item.amount : '-'}</td>
-                                                <td className="p-3 whitespace-nowrap">{formatRupiah(item.price)}</td>
-                                                <td className="p-3 whitespace-nowrap">{formatRupiah(item.driverAccept)}</td>
-                                                <td className="p-3 whitespace-nowrap">{formatRupiah(item.payingGuest)}</td>
-                                                <td className="p-3 whitespace-nowrap">{formatDateToDisplay(item.arrivalTime)}</td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
+                                                Pilih
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <button
+                                onClick={handleGenerateDailyReport}
+                                disabled={isLoading}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow transition-colors ${
+                                    isLoading
+                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                        : "bg-[#3D6CB9] text-white hover:bg-[#B8D4F9] hover:text-black"
+                                }`}
+                            >
+                                <Zap size={20} color={isLoading ? "gray" : "white"} />
+                                <span>Buat Laporan</span>
+                            </button>
+                        </div>
+                        <div className="flex flex-wrap gap-4">
+                            <button
+                                onClick={handleExportExcelAction}
+                                disabled={!hasData || isLoading}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow transition-colors ${
+                                    !hasData || isLoading
+                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                        : "bg-green-100 text-black hover:bg-green-200"
+                                }`}
+                            >
+                                <FileSpreadsheet size={20} color={!hasData || isLoading ? "gray" : "green"} />
+                                <span>Ekspor Excel</span>
+                            </button>
+                            <button
+                                onClick={handleExportPDFAction}
+                                disabled={!hasData || isLoading}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow transition-colors ${
+                                    !hasData || isLoading
+                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                        : "bg-red-100 text-black hover:bg-red-200"
+                                }`}
+                            >
+                                <FileText size={20} color={!hasData || isLoading ? "gray" : "red"} />
+                                <span>Ekspor PDF</span>
+                            </button>
                         </div>
                     </div>
-                )}
+
+                    {isLoading ? (
+                        <div className="text-center p-10 text-lg font-medium text-gray-700">
+                            Memuat data laporan harian, mohon tunggu...
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto rounded-lg shadow-md bg-white">
+                            <div className="max-h-[calc(100vh-280px)] overflow-y-auto">
+                                <table className="min-w-full table-auto text-sm">
+                                    <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10 shadow-sm">
+                                        <tr>
+                                            {tableDisplayHeaders.map((header) => (
+                                                <th
+                                                    key={header}
+                                                    className="p-3 text-center whitespace-nowrap font-semibold"
+                                                >
+                                                    {header}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200">
+                                        {filteredData.length === 0 ? (
+                                            <tr>
+                                                <td
+                                                    colSpan={tableDisplayHeaders.length}
+                                                    className="text-center p-6 text-gray-500 font-medium"
+                                                >
+                                                    Data Tidak Ditemukan
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            filteredData.map((item) => (
+                                                <tr
+                                                    key={item.idDailyReport}
+                                                    className="hover:bg-gray-50 transition duration-150"
+                                                >
+                                                    {/* PERUBAHAN: Semua <td> diubah ke text-center */}
+                                                    <td className="p-3 whitespace-nowrap text-center">{item.stomachNo || '-'}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{item.touringPacket || '-'}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{item.information || '-'}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{item.code || '-'}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.marketing)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.cash)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.oop)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.payDriver)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.totalCash)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{item.amount !== null ? item.amount : '-'}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.price)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.driverAccept)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.payingGuest)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatDateToDisplay(item.arrivalTime)}</td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
-        </div>
         </div>
     );
 };

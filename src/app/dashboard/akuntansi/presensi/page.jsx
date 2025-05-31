@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Sidebar from "/components/Sidebar.jsx"; // Sesuaikan path jika diperlukan
-import UserMenu from "/components/Pengguna.jsx"; // Sesuaikan path jika diperlukan
+// import UserMenu from "/components/Pengguna.jsx"; // Sesuaikan path jika diperlukan
 import withAuth from "/src/app/lib/withAuth"; // Sesuaikan path jika diperlukan
 import {
     CalendarDays,
@@ -339,7 +339,7 @@ const PresensiPage = ({ children }) => {
         <div className="flex">
             <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
             <div
-                className="flex-1 p-6 transition-all duration-300 ease-in-out"
+                className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
                 style={{
                     marginLeft: isSidebarOpen ? 290 : 70,
                 }}
