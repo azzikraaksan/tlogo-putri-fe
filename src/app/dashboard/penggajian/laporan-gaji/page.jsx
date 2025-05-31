@@ -24,39 +24,42 @@ function Page() {
   const years = Array.from({ length: 11 }, (_, i) => 2020 + i);
 
 useEffect(() => {
-  const roles = ["driver", "owner", "fo"]; // fo bisa saja tidak tersedia
-  const userId = 4;
-
   const fetchData = async () => {
     try {
+      const urls = [
+        "http://localhost:8000/api/salary/total/2/driver",
+        "http://localhost:8000/api/salary/total/3/owner",
+      ];
+
       const results = await Promise.allSettled(
-        roles.map(async (role) => {
-          const res = await fetch(`http://localhost:8000/api/salary/total/${userId}/${role}`);
-          if (!res.ok) throw new Error(`Fetch gagal untuk role: ${role}`);
+        urls.map(async (url) => {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`Fetch gagal: ${url}`);
           const data = await res.json();
-          return Array.isArray(data) ? data : [data];
+          return data;
         })
       );
 
       const allData = results
         .filter(result => result.status === "fulfilled")
-        .flatMap(result =>
-          result.value.map(item => ({
-            nama: item.nama || item.name || "-",
-            role: item.role || item.position || "-",
-            tanggal: item.tanggal || item.date || "-",
-            total_salary: item.total_salary || item.amount || 0,
-          }))
-        );
+        .map(result => result.value)
+        .map(item => ({
+          nama: item.nama || "-",
+          role: item.role || "-",
+          tanggal: item.tanggal || "-",
+          total_salary: item.total_salary || 0,
+        }));
 
-      setAllData(allData); // tampilkan hanya data yang berhasil diambil
+      setAllData(allData); // tampilkan semua data
     } catch (err) {
-      console.error("Gagal mengambil sebagian data:", err.message);
+      console.error("Gagal mengambil data:", err.message);
     }
   };
 
   fetchData();
 }, []);
+
+
 
   const filteredData = allData.filter(item => {
     const cocokNama = (item.nama || "").toLowerCase().includes(searchTerm.toLowerCase());
@@ -70,17 +73,21 @@ useEffect(() => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
-  const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredData.map(item => ({
-      Nama: item.nama,
-      Role: item.role,
-      Tanggal: item.tanggal,
-      Gaji: item.total_salary
-    })));
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Gaji");
-    XLSX.writeFile(workbook, "laporan_gaji.xlsx");
-  };
+const exportToExcel = () => {
+  const dataWithNo = filteredData.map((item, idx) => ({
+    No: idx + 1,
+    Nama: item.nama,
+    Role: item.role,
+    Tanggal: item.payment_date,
+    "Total Gaji": item.total_salary,
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(dataWithNo);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Gaji");
+
+  XLSX.writeFile(workbook, "laporan_gaji.xlsx");
+};
 
   const exportToPDF = () => {
     const doc = new jsPDF();
@@ -147,7 +154,7 @@ useEffect(() => {
 
       <div className="flex-1 p-6 bg-gray-50">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-2xl font-bold">Laporan Gaji</h1>
+          <h1 className="text-[32px] font-semibold">Laporan Gaji</h1>
         </div>
 
         <div className="flex justify-between flex-wrap items-start mb-2 gap-2">
@@ -181,16 +188,16 @@ useEffect(() => {
           </div>
         </div>
 
-        <table className="w-full bg-white shadow rounded">
-          <thead className="bg-gray-200">
-           <tr>
-            <th className="p-2 text-left w-12">No</th>
-            <th className="p-2 text-left w-48">Nama</th>
-            <th className="p-2 text-left w-36">Role</th>
-            <th className="p-2 text-left w-40">Tanggal</th>
-            <th className="p-2 text-left w-48">Nominal Gaji</th>
-          </tr>
-        </thead>
+        <table className="w-full bg-white shadow rounded overflow-hidden">
+          <thead className="bg-[#3D6CB9] text-white">
+            <tr>
+              <th className="p-2 text-left w-12">No</th>
+              <th className="p-2 text-left w-48">Nama</th>
+              <th className="p-2 text-left w-36">Role</th>
+              <th className="p-2 text-left w-40">Tanggal</th>
+              <th className="p-2 text-left w-48">Nominal Gaji</th>
+            </tr>
+          </thead>
 
          <tbody>
           {currentData.map((item, index) => (
@@ -208,7 +215,7 @@ useEffect(() => {
       </tr>
     )}
 </tbody>
-        </table>
+          </table>
 
         <div className="mt-4 flex justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => (
