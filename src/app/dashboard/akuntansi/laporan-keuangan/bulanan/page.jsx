@@ -56,27 +56,22 @@ const BulananPage = ({ children }) => {
         console.log(`Memuat data untuk bulan: ${selectedMonth}, tahun: ${selectedYear}`);
         setIsLoading(true);
         try {
-            // Menggunakan endpoint yang mengambil data per bulan/tahun
             const response = await fetch(
                 `${API_BASE_URL}/reports/bulan?month=${selectedMonth}&year=${selectedYear}`
             );
             console.log("Respons fetch diterima, status:", response.status);
 
-            if (!response.ok) {
-                if (response.status === 404) {
-                    console.warn(`Data laporan bulanan tidak ditemukan untuk ${selectedMonth}-${selectedYear}`);
-                    setDataBulanan([]); // Penting untuk menampilkan pesan "Data Tidak Ditemukan"
-                } else {
-                    const errorText = await response.text();
-                    console.error(`HTTP error! status: ${response.status}, body: ${errorText}`);
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return; 
-            }
-            const rawData = await response.json();
+            const rawData = await response.json(); // Ambil JSON-nya langsung dulu
             console.log("Raw data dari backend:", rawData);
 
-            const fetchedData = Array.isArray(rawData) ? rawData : rawData.data || [];
+            // Cek apakah response dari backend menyatakan gagal
+            if (rawData.success === false || !Array.isArray(rawData.data)) {
+                console.warn(`Data laporan bulanan tidak ditemukan untuk ${selectedMonth}-${selectedYear}`);
+                setDataBulanan([]); // Kosongin data kalau gagal atau data bukan array
+                return;
+              }
+
+            const fetchedData = rawData.data;
             console.log("Fetched data (setelah dicek array/object):", fetchedData);
 
             const formattedData = fetchedData.map(item => ({
@@ -99,7 +94,7 @@ const BulananPage = ({ children }) => {
             setIsLoading(false);
             console.log("loadDataFromBackend selesai.");
         }
-    }, [selectedMonth, selectedYear]); // Dependensi agar fungsi ini dibuat ulang & dipanggil saat filter berubah
+    }, [selectedMonth, selectedYear]);
 
     // Efek samping untuk memuat data saat filter bulan/tahun berubah
     useEffect(() => {
@@ -224,7 +219,7 @@ const BulananPage = ({ children }) => {
     return (
         <div className="flex">
             <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
-            <div className="flex-1 p-6 transition-all duration-300 ease-in-out" style={{ marginLeft: isSidebarOpen ? 290 : 70 }}>
+            <div className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden" style={{ marginLeft: isSidebarOpen ? 290 : 70 }}>
                 <div className="flex-1 p-4 md:p-6 relative overflow-y-auto">
                     <h1 className="text-[28px] md:text-[32px] font-semibold text-black flex items-center gap-3 cursor-pointer hover:text-[#3D6CB9] transition-colors mb-6" onClick={handleGoBack}>
                         <ArrowLeft size={28} /> Laporan Bulanan

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Sidebar from "/components/Sidebar.jsx";
-import UserMenu from "/components/Pengguna.jsx";
+// import UserMenu from "/components/Pengguna.jsx";
 import withAuth from "/src/app/lib/withAuth";
 import TambahPengeluaran from "/components/TambahPengeluaran.jsx";
 import {
@@ -92,15 +92,9 @@ const PengeluaranPage = ({ children }) => {
         const { startDate, endDate } = getCurrentMonthDateRange();
         const currentMonthKey = `${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}`;
 
-        // Filter data yang berada di bulan ini DAN belum dilaporkan (jika ada flag di data)
         const filtered = rawData.filter(item => {
             const itemDate = item.issue_date ? new Date(item.issue_date) : null;
             const itemMonthKey = itemDate ? `${itemDate.getFullYear()}-${(itemDate.getMonth() + 1).toString().padStart(2, '0')}` : null;
-            // Jika Anda menambahkan properti `is_reported` di backend, gunakan:
-            // return itemDate && itemDate >= startDate && itemDate <= endDate && !item.is_reported;
-            
-            // Karena tidak ada perubahan BE, kita akan mengandalkan state `reportedMonths`
-            // Ini akan menyembunyikan data jika bulan sudah ditandai dilaporkan secara lokal
             return itemDate && itemMonthKey === currentMonthKey && !reportedMonths[currentMonthKey];
         });
         return filtered;
@@ -219,55 +213,73 @@ const PengeluaranPage = ({ children }) => {
     }, [fetchExpenditureData]);
 
     const handleGenerateReport = async () => {
-        const today = new Date();
-        const currentMonth = today.getMonth() + 1;
-        const currentYear = today.getFullYear();
-        const currentMonthKey = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
-        // const lastDayOfMonth = new Date(currentYear, currentMonth, 0).getDate(); // Tidak digunakan lagi untuk logika disabled
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1;
+    const currentYear = today.getFullYear();
+    const currentMonthKey = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
 
-        // Pengecekan apakah bulan ini sudah pernah dilaporkan
-        if (reportedMonths[currentMonthKey]) {
-            alert("Laporan untuk bulan ini sudah dibuat.");
-            return;
-        }
+    // Pengecekan apakah bulan ini sudah pernah dilaporkan
+    if (reportedMonths[currentMonthKey]) {
+        alert("Laporan untuk bulan ini sudah dibuat.");
+        return;
+    }
 
-        // Pengecekan apakah ada data untuk dilaporkan
-        if (currentMonthExpenditures.length === 0) {
-            alert("Tidak ada pengeluaran untuk bulan ini yang dapat dilaporkan.");
-            return;
-        }
+    // Pengecekan apakah ada data untuk dilaporkan
+    if (currentMonthExpenditures.length === 0) {
+        alert("Tidak ada pengeluaran untuk bulan ini yang dapat dilaporkan.");
+        return;
+    }
 
-        if (confirm(`Apakah Anda yakin ingin membuat laporan pengeluaran untuk bulan ini (Total: ${formatCurrency(totalCurrentMonthExpenditure)})? Data bulan ini akan ditandai sebagai 'dilaporkan' di tampilan.`)) {
-            try {
-                // Simulasi pengiriman laporan ke database (tanpa endpoint baru)
-                // Di sini, Anda akan menyimpan `currentMonthExpenditures` dan `totalCurrentMonthExpenditure`
-                // ke dalam database laporan bulanan Anda.
-                // Karena Anda tidak ingin membuat endpoint baru, Anda harus memikirkan cara
-                // mengelola ini di backend yang sudah ada atau secara manual.
-                // Untuk demo ini, kita hanya akan mengubah status lokal di frontend.
+    if (confirm(`Apakah Anda yakin ingin membuat laporan pengeluaran untuk bulan ini (Total: ${formatCurrency(totalCurrentMonthExpenditure)})? Data bulan ini akan ditandai sebagai 'dilaporkan' di tampilan.`)) {
+        try {
+            // Data yang akan dikirim ke backend
+            const reportData = {
+                monthKey: currentMonthKey,
+                expenditures: currentMonthExpenditures,
+                totalExpenditure: totalCurrentMonthExpenditure,
+                reportDate: today.toISOString() // Menambahkan tanggal laporan dibuat
+            };
 
-                console.log("Simulating report generation for month:", currentMonthKey);
-                console.log("Data to report:", currentMonthExpenditures);
-                console.log("Total expenditure for month:", totalCurrentMonthExpenditure);
+            console.log("Mengirim data laporan ke endpoint:", reportData);
 
-                // Tandai bulan ini sebagai sudah dilaporkan secara lokal
-                setReportedMonths(prev => ({
-                    ...prev,
-                    [currentMonthKey]: true
-                }));
+            // Panggilan ke endpoint untuk membuat/mengakses data laporan
+            const response = await fetch('http://localhost:8000/api/expenditures/generate', {
+                method: 'POST', // Atau metode yang sesuai (PUT, GET jika hanya mengakses)
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Tambahkan header lain jika diperlukan, misalnya token autentikasi
+                    // 'Authorization': `Bearer ${yourAuthToken}`
+                },
+                body: JSON.stringify(reportData) // Mengirim data sebagai JSON
+            });
 
-                alert("Laporan pengeluaran bulanan berhasil dibuat dan ditandai.");
-                
-                // Setelah laporan dibuat dan ditandai, segarkan tampilan untuk menyembunyikan data bulan ini
-                // Tanpa perubahan BE, kita hanya akan memfilter ulang data yang sudah ada
-                fetchExpenditureData(); 
-                
-            } catch (error) {
-                console.error("Gagal membuat laporan pengeluaran bulanan:", error);
-                alert(`Gagal membuat laporan pengeluaran bulanan: ${error.message}`);
+            if (!response.ok) {
+                // Jika respons dari server tidak OK (misal status 4xx atau 5xx)
+                const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                throw new Error(errorData.message || `Gagal menghubungi server: ${response.status}`);
             }
+
+            // Jika berhasil, backend mungkin mengembalikan data konfirmasi
+            const result = await response.json();
+            console.log("Respons dari server:", result);
+
+            // Tandai bulan ini sebagai sudah dilaporkan secara lokal
+            setReportedMonths(prev => ({
+                ...prev,
+                [currentMonthKey]: true
+            }));
+
+            alert("Laporan pengeluaran bulanan berhasil dibuat dan dikirim ke server.");
+            
+            // Setelah laporan dibuat dan ditandai, segarkan tampilan
+            fetchExpenditureData(); 
+            
+        } catch (error) {
+            console.error("Gagal membuat laporan pengeluaran bulanan:", error);
+            alert(`Gagal membuat laporan pengeluaran bulanan: ${error.message}`);
         }
-    };
+    }
+};
 
     useEffect(() => {
         fetchExpenditureData();
@@ -438,18 +450,13 @@ const PengeluaranPage = ({ children }) => {
     }, []);
 
     const isDataAvailableForExport = !isLoading && Array.isArray(filteredData) && filteredData.length > 0;
-    // Logika untuk disabled tidak lagi digunakan di tombol, tapi masih bisa berguna untuk logika lain jika perlu
-    // const isReportGenerationAvailable = !isLoading && Array.isArray(currentMonthExpenditures) && currentMonthExpenditures.length > 0;
-    // const today = new Date();
-    // const currentMonthKey = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}`;
-    // const isCurrentMonthReported = reportedMonths[currentMonthKey];
     const [isSidebarOpen, setSidebarOpen] = useState(true);
 
     return (
      <div className="flex">
        <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
        <div
-         className="flex-1 p-6 transition-all duration-300 ease-in-out"
+         className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
          style={{
            marginLeft: isSidebarOpen ? 290 : 70,
          }}
@@ -598,11 +605,13 @@ const PengeluaranPage = ({ children }) => {
                             </table>
                         </div>
                         {/* Total Pengeluaran dipindahkan ke pojok kanan bawah */}
-                        {filteredData.length > 0 && (
-                            <div className="flex justify-end p-4 text-lg font-semibold text-gray-700">
-                                Total Pengeluaran: <span className="ml-2 text-blue-700">{formatCurrency(totalCurrentMonthExpenditure)}</span>
-                            </div>
-                        )}
+                                {filteredData.length > 0 && (
+                                    <div className="fixed bottom-4 right-4 bg-white text-black px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-20"> 
+                                            <span className="font-bold text-lg">Total Pengeluaran:</span> 
+                                            <span className="text-lg font-semibold text-[#3D6CB9]">{formatCurrency(totalCurrentMonthExpenditure)}</span> 
+                                    </div>
+                                )}
+                        
                     </div>
                 )}
             </div>
