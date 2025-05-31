@@ -40,7 +40,8 @@ const UserNavbar = () => {
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex items-center gap-4 text-[#3D6CB9] bg-white rounded-[15px] px-3 py-1">
+    // <div className="fixed top-4 right-4 z-50 flex items-center gap-4 text-[#3D6CB9]">
+    <div className="absolute top-4 right-4 flex items-center gap-4 text-[#3D6CB9]">
       <Link
         href="/dashboard/profil"
         className="flex items-center gap-4 hover:opacity-80 transition"

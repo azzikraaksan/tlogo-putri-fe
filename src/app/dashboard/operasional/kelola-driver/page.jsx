@@ -457,7 +457,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Sidebar from "/components/Sidebar.jsx";
-import UserMenu from "/components/Pengguna.jsx";
+import LoadingFunny from "/components/LoadingFunny.jsx";
 import SearchInput from "/components/Search.jsx";
 import withAuth from "/src/app/lib/withAuth";
 
@@ -668,15 +668,8 @@ const PenjadwalanPage = () => {
   //   }
   // };
   if (loading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
-        <div className="shadow-md p-6 rounded-lg text-center">
-          <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
+        return <LoadingFunny />;
+      }
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -709,7 +702,7 @@ const PenjadwalanPage = () => {
                 <th className="p-2 text-center font-normal">Nama Driver</th>
                 <th className="p-2 text-center font-normal">Status Jeep</th>
                 <th className="p-2 text-center font-normal">Kontak</th>
-                <th className="p-2 text-center font-normal">Konfirmasi</th>
+                {/* <th className="p-2 text-center font-normal">Konfirmasi</th> */}
                 {/* <th className="p-2 text-center font-normal">Keberangkatan</th> */}
                 <th className="p-2 text-center font-normal">Ubah Status</th>
               </tr>
@@ -756,9 +749,9 @@ const PenjadwalanPage = () => {
                         WhatsApp
                       </button>
                     </td>
-                    <td className="p-2 text-center text-gray-750">
+                    {/* <td className="p-2 text-center text-gray-750">
                       {item.konfirmasi}
-                    </td>
+                    </td> */}
                     {/* <td className="p-2 text-center text-gray-750">
                       <button
                         onClick={() => handleDepartureClick(item)}

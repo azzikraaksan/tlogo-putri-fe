@@ -236,7 +236,7 @@ const TambahAnggota = ({ onKembali }) => {
                   name="foto_profil"
                   accept=".jpeg, .jpg, .png"
                   onChange={handleFileChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="cursor-pointer mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                 />
               </div> */}
               <div style={{ position: "relative", width: "100%" }}>
@@ -248,7 +248,7 @@ const TambahAnggota = ({ onKembali }) => {
                   name="foto_profil"
                   accept=".jpeg, .jpg, .png"
                   onChange={handleFileChange}
-                  className="mt-2 p-2 pr-10 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="cursor-pointer mt-2 p-2 pr-10 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                   style={{ paddingRight: "2.5rem" }} // kasih space kanan buat icon
                 />
                 <Upload
@@ -259,7 +259,6 @@ const TambahAnggota = ({ onKembali }) => {
                     right: "10px",
                     transform: "translateY(-50%)",
                     pointerEvents: "none",
-                    color: "#9CA3AF", // warna abu-abu
                   }}
                 />
               </div>
@@ -271,7 +270,7 @@ const TambahAnggota = ({ onKembali }) => {
                   type="file"
                   name="foto_profil"
                   onChange={handleFileChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:rincursor-pointer g-gray-400 text-[14px]"
                 />
               </div> */}
             </>
@@ -345,7 +344,7 @@ const TambahAnggota = ({ onKembali }) => {
                   name="foto_profil"
                   accept=".jpeg, .jpg, .png"
                   onChange={handleFileChange}
-                  className="mt-2 p-2 pr-10 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="cursor-pointer mt-2 p-2 pr-10 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                   style={{ paddingRight: "2.5rem" }} // kasih space kanan buat icon
                 />
                 <Upload
@@ -356,7 +355,6 @@ const TambahAnggota = ({ onKembali }) => {
                     right: "10px",
                     transform: "translateY(-50%)",
                     pointerEvents: "none",
-                    color: "#9CA3AF", // warna abu-abu
                   }}
                 />
               </div>
@@ -431,7 +429,7 @@ const TambahAnggota = ({ onKembali }) => {
                   name="foto_profil"
                   accept=".jpeg, .jpg, .png"
                   onChange={handleFileChange}
-                  className="mt-2 p-2 pr-10 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                  className="cursor-pointer mt-2 p-2 pr-10 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                   style={{ paddingRight: "2.5rem" }} // kasih space kanan buat icon
                 />
                 <Upload
@@ -442,7 +440,6 @@ const TambahAnggota = ({ onKembali }) => {
                     right: "10px",
                     transform: "translateY(-50%)",
                     pointerEvents: "none",
-                    color: "#9CA3AF", // warna abu-abu
                   }}
                 />
               </div>

@@ -201,11 +201,14 @@ import { useEffect, useState } from "react";
 import Sidebar from "/components/Sidebar.jsx";
 import UserMenu from "/components/Pengguna.jsx";
 import SearchInput from "/components/Search.jsx";
+import LoadingFunny from "/components/LoadingFunny.jsx";
 import RollingDriverPage from "/components/RollingDriver.jsx";
 import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
+import Hashids from "hashids";
 
 const PenjadwalanPage = () => {
+  const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [orders, setOrders] = useState([]);
@@ -224,15 +227,6 @@ const PenjadwalanPage = () => {
   const [rotations, setRotations] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // useEffect(() => {
-  //   const lastRollingDate = localStorage.getItem("lastRollingDate");
-  //   const today = new Date().toISOString().split("T")[0];
-  //   if (lastRollingDate === today) {
-  //     setHasRolledToday(true);
-  //   }
-  //   fetchOrders();
-  //   checkRollingStatus();
-  // }, []);
   useEffect(() => {
     setLoading(true);
     const today = new Date().toISOString().split("T")[0];
@@ -318,6 +312,7 @@ const PenjadwalanPage = () => {
       return;
     }
 
+    setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
       if (!token)
@@ -327,7 +322,6 @@ const PenjadwalanPage = () => {
       tanggalBesok.setDate(tanggalBesok.getDate() + 1);
       const tanggalBesokStr = tanggalBesok.toISOString().split("T")[0];
 
-      // Ambil data rotations, jeeps, dan ticketings
       const [rotationRes, jeepRes, ticketingRes] = await Promise.all([
         fetch(
           `http://localhost:8000/api/driver-rotations?date=${tanggalBesokStr}`,
@@ -344,45 +338,45 @@ const PenjadwalanPage = () => {
       ]);
 
       if (!rotationRes.ok || !jeepRes.ok || !ticketingRes.ok) {
-        const rotationErr = await rotationRes.text();
-        const jeepErr = await jeepRes.text();
-        const ticketingErr = await ticketingRes.text();
-        throw new Error(
-          `Gagal ambil data:\nRotasi: ${rotationErr}\nJeeps: ${jeepErr}\nTicketings: ${ticketingErr}`
-        );
+        throw new Error("Gagal ambil data dari salah satu endpoint.");
       }
 
       const rotations = await rotationRes.json();
       const jeepsData = await jeepRes.json();
       const ticketings = await ticketingRes.json();
 
-      // Buat set driver_id yang sudah digunakan mencetak tiket
-      const usedDriverIds = new Set(ticketings.map((t) => t.driver_id));
-
-      // Filter rotations agar hanya driver yang belum pernah digunakan
-      // const availableRotations = rotations.filter(
-      //   (r) => !usedDriverIds.has(r.driver?.id || r.driver_id)
-      // );
-      const availableRotations = rotations.filter((r) => {
-        const driverId = r.driver?.id || r.driver_id;
-        const assigned = r.assigned;
-
-        const alreadyUsed = usedDriverIds.has(driverId);
-        const isAssigned = assigned !== 0;
-
-        // Hanya lolos kalau: belum dipakai, atau dipakai tapi assigned ≠ 0
-        return !alreadyUsed || (alreadyUsed && isAssigned);
+      // Map driver_id -> Set of booking_id yang sudah punya tiket
+      const usedDriversMap = new Map();
+      ticketings.forEach((t) => {
+        if (t.tanggal_pemesanan === tanggalBesokStr) {
+          if (!usedDriversMap.has(t.driver_id)) {
+            usedDriversMap.set(t.driver_id, new Set());
+          }
+          usedDriversMap.get(t.driver_id).add(t.booking_id);
+        }
       });
 
-      // Cek apakah cukup driver
+      const availableRotations = rotations
+        .filter((r) => {
+          const driverId = r.driver?.id || r.driver_id;
+          const alreadyUsed = usedDriversMap.get(driverId);
+          const usedForSelected =
+            alreadyUsed &&
+            [...alreadyUsed].some((id) => selectedBookings.includes(id));
+          return (
+            r.date === tanggalBesokStr &&
+            r.assigned === 0 &&
+            (r.skip_reason === null || r.skip_reason === "") &&
+            !usedForSelected &&
+            driverId
+          );
+        })
+        .sort((a, b) => a.id - b.id);
       if (availableRotations.length < selectedBookings.length) {
-        alert(
-          "Jumlah driver yang tersedia tidak cukup untuk jumlah booking yang dipilih. Beberapa driver mungkin sudah digunakan sebelumnya."
-        );
+        alert("Jumlah driver yang tersedia tidak cukup.");
         return;
       }
-
-      // Buat peta driver_id ke jeep_id
+      // Map driver -> jeep
       const driverToJeepMap = {};
       jeepsData?.data?.forEach((jeep) => {
         if (jeep.driver_id) {
@@ -390,35 +384,26 @@ const PenjadwalanPage = () => {
         }
       });
 
-      // Cetak tiket untuk setiap booking
       const results = await Promise.all(
-        selectedBookings.map(async (bookingId, index) => {
+        selectedBookings.map(async (bookingId, idx) => {
           const order = orders.find((o) => o.booking_id === bookingId);
           if (!order) {
             return {
               bookingId,
               success: false,
-              message: "Data booking tidak ditemukan.",
+              message: "Booking tidak ditemukan.",
             };
           }
 
-          const rotation = availableRotations[index];
+          const rotation = availableRotations[idx];
           const driverId = rotation?.driver?.id || rotation?.driver_id;
+          const jeepId = driverToJeepMap[driverId];
 
-          if (!driverId) {
+          if (!driverId || !jeepId) {
             return {
               bookingId,
               success: false,
-              message: "Driver belum diatur.",
-            };
-          }
-
-          const jeep_id = driverToJeepMap[driverId];
-          if (!jeep_id) {
-            return {
-              bookingId,
-              success: false,
-              message: "Jeep tidak ditemukan untuk driver ini.",
+              message: "Driver atau Jeep tidak valid.",
             };
           }
 
@@ -428,7 +413,7 @@ const PenjadwalanPage = () => {
             no_handphone: order.customer_phone,
             email: order.customer_email,
             driver_id: driverId,
-            jeep_id: jeep_id,
+            jeep_id: jeepId,
             booking_id: order.booking_id,
           };
 
@@ -438,8 +423,8 @@ const PenjadwalanPage = () => {
               {
                 method: "POST",
                 headers: {
-                  "Content-Type": "application/json",
                   Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
                 },
                 body: JSON.stringify(payload),
               }
@@ -451,22 +436,12 @@ const PenjadwalanPage = () => {
             }
 
             return { bookingId, success: true };
-          } catch (error) {
-            return { bookingId, success: false, message: error.message };
+          } catch (err) {
+            return { bookingId, success: false, message: err.message };
           }
         })
       );
 
-      // Cek hasil
-      // const failed = results.filter((r) => !r.success);
-      // if (failed.length > 0) {
-      //   const msg = failed
-      //     .map((f) => `• Booking ${f.bookingId}: ${f.message}`)
-      //     .join("\n");
-      //   alert(`❌ Beberapa tiket gagal dicetak:\n\n${msg}`);
-      // } else {
-      //   alert("✅ Semua tiket berhasil dicetak!");
-      // }
       const failed = results.filter((r) => !r.success);
       if (failed.length > 0) {
         const msg = failed
@@ -474,26 +449,28 @@ const PenjadwalanPage = () => {
           .join("\n");
         alert(`❌ Beberapa tiket gagal dicetak:\n\n${msg}`);
       } else {
-        alert("✅ Tiket berhasil dicetak!");
-        setSelectedBookings([]);
-        fetchOrders();
-        router.push("/dashboard/operasional/ticketing"); // ⬅️ Redirect ke halaman ticketing
+        alert("✅ Semua tiket berhasil dicetak!");
       }
 
       setSelectedBookings([]);
       fetchOrders();
+      router.push("/dashboard/operasional/ticketing");
     } catch (error) {
-      console.error("Terjadi kesalahan saat mencetak tiket:", error.message);
-      alert("Terjadi kesalahan saat mencetak tiket.");
+      console.error("Gagal cetak tiket:", error.message);
+      alert("Terjadi kesalahan saat cetak tiket.");
     } finally {
       setLoading(false);
     }
   };
 
+  // const handleAturJadwal = (bookingId) => {
+  //   router.push(
+  //     `/dashboard/operasional/penjadwalan/rolling-driver/${bookingId}`
+  //   );
+  // };
   const handleAturJadwal = (bookingId) => {
-    router.push(
-      `/dashboard/operasional/penjadwalan/rolling-driver/${bookingId}`
-    );
+    const encryptedId = hashids.encode(bookingId);
+    router.push(`/dashboard/operasional/penjadwalan/rolling-driver/${encryptedId}`);
   };
 
   const handleKembali = () => {
@@ -561,8 +538,14 @@ const PenjadwalanPage = () => {
 
       // ✅ Hitung driver yang bisa dipilih:
       // assigned = 0 DAN skip_reason = null
+      // const count = rotations.filter(
+      //   (rotation) =>
+      //     rotation.assigned === 0 &&
+      //     (rotation.skip_reason === null || rotation.skip_reason === "")
+      // ).length;
       const count = rotations.filter(
         (rotation) =>
+          rotation.date === tanggalBesokStr &&
           rotation.assigned === 0 &&
           (rotation.skip_reason === null || rotation.skip_reason === "")
       ).length;
@@ -630,57 +613,105 @@ const PenjadwalanPage = () => {
   //   }
   // };
 
+  // const handleRolling = async () => {
+  //   setLoadingRotation(true);
+  //   try {
+  //     const token = localStorage.getItem("access_token");
+  //     if (!token)
+  //       throw new Error("Token tidak ditemukan. Silakan login ulang.");
+
+  //     const res = await fetch(
+  //       "http://localhost:8000/api/driver-rotations/generate",
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+  //     setHasRolledToday(true);
+
+  //     const data = await res.json();
+
+  //     if (res.ok) {
+  //       // sukses generate
+  //       alert("Rolling driver berhasil ✅");
+  //       const today = new Date().toISOString().split("T")[0];
+  //       localStorage.setItem("lastRollingDate", today);
+  //       setHasRolledToday(true);
+
+  //       await fetchOrders(); // update booking
+  //       await fetchAvailableDriversCount(); // update jumlah driver
+  //       await fetchDriversBesok(); // ✅ tampilkan hasil driver besok
+  //     } else {
+  //       // gagal generate, tapi cek pesan khusus
+  //       if (data.message === "Rotasi untuk besok sudah dibuat.") {
+  //         alert("Rotasi untuk besok sudah dibuat sebelumnya.");
+  //         const today = new Date().toISOString().split("T")[0];
+  //         localStorage.setItem("lastRollingDate", today);
+  //         setHasRolledToday(true);
+  //       } else {
+  //         alert(
+  //           "Gagal generate rotasi driver: " + (data.message || "Unknown error")
+  //         );
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error("Rolling driver gagal:", error.message);
+  //     alert("Terjadi kesalahan saat rolling driver: " + error.message);
+  //   } finally {
+  //     setLoadingRotation(false);
+  //   }
+  // };
   const handleRolling = async () => {
     setLoadingRotation(true);
-    try {
-      const token = localStorage.getItem("access_token");
-      if (!token)
-        throw new Error("Token tidak ditemukan. Silakan login ulang.");
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      alert("Token tidak ditemukan. Silakan login ulang.");
+      setLoadingRotation(false);
+      return;
+    }
 
+    const besok = new Date();
+    besok.setDate(besok.getDate() + 1);
+    const tanggalBesok = besok.toISOString().split("T")[0];
+
+    try {
+      //coba generate rotasi
       const res = await fetch(
         "http://localhost:8000/api/driver-rotations/generate",
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setHasRolledToday(true);
 
-      const data = await res.json();
-
-      if (res.ok) {
-        // sukses generate
-        alert("Rolling driver berhasil ✅");
-        const today = new Date().toISOString().split("T")[0];
-        localStorage.setItem("lastRollingDate", today);
-        setHasRolledToday(true);
-
-        await fetchOrders(); // update booking
-        await fetchAvailableDriversCount(); // update jumlah driver
-        await fetchDriversBesok(); // ✅ tampilkan hasil driver besok
-      } else {
-        // gagal generate, tapi cek pesan khusus
-        if (data.message === "Rotasi untuk besok sudah dibuat.") {
-          alert("Rotasi untuk besok sudah dibuat sebelumnya.");
-          const today = new Date().toISOString().split("T")[0];
-          localStorage.setItem("lastRollingDate", today);
-          setHasRolledToday(true);
-        } else {
-          alert(
-            "Gagal generate rotasi driver: " + (data.message || "Unknown error")
-          );
-        }
+      if (res.status === 400) {
+        alert("Rolling driver sudah dilakukan hari ini. Tidak bisa mengulang.");
+        return;
       }
+
+      if (!res.ok) {
+        throw new Error("Gagal generate driver rotation");
+      }
+
+      //ambil data rotasi setelah berhasil generate
+      const rotasiRes = await fetch(
+        `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (!rotasiRes.ok) throw new Error("Gagal mengambil data rotasi");
+
+      const rotasiJson = await rotasiRes.json();
+      setData(rotasiJson.data || []);
     } catch (error) {
-      console.error("Rolling driver gagal:", error.message);
-      alert("Terjadi kesalahan saat rolling driver: " + error.message);
+      console.error("Gagal generate rotation:", error);
+      alert("Gagal generate rotation.");
     } finally {
       setLoadingRotation(false);
     }
   };
-
   // const checkRollingStatus = async () => {
   //   const token = localStorage.getItem("access_token");
   //   if (!token) return;
@@ -707,6 +738,56 @@ const PenjadwalanPage = () => {
   //   }
   // };
 
+  // const checkRollingStatus = async () => {
+  //   const token = localStorage.getItem("access_token");
+  //   if (!token) return;
+
+  //   const besok = new Date();
+  //   besok.setDate(besok.getDate() + 1);
+  //   const tanggalBesok = besok.toISOString().split("T")[0];
+
+  //   try {
+  //     // 1. Ambil data driver-rotations
+  //     const resRotations = await fetch(
+  //       `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
+  //       { headers: { Authorization: `Bearer ${token}` } }
+  //     );
+  //     if (!resRotations.ok) throw new Error("Gagal fetch driver-rotations");
+  //     const rotationsData = await resRotations.json();
+
+  //     // 2. Ambil data ticketing
+  //     const resTicketings = await fetch(
+  //       `http://localhost:8000/api/ticketings/all`,
+  //       {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     );
+  //     if (!resTicketings.ok) throw new Error("Gagal fetch ticketings");
+  //     const ticketingsData = await resTicketings.json();
+
+  //     // 3. Ambil semua driver_id yang sudah pernah dipakai
+  //     const usedDriverIds = new Set(ticketingsData.map((t) => t.driver_id));
+
+  //     // 4. Filter driver yang valid
+  //     const filteredRotations = rotationsData.filter((r) => {
+  //       const driverId = r.driver?.id || r.driver_id;
+  //       const alreadyUsed = usedDriverIds.has(driverId);
+  //       const isAssigned = r.assigned !== 0;
+
+  //       // Hanya lolos kalau belum dipakai, atau sudah dipakai tapi assigned ≠ 0
+  //       return !alreadyUsed || (alreadyUsed && isAssigned);
+  //     });
+
+  //     console.log("✅ Filtered rotations yang valid:", filteredRotations);
+  //     // 5. Simpan hasil yang sudah difilter (atau atur ke state jika perlu)
+  //     setIsAlreadyRolled(filteredRotations.length > 0);
+  //     setRotations(filteredRotations); // kalau kamu pakai state rotations
+  //   } catch (err) {
+  //     console.error("Error cek rolling:", err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const checkRollingStatus = async () => {
     const token = localStorage.getItem("access_token");
     if (!token) return;
@@ -716,7 +797,7 @@ const PenjadwalanPage = () => {
     const tanggalBesok = besok.toISOString().split("T")[0];
 
     try {
-      // 1. Ambil data driver-rotations
+      // Ambil data driver-rotations untuk tanggal besok
       const resRotations = await fetch(
         `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -724,37 +805,19 @@ const PenjadwalanPage = () => {
       if (!resRotations.ok) throw new Error("Gagal fetch driver-rotations");
       const rotationsData = await resRotations.json();
 
-      // 2. Ambil data ticketing
-      const resTicketings = await fetch(
-        `http://localhost:8000/api/ticketings/all`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+      // ✅ Filter driver yang:
+      // belum assigned DAN tidak memiliki skip_reason
+      const unassignedRotations = rotationsData.filter(
+        (r) => r.assigned === 0 && (!r.skip_reason || r.skip_reason === "")
       );
-      if (!resTicketings.ok) throw new Error("Gagal fetch ticketings");
-      const ticketingsData = await resTicketings.json();
 
-      // 3. Ambil semua driver_id yang sudah pernah dipakai
-      const usedDriverIds = new Set(ticketingsData.map((t) => t.driver_id));
+      console.log("✅ Driver yang bisa dipilih:", unassignedRotations);
 
-      // 4. Filter driver yang valid
-      const filteredRotations = rotationsData.filter((r) => {
-        const driverId = r.driver?.id || r.driver_id;
-        const alreadyUsed = usedDriverIds.has(driverId);
-        const isAssigned = r.assigned !== 0;
-
-        // Hanya lolos kalau belum dipakai, atau sudah dipakai tapi assigned ≠ 0
-        return !alreadyUsed || (alreadyUsed && isAssigned);
-      });
-
-      console.log("✅ Filtered rotations yang valid:", filteredRotations);
-      // 5. Simpan hasil yang sudah difilter (atau atur ke state jika perlu)
-      setIsAlreadyRolled(filteredRotations.length > 0);
-      setRotations(filteredRotations); // kalau kamu pakai state rotations
+      // Set state jika perlu
+      setIsAlreadyRolled(rotationsData.length > 0); // Atur ini sesuai logika kamu
+      setRotations(unassignedRotations);
     } catch (err) {
       console.error("Error cek rolling:", err);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -800,22 +863,27 @@ const PenjadwalanPage = () => {
   //       <div className="flex flex-col items-center gap-4">
   //         <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
   //         <p className="text-blue-600 text-lg font-semibold animate-pulse">
-  //           Data sedang dimuat, harap tunggu...
+  //           Memuat data...
   //         </p>
   //       </div>
   //     </div>
   //   );
   // }
   if (loading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
-        <div className="shadow-md p-6 rounded-lg text-center">
-          <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
+  return <LoadingFunny />;
+}
+
+//   if (loading) {
+//   return (
+//     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
+//       <div className="shadow-md p-6 rounded-lg text-center">
+//         <p className="text-lg text-gray-800 mb-2">Memuat data...</p>
+//         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-[spin_0.5s_linear_infinite] mx-auto"></div>
+//       </div>
+//     </div>
+//   );
+// }
+
 
   return (
     <div className="flex">
@@ -836,7 +904,7 @@ const PenjadwalanPage = () => {
         ) : (
           <>
             <h1 className="text-[32px] font-semibold mb-6 text-black">
-              Daftar Pemesanan
+              Daftar Pesanan
             </h1>
             <div className="flex justify-end mb-3">
               <SearchInput
@@ -917,6 +985,42 @@ const PenjadwalanPage = () => {
                             checked={selectedBookings.includes(item.booking_id)}
                             disabled={
                               !selectedBookings.includes(item.booking_id) &&
+                              (filteredData.findIndex(
+                                (o) => o.booking_id === item.booking_id
+                              ) !== selectedBookings.length ||
+                                selectedBookings.length >=
+                                  availableDriversCount)
+                            }
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedBookings([
+                                  ...selectedBookings,
+                                  item.booking_id,
+                                ]);
+                              } else {
+                                setSelectedBookings(
+                                  selectedBookings.filter(
+                                    (id) => id !== item.booking_id
+                                  )
+                                );
+                              }
+                            }}
+                          />
+
+                          {/* <input
+                            type="checkbox"
+                            className={`${
+                              selectedBookings.includes(item.booking_id) ||
+                              (filteredData.findIndex(
+                                (o) => o.booking_id === item.booking_id
+                              ) === selectedBookings.length &&
+                                selectedBookings.length < availableDriversCount)
+                                ? "cursor-pointer"
+                                : "cursor-not-allowed"
+                            }`}
+                            checked={selectedBookings.includes(item.booking_id)}
+                            disabled={
+                              !selectedBookings.includes(item.booking_id) &&
                               (selectedBookings.length >=
                                 availableDriversCount ||
                                 filteredData.findIndex(
@@ -937,7 +1041,7 @@ const PenjadwalanPage = () => {
                                 );
                               }
                             }}
-                          />
+                          /> */}
                         </td>
 
                         <td className="p-2 text-center text-gray-750">

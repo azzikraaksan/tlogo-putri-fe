@@ -172,14 +172,14 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import withAuth from "/src/app/lib/withAuth";
 import Sidebar from "/components/Sidebar";
-import UserMenu from "/components/Pengguna";
+import LoadingFunny from "/components/LoadingFunny.jsx";
 import { CircleArrowLeft } from "lucide-react";
 import Hashids from "hashids";
 
 const EditAnggota = () => {
   const router = useRouter();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  // const { id } = useParams();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -203,6 +203,7 @@ const EditAnggota = () => {
       if (!token || !id) return;
 
       try {
+        setLoading(true);
         const res = await fetch("http://localhost:8000/api/users/all", {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -219,6 +220,8 @@ const EditAnggota = () => {
         }
       } catch (error) {
         console.error("Gagal ambil data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -233,14 +236,6 @@ const EditAnggota = () => {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
-
-  // const handleChange = (e) => {
-  //   if (e.target.type === "file") {
-  //     setFormData({ ...formData, [e.target.name]: e.target.files[0] });
-  //   } else {
-  //     setFormData({ ...formData, [e.target.name]: e.target.value });
-  //   }
-  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -280,7 +275,8 @@ const EditAnggota = () => {
       const result = await res.json();
       if (res.ok) {
         alert("Data berhasil diperbarui!");
-        router.push(`/dashboard/operasional/anggota/detail-anggota/${params.id}`);
+        router.back();
+        // router.push(`/dashboard/operasional/anggota/detail-anggota/${params.id}`);
       } else {
         alert("Gagal update: " + (result.message || "Terjadi kesalahan."));
       }
@@ -387,7 +383,9 @@ const EditAnggota = () => {
   //     console.error("Update error:", error);
   //   }
   // };
-
+if (loading) {
+    return <LoadingFunny />;
+  }
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -562,6 +560,18 @@ const EditAnggota = () => {
                   onChange={handleChange}
                   className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                 />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700">Status</label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                >
+                  <option value="Aktif">Aktif</option>
+                  <option value="Tidak Aktif">Tidak Aktif</option>
+                </select>
               </div>
             </>
           )}
