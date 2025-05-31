@@ -86,7 +86,7 @@ const DaftarPesanan = () => {
   });
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div
         className="transition-all duration-300 ease-in-out"
@@ -94,7 +94,7 @@ const DaftarPesanan = () => {
       />
 
       <div className="flex-1 p-6 overflow-y-auto">
-        <h1 className="text-5xl font-semibold mb-6 text-black">
+        <h1 className="text-[32px] font-semibold mb-6 text-black">
           {showHistory ? "Arsip Pesanan" : "Daftar Pesanan"}
         </h1>
 
