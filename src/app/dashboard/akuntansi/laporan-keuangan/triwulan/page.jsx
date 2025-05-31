@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Sidebar from "/components/Sidebar.jsx";
-// import UserMenu from "/components/Pengguna.jsx"; // Dipertahankan sesuai kode Anda
-import withAuth from "/src/app/lib/withAuth";
-import { FileText, FileSpreadsheet, ArrowLeft } from "lucide-react"; // Ikon Zap dihapus
+import Sidebar from "/components/Sidebar.jsx"; // Pastikan path ini benar
+import withAuth from "/src/app/lib/withAuth"; // Pastikan path ini benar
+import { FileText, FileSpreadsheet, ArrowLeft } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -25,32 +24,23 @@ const formatRupiah = (number) => {
     return formatter.format(number).replace(/,/g, '.').replace('Rp', 'Rp.');
 };
 
-// Fungsi helper untuk memformat tanggal (digunakan kembali dari versi Bulanan)
-const formatDateFull = (dateString) => {
-    if (!dateString) return "-";
-    const d = new Date(dateString);
-    if (isNaN(d.getTime())) {
-        console.warn("Format tanggal tidak valid diterima di formatDateFull:", dateString);
-        return dateString; 
-    }
-    return d.toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: 'long',
-        year: 'numeric'
-    });
+const getMonthName = (monthNumber) => {
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    return monthNames[monthNumber - 1] || "";
 };
 
 const TriwulanPage = ({ children }) => {
     const router = useRouter();
     const [dataTriwulan, setDataTriwulan] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSidebarOpen, setSidebarOpen] = useState(true);
 
     const [selectedQuarter, setSelectedQuarter] = useState(() => {
-        const currentMonth = new Date().getMonth() + 1; // 1-12
+        const currentMonth = new Date().getMonth() + 1;
         if (currentMonth >= 1 && currentMonth <= 3) return 1;
         if (currentMonth >= 4 && currentMonth <= 6) return 2;
         if (currentMonth >= 7 && currentMonth <= 9) return 3;
-        return 4; // Oktober-Desember
+        return 4;
     });
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
@@ -60,41 +50,41 @@ const TriwulanPage = ({ children }) => {
 
     const loadDataFromBackend = useCallback(async () => {
         setIsLoading(true);
-        console.log(`Memuat data untuk Triwulan: ${selectedQuarter}, Tahun: ${selectedYear}`);
+        setDataTriwulan([]); // Kosongkan data sebelum memuat yang baru
         try {
             const response = await fetch(
                 `${API_BASE_URL}/reports/triwulan?quarter=${selectedQuarter}&year=${selectedYear}`
             );
             if (!response.ok) {
                 if (response.status === 404) {
-                    console.warn(`Data laporan triwulan tidak ditemukan untuk Triwulan ${selectedQuarter}-${selectedYear}`);
                     setDataTriwulan([]);
                     return;
                 }
                 const errorText = await response.text();
-                console.error(`HTTP error! status: ${response.status}, body: ${errorText}`);
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
             }
             const rawData = await response.json();
-            const fetchedData = Array.isArray(rawData) ? rawData : rawData.data || [];
+            const fetchedData = Array.isArray(rawData) ? rawData : (rawData.data || []);
 
             const formattedData = fetchedData.map(item => ({
-                reportId: item.report_id, // reportId tetap diambil, bisa digunakan untuk key atau detail jika perlu
-                reportDate: item.report_date, // Diasumsikan backend mengirimkan tanggal relevan
-                cash: parseFloat(item.cash || 0),
-                operational: parseFloat(item.operational || 0),
-                expenditure: parseFloat(item.expenditure || 0),
-                netCash: parseFloat(item.net_cash || 0),
-                cleanOperations: parseFloat(item.clean_operations || 0),
-                jeepAmount: parseInt(item.jeep_amount || 0),
-                // createdAt dan updatedAt bisa disertakan jika perlu, tapi tidak ditampilkan di tabel utama
-                // createdAt: item.created_at, 
-                // updatedAt: item.updated_at,
+                id: `${item.tahun}-${item.bulan}-${item.minggu}`,
+                minggu_display: `${item.minggu} (${getMonthName(item.bulan)} ${item.tahun})`,
+                original_minggu: item.minggu,
+                original_bulan: item.bulan,
+                original_tahun: item.tahun,
+                total_cash: parseFloat(item.total_cash || 0),
+                total_operational: parseFloat(item.total_operational || 0),
+                total_expenditure: parseFloat(item.total_expenditure || 0),
+                total_net_cash: parseFloat(item.total_net_cash || 0), // Ini adalah nilai per minggu
+                total_clean_operations: parseFloat(item.total_clean_operations || 0),
+                total_jeep_amount: parseInt(item.total_jeep_amount || 0),
             }));
+            // Backend query sudah di orderBy('tahun', 'bulan', 'minggu_ke') ASC
+            // Jadi data sudah terurut dari minggu terawal ke terbaru.
             setDataTriwulan(formattedData);
         } catch (error) {
             console.error("Gagal memuat laporan triwulan dari backend:", error);
-            alert("Terjadi kesalahan saat memuat data laporan triwulan. Pastikan backend berjalan dan endpoint aktif.");
+            alert("Terjadi kesalahan saat memuat data laporan triwulan.");
             setDataTriwulan([]);
         } finally {
             setIsLoading(false);
@@ -105,12 +95,18 @@ const TriwulanPage = ({ children }) => {
         loadDataFromBackend();
     }, [loadDataFromBackend]);
 
-    const totalNetCashTriwulan = useMemo(() => {
-        return dataTriwulan.reduce((sum, item) => sum + (item.netCash || 0), 0);
+    // PERUBAHAN: Mengambil nilai kas bersih dari minggu terakhir
+    const nilaiKasBersihAkhirPeriode = useMemo(() => {
+        if (dataTriwulan.length > 0) {
+            // Mengambil item terakhir dari array dataTriwulan (minggu paling akhir)
+            const lastWeekData = dataTriwulan[dataTriwulan.length - 1];
+            return lastWeekData.total_net_cash || 0;
+        }
+        return 0; // Default jika tidak ada data
     }, [dataTriwulan]);
 
     const getExportFileName = (ext) => {
-        return `laporan_triwulan_${selectedQuarter}_${selectedYear}.${ext}`;
+        return `laporan_triwulan_Q${selectedQuarter}_${selectedYear}.${ext}`;
     };
 
     const handleExportExcelAction = () => {
@@ -120,16 +116,19 @@ const TriwulanPage = ({ children }) => {
         }
         try {
             const dataToExport = dataTriwulan.map(item => ({
-                "Tanggal Laporan": formatDateFull(item.reportDate), // Disesuaikan
-                "Operasional": item.operational,
-                "Kas": item.cash,
-                "Pengeluaran": item.expenditure,
-                "Operasional Bersih": item.cleanOperations,
-                "Kas Bersih": item.netCash,
-                "Jumlah Jeep": item.jeepAmount,
+                "Periode Laporan": item.minggu_display,
+                "Total Kas (Rp)": item.total_cash,
+                "Total Operasional (Rp)": item.total_operational,
+                "Total Pengeluaran (Rp)": item.total_expenditure,
+                "Total Operasional Bersih (Rp)": item.total_clean_operations,
+                "Total Kas Bersih (Rp)": item.total_net_cash, // Nilai per minggu
+                "Total Jeep": item.total_jeep_amount,
             }));
 
             const ws = XLSX.utils.json_to_sheet(dataToExport);
+            const columnWidths = Object.keys(dataToExport[0] || {}).map(key => ({ wch: Math.max(key.length, ...dataToExport.map(row => (row[key]?.toString() || "").length)) + 2 }));
+            ws['!cols'] = columnWidths;
+
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, `Triwulan ${selectedQuarter} ${selectedYear}`);
             XLSX.writeFile(wb, getExportFileName("xlsx"));
@@ -145,32 +144,35 @@ const TriwulanPage = ({ children }) => {
             return;
         }
         try {
-            const doc = new jsPDF('landscape');
-            const tableColumn = [ // Disesuaikan urutannya
-                "Tanggal Laporan", "Operasional", "Kas",
-                "Pengeluaran", "Operasional Bersih", "Kas Bersih","Jumlah Jeep"
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+            const tableColumn = [
+                "Periode Laporan", "Total Kas", "Tot. Operasional",
+                "Tot. Pengeluaran", "Tot. Op. Bersih", "Tot. Kas Bersih", "Total Jeep"
             ];
-            const tableRows = dataTriwulan.map((item) => [ // Disesuaikan urutannya
-                formatDateFull(item.reportDate),
-                formatRupiah(item.operational),
-                formatRupiah(item.cash),
-                formatRupiah(item.expenditure),
-                formatRupiah(item.cleanOperations),
-                formatRupiah(item.netCash),
-                item.jeepAmount,
+            const tableRows = dataTriwulan.map((item) => [
+                item.minggu_display,
+                formatRupiah(item.total_cash),
+                formatRupiah(item.total_operational),
+                formatRupiah(item.total_expenditure),
+                formatRupiah(item.total_clean_operations),
+                formatRupiah(item.total_net_cash), // Nilai per minggu
+                item.total_jeep_amount,
             ]);
 
-            doc.text(`Laporan Data Triwulan - Triwulan ${selectedQuarter} Tahun ${selectedYear}`, 14, 15);
+            doc.setFontSize(14);
+            doc.text(`Laporan Data Triwulan - Q${selectedQuarter} Tahun ${selectedYear}`, 40, 40);
             autoTable(doc, {
                 head: [tableColumn],
                 body: tableRows,
-                startY: 20,
-                styles: { fontSize: 8, cellPadding: 2, overflow: 'linebreak' },
-                headStyles: { fillColor: [61, 108, 185], fontSize: 9 },
-                didDrawPage: function(data) {
-                    let str = "Page " + doc.internal.getNumberOfPages();
-                    doc.setFontSize(7);
-                    doc.text(str, data.settings.margin.left, doc.internal.pageSize.height - 10);
+                startY: 55,
+                theme: 'grid',
+                styles: { fontSize: 7, cellPadding: 2, overflow: 'ellipsize', halign: 'center', valign: 'middle' },
+                headStyles: { fillColor: [61, 108, 185], textColor: [255,255,255], fontSize: 8, fontStyle: 'bold', halign: 'center' },
+                didDrawPage: function (data) {
+                    let str = "Halaman " + doc.internal.getNumberOfPages();
+                    doc.setFontSize(8);
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    doc.text(str, pageWidth - data.settings.margin.right - 40, doc.internal.pageSize.height - 30);
                 }
             });
             doc.save(getExportFileName("pdf"));
@@ -180,10 +182,9 @@ const TriwulanPage = ({ children }) => {
         }
     };
 
-    // Urutan header tabel disesuaikan
     const tableHeaders = [
-        "Tanggal Laporan", "Operasional", "Kas",
-        "Pengeluaran", "Operasional Bersih", "Kas Bersih","Jumlah Jeep"
+        "Periode Laporan", "Total Kas", "Total Operasional",
+        "Total Pengeluaran", "Total Operasional Bersih", "Total Kas Bersih", "Total Jeep"
     ];
 
     const quarters = [
@@ -194,26 +195,24 @@ const TriwulanPage = ({ children }) => {
     ];
 
     const years = useMemo(() => {
-        const _currentYear = new Date().getFullYear(); // Definisikan di dalam useMemo jika dependensi kosong
+        const currentYear = new Date().getFullYear();
         const yearsArray = [];
-        const startYear = _currentYear - 5; // 5 tahun ke belakang
-        const endYear = _currentYear + 5;   // 5 tahun ke depan
+        const startYear = currentYear - 5;
+        const endYear = currentYear + 5;
         for (let i = startYear; i <= endYear; i++) {
             yearsArray.push(i);
         }
         return yearsArray;
-    }, []); // Dependensi kosong agar hanya dihitung sekali
-
-    const [isSidebarOpen, setSidebarOpen] = useState(true);
+    }, []);
 
     return (
         <div className="flex">
             <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
             <div
-                className="flex-1 p-6 transition-all duration-300 ease-in-out"
+                className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
                 style={{ marginLeft: isSidebarOpen ? 290 : 70 }}
             >
-                <div className="flex-1 p-4 md:p-6 relative overflow-y-auto">
+                <div className="flex-1 p-4 md:p-6 overflow-auto"> {/* Konten utama dengan scroll */}
                     <h1
                         className="text-[28px] md:text-[32px] font-semibold text-black flex items-center gap-3 cursor-pointer hover:text-[#3D6CB9] transition-colors mb-6"
                         onClick={handleGoBack}
@@ -222,15 +221,14 @@ const TriwulanPage = ({ children }) => {
                         Laporan Triwulan
                     </h1>
 
-                    {/* Toolbar tanpa tombol "Buat Laporan" */}
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
-                        <div className="flex gap-4 flex-wrap"> {/* Menambahkan flex-wrap */}
-                            {/* Filter Triwulan dan Tahun */}
+                        <div className="flex gap-4 flex-wrap items-center">
                             <div className="flex gap-2 items-center">
+                                <span className="text-sm font-medium text-gray-700">Pilih Periode:</span>
                                 <select
                                     value={selectedQuarter}
                                     onChange={(e) => setSelectedQuarter(parseInt(e.target.value, 10))}
-                                    className="px-3 py-2 rounded-lg border border-gray-300 shadow bg-white text-black cursor-pointer"
+                                    className="px-3 py-2 rounded-lg border border-gray-300 shadow-sm bg-white text-black cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#3D6CB9]"
                                 >
                                     {quarters.map((quarter) => (
                                         <option key={quarter.value} value={quarter.value}>
@@ -241,7 +239,7 @@ const TriwulanPage = ({ children }) => {
                                 <select
                                     value={selectedYear}
                                     onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-                                    className="px-3 py-2 rounded-lg border border-gray-300 shadow bg-white text-black cursor-pointer"
+                                    className="px-3 py-2 rounded-lg border border-gray-300 shadow-sm bg-white text-black cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#3D6CB9]"
                                 >
                                     {years.map((year) => (
                                         <option key={year} value={year}>
@@ -251,15 +249,14 @@ const TriwulanPage = ({ children }) => {
                                 </select>
                             </div>
                         </div>
-                        {/* Tombol Export */}
-                        <div className="flex gap-4">
+                        <div className="flex gap-4 flex-wrap">
                             <button
                                 onClick={handleExportExcelAction}
                                 disabled={dataTriwulan.length === 0 || isLoading}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow transition-colors ${
                                     (dataTriwulan.length === 0 || isLoading)
-                                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                        : "bg-green-100 text-black hover:bg-[#B8D4F9] cursor-pointer"
+                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                        : "bg-green-100 text-black hover:bg-green-200"
                                 }`}
                             >
                                 <FileSpreadsheet size={20} color={(dataTriwulan.length === 0 || isLoading) ? "gray" : "green"} />
@@ -268,10 +265,10 @@ const TriwulanPage = ({ children }) => {
                             <button
                                 onClick={handleExportPDFAction}
                                 disabled={dataTriwulan.length === 0 || isLoading}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow transition-colors ${
                                     (dataTriwulan.length === 0 || isLoading)
-                                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                        : "bg-red-100 text-black hover:bg-[#B8D4F9] cursor-pointer"
+                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                        : "bg-red-100 text-black hover:bg-red-200"
                                 }`}
                             >
                                 <FileText size={20} color={(dataTriwulan.length === 0 || isLoading) ? "gray" : "red"} />
@@ -283,50 +280,38 @@ const TriwulanPage = ({ children }) => {
                     {isLoading ? (
                         <div className="text-center p-10 text-lg font-medium text-gray-700">Memuat data laporan triwulan...</div>
                     ) : (
-                        <div className="overflow-x-auto rounded-lg shadow">
-                            <div className="max-h-[600px] overflow-y-auto">
-                                <table className="min-w-full table-auto bg-white text-sm">
-                                    <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
+                        <div className="overflow-x-auto rounded-lg shadow-md bg-white">
+                            <div className="max-h-[calc(100vh-260px)] overflow-y-auto">
+                                <table className="min-w-full table-auto text-sm">
+                                    <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10 shadow-sm">
                                         <tr>
-                                            {tableHeaders.map((header, index) => (
-                                                <th
-                                                    key={header}
-                                                    className={`p-2 text-center whitespace-nowrap`}
-                                                    style={{
-                                                        borderTopLeftRadius: index === 0 ? "0.5rem" : undefined,
-                                                        borderTopRightRadius:
-                                                            index === tableHeaders.length - 1 ? "0.5rem" : undefined,
-                                                    }}
-                                                >
+                                            {tableHeaders.map((header) => (
+                                                <th key={header} className="p-3 text-center whitespace-nowrap font-semibold">
                                                     {header}
                                                 </th>
                                             ))}
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody className="divide-y divide-gray-200">
                                         {dataTriwulan.length === 0 ? (
                                             <tr>
                                                 <td
                                                     colSpan={tableHeaders.length}
-                                                    className="text-center p-4 text-gray-500 font-medium"
+                                                    className="text-center p-6 text-gray-500 font-medium"
                                                 >
                                                     Data Tidak Ditemukan untuk Triwulan {selectedQuarter} Tahun {selectedYear}
                                                 </td>
                                             </tr>
                                         ) : (
                                             dataTriwulan.map((item) => (
-                                                <tr
-                                                    key={item.reportId} // Menggunakan reportId sebagai key
-                                                    className="border-b text-center border-blue-200 hover:bg-blue-100 transition duration-200"
-                                                >
-                                                    {/* Kolom data disesuaikan dengan tableHeaders */}
-                                                    <td className="p-3 whitespace-nowrap">{formatDateFull(item.reportDate)}</td>
-                                                    <td className="p-3 whitespace-nowrap">{formatRupiah(item.operational)}</td>
-                                                    <td className="p-3 whitespace-nowrap">{formatRupiah(item.cash)}</td>
-                                                    <td className="p-3 whitespace-nowrap">{formatRupiah(item.expenditure)}</td>
-                                                    <td className="p-3 whitespace-nowrap">{formatRupiah(item.cleanOperations)}</td>
-                                                    <td className="p-3 whitespace-nowrap">{formatRupiah(item.netCash)}</td>
-                                                    <td className="p-3 whitespace-nowrap">{item.jeepAmount !== null ? item.jeepAmount : '-'}</td>
+                                                <tr key={item.id} className="hover:bg-gray-50 transition duration-150">
+                                                    <td className="p-3 whitespace-nowrap text-center">{item.minggu_display}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_cash)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_operational)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_expenditure)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_clean_operations)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_net_cash)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{item.total_jeep_amount !== null ? item.total_jeep_amount : '-'}</td>
                                                 </tr>
                                             ))
                                         )}
@@ -336,10 +321,13 @@ const TriwulanPage = ({ children }) => {
                         </div>
                     )}
 
-                    <div className="fixed bottom-4 right-4 bg-white text-black px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-20">
-                        <span className="font-bold text-lg">Total Kas:</span>
-                        <span className="text-lg font-semibold text-[#3D6CB9]">{formatRupiah(totalNetCashTriwulan)}</span>
-                    </div>
+                    {/* PERUBAHAN STYLE DAN POSISI TOTAL KAS BERSIH */}
+                    {!isLoading && dataTriwulan.length > 0 && (
+                        <div className="fixed bottom-4 right-4 bg-white text-black px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-20">
+                            <span className="font-bold text-lg">Total Kas Bersih Triwulan Ini:</span>
+                            <span className="text-lg font-semibold text-[#3D6CB9]">{formatRupiah(nilaiKasBersihAkhirPeriode)}</span>
+                        </div>
+                    )}
                 </div>
                 {children}
             </div>

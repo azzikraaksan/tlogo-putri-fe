@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Sidebar from "/components/Sidebar.jsx";
-import UserMenu from "/components/Pengguna.jsx";
+// import UserMenu from "/components/Pengguna.jsx";
 import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
 import {
@@ -10,7 +10,7 @@ import {
 } from "recharts";
 import { TrendingUp, TrendingDown, DollarSign, FileText, BarChart2, ChevronRight } from "lucide-react";
 
-// const API_BASE_URL = "http://localhost:8000/api";
+const API_BASE_URL = "http://localhost:8000/api";
 
 // Fungsi utilitas untuk format angka ke format mata uang Rupiah
 const formatCurrency = (value, type = "full") => {
@@ -172,7 +172,7 @@ const KeuanganPage = () => {
      <div className="flex">
        <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
        <div
-         className="flex-1 p-6 transition-all duration-300 ease-in-out"
+         className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
          style={{
            marginLeft: isSidebarOpen ? 290 : 70,
          }}
