@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Sidebar from "/components/Sidebar.jsx"; // Sesuaikan path jika berbeda
-import UserMenu from "/components/Pengguna.jsx"; // Sesuaikan path jika berbeda
+// import UserMenu from "/components/Pengguna.jsx"; // Sesuaikan path jika berbeda
 import withAuth from "/src/app/lib/withAuth"; // Sesuaikan path jika berbeda
 import {
     CalendarDays,
@@ -254,7 +254,7 @@ const PemasukanPage = () => {
                 didDrawPage: function (data) {
                     if (data && data.settings && doc && doc.internal && doc.internal.pageSize) {
                         doc.setFontSize(10);
-                        const totalKasText = `Total Kas: ${calculateTotalKas()}`;
+                        const totalKasText = `Total Kas Kotor: ${calculateTotalKas()}`;
                         const textWidth = doc.getStringUnitWidth(totalKasText) * doc.internal.getFontSize() / doc.internal.scaleFactor;
                         const xOffset = doc.internal.pageSize.width - data.settings.margin.right - textWidth;
                         doc.text(totalKasText, xOffset, doc.internal.pageSize.height - 10);
@@ -268,10 +268,10 @@ const PemasukanPage = () => {
         }
     };
 
-    /**
-     * Memicu pembuatan laporan pemasukan di backend.
-     * Menggunakan endpoint '/api/income/create' dengan metode POST.
-     */
+    
+    //  Memicu pembuatan laporan pemasukan di backend.
+    //  Menggunakan endpoint '/api/income/create' dengan metode POST.
+     
     const handleGenerateIncomeReport = async () => {
         if (!confirm("Apakah Anda yakin ingin memicu perhitungan laporan pemasukan otomatis dari backend? Proses ini mungkin memerlukan waktu.")) {
             return;
@@ -335,7 +335,7 @@ const PemasukanPage = () => {
      <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div
-        className="flex-1 p-6 transition-all duration-300 ease-in-out"
+        className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
         style={{
           marginLeft: isSidebarOpen ? 290 : 70,
         }}
@@ -497,7 +497,7 @@ const PemasukanPage = () => {
 
                 {/* --- Total Kas Display --- */}
                 <div className="fixed bottom-4 right-4 bg-white text-black px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-20">
-                    <span className="font-bold text-lg">Total Kas:</span>
+                    <span className="font-bold text-lg">Total Kas Kotor:</span>
                     <span className="text-lg font-semibold text-[#3D6CB9]">{calculateTotalKas()}</span>
                 </div>
             </div>

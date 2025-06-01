@@ -90,13 +90,33 @@
 "use client";
 
 import { useState } from "react";
+import Hashids from "hashids";
 
+const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
+
+// export default function ClientConfirmPage({ rotasi_id }) {
+//   const [loading, setLoading] = useState(false);
+//   const [message, setMessage] = useState("");
+//   const [error, setError] = useState("");
+//   const [skipReason, setSkipReason] = useState("");
+//   const [showSkipReason, setShowSkipReason] = useState(false);
 export default function ClientConfirmPage({ rotasi_id }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [skipReason, setSkipReason] = useState("");
   const [showSkipReason, setShowSkipReason] = useState(false);
+
+  const decoded = hashids.decode(rotasi_id);
+  const realId = decoded[0]; // hasil decode berupa array, ambil elemen pertama
+
+  if (!realId) {
+    return (
+      <div style={{ padding: 20, textAlign: "center", color: "red" }}>
+        ID rotasi tidak valid atau link rusak 😢
+      </div>
+    );
+  }
 
   async function handleConfirm(canGo) {
     setLoading(true);
@@ -107,7 +127,7 @@ export default function ClientConfirmPage({ rotasi_id }) {
       let res;
       if (canGo) {
         res = await fetch(
-          `http://localhost:8000/api/driver-rotations/${rotasi_id}/assign`,
+          `http://localhost:8000/api/driver-rotations/${realId}/assign`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -121,7 +141,7 @@ export default function ClientConfirmPage({ rotasi_id }) {
         }
 
         res = await fetch(
-          `http://localhost:8000/api/driver-rotations/${rotasi_id}/skip`,
+          `http://localhost:8000/api/driver-rotations/${realId}/skip`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -139,8 +159,53 @@ export default function ClientConfirmPage({ rotasi_id }) {
     } catch {
       setError("Gagal mengirim konfirmasi. Silakan coba lagi.");
     }
+
     setLoading(false);
   }
+  
+  // async function handleConfirm(canGo) {
+  //   setLoading(true);
+  //   setError("");
+  //   setMessage("");
+
+  //   try {
+  //     let res;
+  //     if (canGo) {
+  //       res = await fetch(
+  //         `http://localhost:8000/api/driver-rotations/${rotasi_id}/assign`,
+  //         {
+  //           method: "POST",
+  //           headers: { "Content-Type": "application/json" },
+  //         }
+  //       );
+  //     } else {
+  //       if (!skipReason.trim()) {
+  //         setError("Mohon isi alasan tidak bisa berangkat.");
+  //         setLoading(false);
+  //         return;
+  //       }
+
+  //       res = await fetch(
+  //         `http://localhost:8000/api/driver-rotations/${rotasi_id}/skip`,
+  //         {
+  //           method: "POST",
+  //           headers: { "Content-Type": "application/json" },
+  //           body: JSON.stringify({ skip_reason: skipReason }),
+  //         }
+  //       );
+  //     }
+
+  //     if (res.ok) {
+  //       setMessage("Terima kasih, konfirmasi Anda sudah kami terima.");
+  //     } else {
+  //       const data = await res.json();
+  //       setError(data.error || "Terjadi kesalahan saat mengirim konfirmasi.");
+  //     }
+  //   } catch {
+  //     setError("Gagal mengirim konfirmasi. Silakan coba lagi.");
+  //   }
+  //   setLoading(false);
+  // }
 
   return (
     <div
@@ -156,7 +221,7 @@ export default function ClientConfirmPage({ rotasi_id }) {
     >
       <h2 style={{ marginBottom: 10, textAlign: "center" }}>Konfirmasi Kehadiran</h2>
       <p style={{ marginBottom: 20, textAlign: "center" }}>
-        Apakah Anda bisa berangkat besok?
+        Apakah Anda bisa berangkat?
       </p>
 
       {message && (
