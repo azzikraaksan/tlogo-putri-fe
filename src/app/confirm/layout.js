@@ -1,6 +1,6 @@
 import { Geist, Geist_Mono, Poppins } from "next/font/google";
 import "/src/app/globals.css";
-import LayoutClient from "/src/app/LayoutClient"; // sesuaikan path jika perlu
+import LayoutClient from "/src/app/confirm/LayoutClient"; // sesuaikan path jika perlu
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -23,16 +23,4 @@ export default function RootLayout({ children }) {
         <LayoutClient>{children}</LayoutClient>
       </body>
     </html>
-  );
-}
-
-
-// const geistSans = Geist({
-//   variable: "--font-geist-sans",
-//   subsets: ["latin"],
-// });
-
-// const geistMono = Geist_Mono({
-//   variable: "--font-geist-mono",
-//   subsets: ["latin"],
-// });
+  );}
