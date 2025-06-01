@@ -18,6 +18,9 @@ function Page() {
   const [allData, setAllData] = useState([]);
   const [selectedRole, setSelectedRole] = useState('');
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportType, setExportType] = useState(""); // "excel" atau "pdf"
+
   const itemsPerPage = 4;
 
   const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
@@ -178,12 +181,25 @@ const exportToExcel = () => {
           <div className="flex flex-col items-end gap-2">
             <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             <div className="flex gap-2">
-              <button onClick={exportToExcel} className="flex items-center gap-1 bg-green-500 text-white p-2 rounded hover:bg-green-600">
-                <FileSpreadsheet size={16} /> Export Excel
+              <button
+                onClick={() => {
+                setExportType("excel");
+                setShowExportModal(true);
+              }}
+              className="flex items-center gap-1 bg-green-500 text-white p-2 rounded hover:bg-green-600"
+>
+              <FileSpreadsheet size={16} /> Export Excel
               </button>
-              <button onClick={exportToPDF} className="flex items-center gap-1 bg-red-500 text-white p-2 rounded hover:bg-red-600">
-                <FileText size={16} /> Export PDF
-              </button>
+
+              <button
+              onClick={() => {
+                setExportType("pdf");
+                setShowExportModal(true);
+              }}
+              className="flex items-center gap-1 bg-red-500 text-white p-2 rounded hover:bg-red-600"
+            >
+              <FileText size={16} /> Export PDF
+            </button>
             </div>
           </div>
         </div>
@@ -220,22 +236,73 @@ const exportToExcel = () => {
         <div className="mt-4 flex justify-center gap-2">
           {Array.from({ length: totalPages }, (_, i) => (
             <button key={i} onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-blue-500 text-white" : "bg-gray-200"}`}>
+              className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-[#3D6CB9] text-white" : "bg-gray-200"}`}>
               {i + 1}
             </button>
           ))}
         </div>
 
-        {showPrintModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded shadow-md w-full max-w-md">
-              <h2 className="text-lg font-semibold mb-4">Cetak Laporan Gaji</h2>
-              <p>Total Data: {filteredData.length}</p>
-              <p>Bulan: {selectedMonth || 'Semua'}</p>
-              <p>Tahun: {selectedYear || 'Semua'}</p>
+        {showExportModal && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"
+            onClick={() => setShowExportModal(false)}
+          >
+            <div
+              className="bg-white p-6 rounded shadow-md w-full max-w-3xl overflow-y-auto max-h-[90vh]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-lg font-semibold mb-4">
+                Pratinjau Data yang Akan Diekspor ({exportType.toUpperCase()})
+              </h2>
+              <p className="mb-2 text-sm text-gray-600">
+                Menampilkan {filteredData.length} data sesuai filter.
+              </p>
+              <table className="w-full text-sm border text-center">
+                <thead className="bg-[#3D6CB9] text-white">
+                  <tr>
+                    <th className="p-2 border">No</th>
+                    <th className="p-2 border">Nama</th>
+                    <th className="p-2 border">Role</th>
+                    <th className="p-2 border">Tanggal</th>
+                    <th className="p-2 border">Nominal Gaji</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredData.map((item, idx) => (
+                    <tr key={idx}>
+                      <td className="p-2 border">{idx + 1}</td>
+                      <td className="p-2 border">{item.nama}</td>
+                      <td className="p-2 border">{item.role}</td>
+                      <td className="p-2 border">{item.tanggal}</td>
+                      <td className="p-2 border">Rp {item.total_salary?.toLocaleString("id-ID")}</td>
+                    </tr>
+                  ))}
+                  {filteredData.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="p-2 text-center text-gray-500">
+                        Tidak ada data
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
               <div className="mt-4 flex justify-end gap-2">
-                <button onClick={() => setShowPrintModal(false)} className="px-4 py-2 bg-gray-300 rounded">Tutup</button>
-                <button onClick={() => { window.print(); }} className="px-4 py-2 bg-blue-500 text-white rounded">Cetak</button>
+                <button onClick={() => setShowExportModal(false)} className="px-4 py-2 bg-gray-300 rounded">
+                  Batal
+                </button>
+                <button
+                  onClick={() => {
+                    if (exportType === "excel") {
+                      exportToExcel();
+                    } else if (exportType === "pdf") {
+                      exportToPDF();
+                    }
+                    setShowExportModal(false);
+                  }}
+                  className="px-4 py-2 bg-[#3D6CB9] text-white rounded"
+                >
+                  Ekspor
+                </button>
               </div>
             </div>
           </div>
