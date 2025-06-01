@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import Sidebar from "/components/Sidebar.jsx"; // Pastikan path ini benar
-import withAuth from "/src/app/lib/withAuth"; // Pastikan path ini benar
+import Sidebar from "/components/Sidebar.jsx";
+import withAuth from "/src/app/lib/withAuth";
 import { FileText, FileSpreadsheet, ArrowLeft } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -50,7 +50,7 @@ const TriwulanPage = ({ children }) => {
 
     const loadDataFromBackend = useCallback(async () => {
         setIsLoading(true);
-        setDataTriwulan([]); // Kosongkan data sebelum memuat yang baru
+        setDataTriwulan([]); 
         try {
             const response = await fetch(
                 `${API_BASE_URL}/reports/triwulan?quarter=${selectedQuarter}&year=${selectedYear}`
@@ -75,16 +75,12 @@ const TriwulanPage = ({ children }) => {
                 total_cash: parseFloat(item.total_cash || 0),
                 total_operational: parseFloat(item.total_operational || 0),
                 total_expenditure: parseFloat(item.total_expenditure || 0),
-                total_net_cash: parseFloat(item.total_net_cash || 0), // Ini adalah nilai per minggu
+                total_net_cash: parseFloat(item.total_net_cash || 0), 
                 total_clean_operations: parseFloat(item.total_clean_operations || 0),
                 total_jeep_amount: parseInt(item.total_jeep_amount || 0),
             }));
-            // Backend query sudah di orderBy('tahun', 'bulan', 'minggu_ke') ASC
-            // Jadi data sudah terurut dari minggu terawal ke terbaru.
             setDataTriwulan(formattedData);
         } catch (error) {
-            console.error("Gagal memuat laporan triwulan dari backend:", error);
-            alert("Terjadi kesalahan saat memuat data laporan triwulan.");
             setDataTriwulan([]);
         } finally {
             setIsLoading(false);
@@ -95,14 +91,12 @@ const TriwulanPage = ({ children }) => {
         loadDataFromBackend();
     }, [loadDataFromBackend]);
 
-    // PERUBAHAN: Mengambil nilai kas bersih dari minggu terakhir
     const nilaiKasBersihAkhirPeriode = useMemo(() => {
         if (dataTriwulan.length > 0) {
-            // Mengambil item terakhir dari array dataTriwulan (minggu paling akhir)
             const lastWeekData = dataTriwulan[dataTriwulan.length - 1];
             return lastWeekData.total_net_cash || 0;
         }
-        return 0; // Default jika tidak ada data
+        return 0; 
     }, [dataTriwulan]);
 
     const getExportFileName = (ext) => {
@@ -121,7 +115,7 @@ const TriwulanPage = ({ children }) => {
                 "Total Operasional (Rp)": item.total_operational,
                 "Total Pengeluaran (Rp)": item.total_expenditure,
                 "Total Operasional Bersih (Rp)": item.total_clean_operations,
-                "Total Kas Bersih (Rp)": item.total_net_cash, // Nilai per minggu
+                "Total Kas Bersih (Rp)": item.total_net_cash, 
                 "Total Jeep": item.total_jeep_amount,
             }));
 
@@ -133,7 +127,6 @@ const TriwulanPage = ({ children }) => {
             XLSX.utils.book_append_sheet(wb, ws, `Triwulan ${selectedQuarter} ${selectedYear}`);
             XLSX.writeFile(wb, getExportFileName("xlsx"));
         } catch (error) {
-            console.error("Export Excel error:", error);
             alert("Gagal export Excel!");
         }
     };
@@ -155,7 +148,7 @@ const TriwulanPage = ({ children }) => {
                 formatRupiah(item.total_operational),
                 formatRupiah(item.total_expenditure),
                 formatRupiah(item.total_clean_operations),
-                formatRupiah(item.total_net_cash), // Nilai per minggu
+                formatRupiah(item.total_net_cash), 
                 item.total_jeep_amount,
             ]);
 
@@ -177,7 +170,6 @@ const TriwulanPage = ({ children }) => {
             });
             doc.save(getExportFileName("pdf"));
         } catch (error) {
-            console.error("Export PDF error:", error);
             alert("Gagal export PDF!");
         }
     };
@@ -212,7 +204,7 @@ const TriwulanPage = ({ children }) => {
                 className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
                 style={{ marginLeft: isSidebarOpen ? 290 : 70 }}
             >
-                <div className="flex-1 p-4 md:p-6 overflow-auto"> {/* Konten utama dengan scroll */}
+                <div className="flex-1 p-4 md:p-6 overflow-auto"> 
                     <h1
                         className="text-[28px] md:text-[32px] font-semibold text-black flex items-center gap-3 cursor-pointer hover:text-[#3D6CB9] transition-colors mb-6"
                         onClick={handleGoBack}
@@ -321,7 +313,6 @@ const TriwulanPage = ({ children }) => {
                         </div>
                     )}
 
-                    {/* PERUBAHAN STYLE DAN POSISI TOTAL KAS BERSIH */}
                     {!isLoading && dataTriwulan.length > 0 && (
                         <div className="fixed bottom-4 right-4 bg-white text-black px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-20">
                             <span className="font-bold text-lg">Total Kas Bersih Triwulan Ini:</span>

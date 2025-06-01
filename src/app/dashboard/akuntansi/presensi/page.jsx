@@ -1,15 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import Sidebar from "/components/Sidebar.jsx"; // Sesuaikan path jika diperlukan
-// import UserMenu from "/components/Pengguna.jsx"; // Sesuaikan path jika diperlukan
-import withAuth from "/src/app/lib/withAuth"; // Sesuaikan path jika diperlukan
+import Sidebar from "/components/Sidebar.jsx";
+import withAuth from "/src/app/lib/withAuth";
 import {
     CalendarDays,
     FileText,
     FileSpreadsheet,
     RotateCcw,
-    Zap // Icon untuk generate laporan (Buat Laporan)
+    Zap
 } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -17,16 +16,8 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-// --- Base URL untuk API backend Anda ---
 const API_BASE_URL = "http://localhost:8000/api";
 
-// --- Helper Functions ---
-
-/**
- * Memformat string tanggal atau objek Date ke tampilan DD-MM-YYYY.
- * @param {string|Date} dateInput - String tanggal dari backend atau objek Date.
- * @returns {string} - Tanggal dalam format DD-MM-YYYY atau '-'.
- */
 const formatDateToDisplay = (dateInput) => {
     if (!dateInput) return "-";
     let d;
@@ -56,11 +47,6 @@ const formatDateToDisplay = (dateInput) => {
     return `${day}-${month}-${year}`;
 };
 
-/**
- * Memformat string tanggal atau objek Date untuk menampilkan HARI SAJA (DD).
- * @param {string|Date} dateInput - String tanggal dari backend atau objek Date.
- * @returns {string} - Tanggal dalam format DD atau '-'.
- */
 const formatDateToDayOnly = (dateInput) => {
     if (!dateInput) return "-";
     let d;
@@ -70,7 +56,6 @@ const formatDateToDayOnly = (dateInput) => {
         } else {
             const parts = dateInput.split(' ')[0].split('-');
             if (parts.length === 3 && parts[0].length === 4) {
-                // Menggunakan UTC untuk konsistensi jika tanggal dari DB adalah UTC date string
                 d = new Date(Date.UTC(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])));
             } else {
                 d = new Date(dateInput);
@@ -85,15 +70,9 @@ const formatDateToDayOnly = (dateInput) => {
     if (isNaN(d.getTime())) {
         return "-";
     }
-    // Menggunakan getUTCDate() agar konsisten jika input adalah string tanggal UTC tanpa timezon
     return d.getUTCDate().toString().padStart(2, "0");
 };
 
-/**
- * Mengubah angka bulan menjadi nama bulan dalam bahasa Indonesia.
- * @param {number|string} monthNumber - Angka bulan (1-12).
- * @returns {string} - Nama bulan atau angka bulan jika tidak valid.
- */
 const getMonthName = (monthNumber) => {
     if (monthNumber == null || isNaN(parseInt(monthNumber))) return "-";
     const num = parseInt(monthNumber);
@@ -104,28 +83,19 @@ const getMonthName = (monthNumber) => {
     if (num >= 1 && num <= 12) {
         return monthNames[num - 1];
     }
-    return monthNumber.toString(); // Fallback jika angka tidak valid
+    return monthNumber.toString();
 };
 
-
-/**
- * Memformat objek Date atau string tanggal ke format YYYY-MM-DD.
- * @param {Date|string} date - Objek Date atau string tanggal.
- * @returns {string|null} - Tanggal dalam format YYYY-MM-DD atau null.
- */
 const formatToISODate = (date) => {
     if (!date) return null;
     const d = date instanceof Date ? date : new Date(date);
     if (isNaN(d.getTime())) return null;
-    // Menggunakan getUTC... untuk menghindari masalah timezone saat konversi ke ISO string
     const year = d.getUTCFullYear();
     const month = (d.getUTCMonth() + 1).toString().padStart(2, '0');
     const day = d.getUTCDate().toString().padStart(2, '0');
     return `${year}-${month}-${day}`;
 };
 
-
-// --- Komponen PresensiPage ---
 const PresensiPage = ({ children }) => {
     const [dataPresensi, setDataPresensi] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
@@ -146,17 +116,14 @@ const PresensiPage = ({ children }) => {
             const result = await response.json();
             const fetchedRawData = Array.isArray(result) ? result : result.data || [];
             if (!Array.isArray(fetchedRawData)) {
-                console.error("Data dari backend (/rekap-presensi/all) bukan array:", fetchedRawData);
                 throw new Error("Format data dari backend tidak valid.");
             }
             setDataPresensi(fetchedRawData);
 
             if (selectedDateForFilter) {
                 const formattedFilterDate = formatToISODate(selectedDateForFilter);
-                console.log("Filtering by date (ISO):", formattedFilterDate);
                 setFilteredData(
                     fetchedRawData.filter(item => {
-                        // Pastikan item.tanggal_bergabung ada dan valid sebelum diformat
                         if (!item.tanggal_bergabung) return false;
                         const itemDate = formatToISODate(new Date(item.tanggal_bergabung));
                         return itemDate === formattedFilterDate;
@@ -166,8 +133,6 @@ const PresensiPage = ({ children }) => {
                 setFilteredData(fetchedRawData);
             }
         } catch (error) {
-            console.error("Gagal memuat data presensi:", error);
-            alert(`Terjadi kesalahan saat memuat data presensi: ${error.message}.`);
             setDataPresensi([]);
             setFilteredData([]);
         } finally {
@@ -211,9 +176,7 @@ const PresensiPage = ({ children }) => {
                 'Nama Lengkap': item.nama_lengkap,
                 'No. HP': item.no_hp || '-',
                 'Role': item.role || '-',
-                // MODIFIED: Menggunakan formatDateToDayOnly untuk kolom 'Tanggal Bergabung'
                 'Tanggal Bergabung': item.tanggal_bergabung ? formatDateToDayOnly(item.tanggal_bergabung) : '-',
-                // MODIFIED: Menggunakan getMonthName untuk kolom 'Bulan'
                 'Bulan': getMonthName(item.bulan),
                 'Tahun': item.tahun,
                 'Jumlah Kehadiran': item.jumlah_kehadiran,
@@ -223,7 +186,6 @@ const PresensiPage = ({ children }) => {
             XLSX.utils.book_append_sheet(wb, ws, "Rekap Presensi");
             XLSX.writeFile(wb, getExportFileName("xlsx"));
         } catch (error) {
-            console.error("Export Excel error:", error);
             alert("Gagal export Excel!");
         }
     };
@@ -236,16 +198,13 @@ const PresensiPage = ({ children }) => {
         try {
             const doc = new jsPDF('landscape');
             const tableColumn = [
-                // MODIFIED: Menyesuaikan header kolom jika diperlukan (misalnya, "Tgl. Bergabung")
                 "Nama Lengkap", "No. HP", "Role", "Tgl. Bergabung", "Bulan", "Tahun", "Jml. Hadir"
             ];
             const tableRows = filteredData.map((item) => [
                 item.nama_lengkap,
                 item.no_hp || '-',
                 item.role || '-',
-                // MODIFIED: Menggunakan formatDateToDayOnly
                 item.tanggal_bergabung ? formatDateToDayOnly(item.tanggal_bergabung) : '-',
-                // MODIFIED: Menggunakan getMonthName
                 getMonthName(item.bulan),
                 item.tahun,
                 item.jumlah_kehadiran,
@@ -273,7 +232,6 @@ const PresensiPage = ({ children }) => {
             });
             doc.save(getExportFileName("pdf"));
         } catch (error) {
-            console.error("Export PDF error:", error);
             alert("Gagal export PDF!");
         }
     };
@@ -287,8 +245,8 @@ const PresensiPage = ({ children }) => {
         try {
             let payload = {};
             if (selectedDateForFilter) {
-                const month = (selectedDateForFilter.getUTCMonth() + 1).toString(); // Gunakan getUTCMonth untuk konsistensi
-                const year = selectedDateForFilter.getUTCFullYear().toString(); // Gunakan getUTCFullYear
+                const month = (selectedDateForFilter.getUTCMonth() + 1).toString();
+                const year = selectedDateForFilter.getUTCFullYear().toString();
                 payload = { bulan: month, tahun: year };
             } else {
                 const now = new Date();
@@ -313,8 +271,6 @@ const PresensiPage = ({ children }) => {
             alert(`Proses rekapitulasi presensi berhasil dipicu di backend. ${result.message || 'Memuat data terbaru...'}`);
             await fetchAndFilterPresensiData();
         } catch (error) {
-            console.error("Error saat memicu rekap presensi:", error);
-            alert(`Gagal memicu rekap presensi: ${error.message}`);
             setIsLoading(originalIsLoading);
         }
     };
@@ -330,13 +286,12 @@ const PresensiPage = ({ children }) => {
     }, [calendarRef]);
 
     const tableDisplayHeaders = [
-        // MODIFIED: Menyesuaikan header untuk mencerminkan perubahan format
         "Nama Lengkap", "No. HP", "Role", "Tgl. Bergabung", "Bulan", "Tahun", "Jumlah Kehadiran"
     ];
     const [isSidebarOpen, setSidebarOpen] = useState(true);
 
     return (
-        <div className="flex">
+        <div className="flex h-screen">
             <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
             <div
                 className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
@@ -468,9 +423,7 @@ const PresensiPage = ({ children }) => {
                                                     <td className="p-3 whitespace-nowrap">{item.nama_lengkap || '-'}</td>
                                                     <td className="p-3 whitespace-nowrap">{item.no_hp || '-'}</td>
                                                     <td className="p-3 whitespace-nowrap">{item.role || '-'}</td>
-                                                    {/* MODIFIED: Menggunakan formatDateToDayOnly untuk tampilan tabel */}
                                                     <td className="p-3 whitespace-nowrap">{formatDateToDayOnly(item.tanggal_bergabung)}</td>
-                                                    {/* MODIFIED: Menggunakan getMonthName untuk tampilan tabel */}
                                                     <td className="p-3 whitespace-nowrap">{getMonthName(item.bulan)}</td>
                                                     <td className="p-3 whitespace-nowrap">{item.tahun || '-'}</td>
                                                     <td className="p-3 whitespace-nowrap">{item.jumlah_kehadiran == null ? '-' : item.jumlah_kehadiran}</td>
