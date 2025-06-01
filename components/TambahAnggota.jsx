@@ -5,6 +5,7 @@ import { CircleArrowLeft, Upload } from "lucide-react";
 
 const TambahAnggota = ({ onKembali }) => {
   const router = useRouter();
+  const today = new Date().toISOString().split("T")[0]; // format: YYYY-MM-DD
   const [formData, setFormData] = useState({
     name: "",
     username: "",
@@ -197,7 +198,6 @@ const TambahAnggota = ({ onKembali }) => {
                   className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-bold text-gray-700">
                   Tanggal Bergabung
@@ -207,38 +207,10 @@ const TambahAnggota = ({ onKembali }) => {
                   name="tanggal_bergabung"
                   value={formData.tanggal_bergabung}
                   onChange={handleChange}
+                  max={today}
                   className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                 />
               </div>
-
-              {/* <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Status
-                </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                >
-                  <option value="">Pilih Status</option>
-                  <option value="Aktif">Aktif</option>
-                  <option value="Tidak Aktif">Tidak Aktif</option>
-                </select>
-              </div> */}
-
-              {/* <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Foto Profil (opsional)
-                </label>
-                <input
-                  type="file"
-                  name="foto_profil"
-                  accept=".jpeg, .jpg, .png"
-                  onChange={handleFileChange}
-                  className="cursor-pointer mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                />
-              </div> */}
               <div style={{ position: "relative", width: "100%" }}>
                 <label className="block text-sm font-bold text-gray-700">
                   Foto Profil (opsional)
@@ -262,17 +234,6 @@ const TambahAnggota = ({ onKembali }) => {
                   }}
                 />
               </div>
-              {/* <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Foto Profil (opsional)
-                </label>
-                <input
-                  type="file"
-                  name="foto_profil"
-                  onChange={handleFileChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:rincursor-pointer g-gray-400 text-[14px]"
-                />
-              </div> */}
             </>
           )}
 
@@ -305,7 +266,6 @@ const TambahAnggota = ({ onKembali }) => {
                   className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-bold text-gray-700">
                   Tanggal Bergabung
@@ -315,26 +275,10 @@ const TambahAnggota = ({ onKembali }) => {
                   name="tanggal_bergabung"
                   value={formData.tanggal_bergabung}
                   onChange={handleChange}
+                  max={today}
                   className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                 />
               </div>
-
-              {/* <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Status
-                </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                >
-                  <option value="">Pilih Status</option>
-                  <option value="Aktif">Aktif</option>
-                  <option value="Tidak Aktif">Tidak Aktif</option>
-                </select>
-              </div> */}
-
               <div style={{ position: "relative", width: "100%" }}>
                 <label className="block text-sm font-bold text-gray-700">
                   Foto Profil (opsional)
@@ -390,7 +334,6 @@ const TambahAnggota = ({ onKembali }) => {
                   className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-bold text-gray-700">
                   Tanggal Bergabung
@@ -400,26 +343,10 @@ const TambahAnggota = ({ onKembali }) => {
                   name="tanggal_bergabung"
                   value={formData.tanggal_bergabung}
                   onChange={handleChange}
+                  max={today}
                   className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                 />
               </div>
-
-              {/* <div>
-                <label className="block text-sm font-bold text-gray-700">
-                  Status
-                </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                >
-                  <option value="">Pilih Status</option>
-                  <option value="Aktif">Aktif</option>
-                  <option value="Tidak Aktif">Tidak Aktif</option>
-                </select>
-              </div> */}
-
               <div style={{ position: "relative", width: "100%" }}>
                 <label className="block text-sm font-bold text-gray-700">
                   Foto Profil (opsional)

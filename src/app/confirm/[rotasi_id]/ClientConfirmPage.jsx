@@ -94,12 +94,6 @@ import Hashids from "hashids";
 
 const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
 
-// export default function ClientConfirmPage({ rotasi_id }) {
-//   const [loading, setLoading] = useState(false);
-//   const [message, setMessage] = useState("");
-//   const [error, setError] = useState("");
-//   const [skipReason, setSkipReason] = useState("");
-//   const [showSkipReason, setShowSkipReason] = useState(false);
 export default function ClientConfirmPage({ rotasi_id }) {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -108,7 +102,7 @@ export default function ClientConfirmPage({ rotasi_id }) {
   const [showSkipReason, setShowSkipReason] = useState(false);
 
   const decoded = hashids.decode(rotasi_id);
-  const realId = decoded[0]; // hasil decode berupa array, ambil elemen pertama
+  const realId = decoded[0];
 
   if (!realId) {
     return (
@@ -163,49 +157,6 @@ export default function ClientConfirmPage({ rotasi_id }) {
     setLoading(false);
   }
   
-  // async function handleConfirm(canGo) {
-  //   setLoading(true);
-  //   setError("");
-  //   setMessage("");
-
-  //   try {
-  //     let res;
-  //     if (canGo) {
-  //       res = await fetch(
-  //         `http://localhost:8000/api/driver-rotations/${rotasi_id}/assign`,
-  //         {
-  //           method: "POST",
-  //           headers: { "Content-Type": "application/json" },
-  //         }
-  //       );
-  //     } else {
-  //       if (!skipReason.trim()) {
-  //         setError("Mohon isi alasan tidak bisa berangkat.");
-  //         setLoading(false);
-  //         return;
-  //       }
-
-  //       res = await fetch(
-  //         `http://localhost:8000/api/driver-rotations/${rotasi_id}/skip`,
-  //         {
-  //           method: "POST",
-  //           headers: { "Content-Type": "application/json" },
-  //           body: JSON.stringify({ skip_reason: skipReason }),
-  //         }
-  //       );
-  //     }
-
-  //     if (res.ok) {
-  //       setMessage("Terima kasih, konfirmasi Anda sudah kami terima.");
-  //     } else {
-  //       const data = await res.json();
-  //       setError(data.error || "Terjadi kesalahan saat mengirim konfirmasi.");
-  //     }
-  //   } catch {
-  //     setError("Gagal mengirim konfirmasi. Silakan coba lagi.");
-  //   }
-  //   setLoading(false);
-  // }
 
   return (
     <div

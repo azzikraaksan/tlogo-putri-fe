@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 const LoadingFunny = () => {
   const messages = [
-    'Loading...',
-    'Masih loading...',
-    'Sabar ya...',
-    'Sebentar lagi...',
+    "Loading...",
+    "Masih loading...",
+    "Sabar ya...",
+    "Sebentar lagi...",
   ];
 
   const [messageIndex, setMessageIndex] = useState(0);
@@ -19,8 +19,10 @@ const LoadingFunny = () => {
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-blue-50 text-center">
-      <div className="relative w-40 h-14 overflow-hidden">
-        <div className="absolute left-0 animate-walk text-4xl">🐢</div>
+      <div className="relative w-30 h-14 overflow-hidden">
+        <div className="absolute right-0 animate-walk text-4xl">🚜</div>
+        {/* <div className="absolute right-0 animate-walk text-4xl">🥴</div> */}
+        {/* <div className="absolute right-0 animate-walk text-4xl">😭</div> */}
       </div>
       <p className="text-lg font-semibold text-gray-700">
         {messages[messageIndex]}
@@ -29,14 +31,14 @@ const LoadingFunny = () => {
       <style jsx>{`
         @keyframes walk {
           0% {
-            left: 0%;
+            right: 0%;
           }
           100% {
-            left: 100%;
+            right: 100%;
           }
         }
         .animate-walk {
-          animation: walk 3s linear infinite;
+          animation: walk 1s linear infinite;
         }
       `}</style>
     </div>

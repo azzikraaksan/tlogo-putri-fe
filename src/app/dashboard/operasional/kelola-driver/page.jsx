@@ -589,7 +589,7 @@ const PenjadwalanPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/jeeps/update/${item.jeep_id}`, // ✅ perbaikan di sini
+        `http://localhost:8000/api/jeeps/update/${item.jeep_id}`,
         {
           method: "PUT",
           headers: {
@@ -602,13 +602,10 @@ const PenjadwalanPage = () => {
 
       if (!response.ok) throw new Error("Gagal mengubah status");
 
-      // update data lokal
-      const updatedData = data.map(
-        (d) =>
-          d.jeep_id === item.jeep_id ? { ...d, status_jeep: statusBaru } : d // ✅ ganti kondisi
+      const updatedData = data.map((d) =>
+        d.jeep_id === item.jeep_id ? { ...d, status_jeep: statusBaru } : d
       );
 
-      // pindahkan item ke bawah
       const reordered = [
         ...updatedData.filter((d) => d.jeep_id !== item.jeep_id),
         updatedData.find((d) => d.jeep_id === item.jeep_id),
@@ -668,8 +665,8 @@ const PenjadwalanPage = () => {
   //   }
   // };
   if (loading) {
-        return <LoadingFunny />;
-      }
+    return <LoadingFunny />;
+  }
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -720,21 +717,27 @@ const PenjadwalanPage = () => {
                     <td className="p-2 text-center text-gray-750">
                       {item.name}
                     </td>
-                    <td className="p-2 text-center text-gray-750">
-                      <div className="flex items-center justify-center gap-2">
+                    <td className="p-2 text-center">
+                      <span
+                        className={`inline-flex items-center gap-2 px-2 py-1 text-[14px] font-semibold rounded-full ${
+                          item.status_jeep === "Tersedia"
+                            ? "bg-green-100 text-green-600"
+                            : item.status_jeep === "On Track"
+                              ? "bg-red-100 text-red-600"
+                              : "text-gray-700"
+                        }`}
+                      >
                         <span
-                          className={`w-3 h-3 rounded-full ${
+                          className={`w-2 h-2 rounded-full ${
                             item.status_jeep === "Tersedia"
-                              ? "bg-green-500"
+                              ? "bg-green-600"
                               : item.status_jeep === "On Track"
-                                ? "bg-red-500"
-                                : item.status_jeep === "Tertunda"
-                                  ? "bg-[#FBBC05]"
-                                  : "bg-gray-300"
+                                ? "bg-red-600"
+                                : "bg-gray-400"
                           }`}
                         ></span>
-                        <span>{item.status_jeep}</span>
-                      </div>
+                        {item.status_jeep}
+                      </span>
                     </td>
                     <td className="p-2 text-center text-gray-750">
                       <button
@@ -765,11 +768,22 @@ const PenjadwalanPage = () => {
                         {item.departure}
                       </button>
                     </td> */}
-                    <td className="p-2 text-center text-gray-750">
+                    {/* <span
+                            className={`px-2 py-1 text-[14px] font-semibold rounded-full ${
+                              item.status_jeep === "Tersedia"
+                                ? "bg-green-100 text-green-600"
+                                : item.status_jeep === "On Track"
+                                  ? "bg-red-100 text-red-600"
+                                  : "text-gray-700"
+                            }`}
+                          >
+                            {item.status_jeep}
+                          </span> */}
+                    <td className="p-2 text-center">
                       {item.status_jeep === "Tersedia" ? (
                         <button
                           onClick={() => handleStatusUpdate(item, "On Track")}
-                          className="bg-red-500 hover:bg-red-600 text-white rounded-[10px] px-3 cursor-pointer"
+                          className="bg-red-500 text-white hover:bg-red-600 rounded-[10px] px-3 cursor-pointer"
                         >
                           On Track
                         </button>

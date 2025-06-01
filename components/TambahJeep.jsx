@@ -14,7 +14,7 @@ export default function AddJeepForm({ onKembali }) {
     merek: "",
     tipe: "",
     tahun_kendaraan: "",
-    status: "",
+    status: "Tersedia",
     driver_id: "",
     owner_id: "",
     users_id: "",
@@ -328,7 +328,7 @@ export default function AddJeepForm({ onKembali }) {
             onChange={handleChange}
             className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
           />
-          <label className="block text-sm font-bold text-gray-700">
+          {/* <label className="block text-sm font-bold text-gray-700">
             Foto Jeep (opsional)
           </label>
           <input
@@ -347,46 +347,16 @@ export default function AddJeepForm({ onKembali }) {
               right: "10px",
               transform: "translateY(-50%)",
               pointerEvents: "none",
-              color: "#9CA3AF", // warna abu-abu
+              color: "#9CA3AF",
             }}
-          />
-          <label className="block text-sm font-medium mb-1">
-            Pilih Status :
-          </label>
-          <select
-            name="status"
-            value={form.status}
-            onChange={handleChange}
-            className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-          >
-            <option value="">Pilih Status</option>
-            <option value="Tersedia">Tersedia</option>
-            <option value="Tidak Tersedia">Tidak Tersedia</option>
-          </select>
-
-          {/* <input
-          name="status"
-          value={form.status}
-          placeholder="Status"
-          onChange={handleChange}
-          className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-        /> */}
-          {/* <select
-          name="status"
-          value={form.status}
-          onChange={handleChange}
-          className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-        >
-          <option value="Tersedia">Tersedia</option>
-          <option value="Dipakai">Dipakai</option>
-        </select> */}
+          /> */}
           <div className="flex justify-end">
             <button
               type="submit"
-              className={`bg-[#1C7AC8] text-[13px] text-white py-1 px-3 rounded-[12px] hover:bg-[#6CAEE5] transition cursor-pointer ${
+              className={`bg-[#1C7AC8] text-[13px] text-white py-1 px-3 rounded-[12px] transition ${
                 drivers.length === 0
                   ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-[#1C7AC8] hover:bg-blue-700 cursor-pointer"
+                  : "bg-[#1C7AC8] hover:bg-[#6CAEE5] cursor-pointer"
               }`}
               disabled={drivers.length === 0}
             >

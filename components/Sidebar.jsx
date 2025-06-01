@@ -1023,7 +1023,7 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
             <div className="flex justify-center gap-4 mt-4">
               <button
                 onClick={() => setShowLogoutConfirm(false)}
-                className="px-4 py-2 bg-gray-300 rounded-[10px] hover:bg-gray-400 cursor-pointer"
+                className="px-2 py-1 bg-gray-300 rounded-[10px] hover:bg-gray-400 cursor-pointer"
               >
                 Batal
               </button>
@@ -1032,7 +1032,7 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
                   setShowLogoutConfirm(false);
                   handleLogout();
                 }}
-                className="px-4 py-2 bg-red-500 rounded-[10px] hover:bg-red-600 text-white cursor-pointer"
+                className="px-2 py-1 bg-red-500 rounded-[10px] hover:bg-red-600 text-white cursor-pointer"
               >
                 Ya, Logout
               </button>

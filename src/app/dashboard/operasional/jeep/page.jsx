@@ -46,6 +46,7 @@ const JeepPage = () => {
           return {
             driver_id: driver?.id,
             driver_name: driver?.name || "-",
+            telepon: driver?.telepon || "-",
             lambung: jeep.no_lambung,
             jeep_id: jeep.jeep_id,
             plat: jeep.plat_jeep,
@@ -78,6 +79,7 @@ const JeepPage = () => {
       item.jeep_id?.toString().includes(searchTerm.toLowerCase()) ||
       item.lambung?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.driver_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.telepon?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.plat?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.kapasitas?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.status?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -177,6 +179,7 @@ const JeepPage = () => {
                     <th className="p-2 text-center font-normal">Plat</th>
                     <th className="p-2 text-center font-normal">Kapasitas</th>
                     <th className="p-2 text-center font-normal">Status Jeep</th>
+                    <th className="p-2 text-center font-normal">Kontak</th>
                     <th className="p-2 text-center font-normal">Aksi</th>
                     <th className="p-2 text-center font-normal">Hapus Jeep</th>
                   </tr>
@@ -200,8 +203,76 @@ const JeepPage = () => {
                         <td className="p-2 text-center text-gray-750">
                           {item.kapasitas}
                         </td>
-                        <td className="p-2 text-center text-gray-750">
+                        <td className="p-2 text-center">
+                          <span
+                            className={`inline-flex items-center gap-2 px-2 py-1 text-[14px] font-semibold rounded-full ${
+                              item.status_jeep === "Tersedia"
+                                ? "bg-green-100 text-green-600"
+                                : item.status_jeep === "On Track"
+                                  ? "bg-red-100 text-red-600"
+                                  : "text-gray-700"
+                            }`}
+                          >
+                            <span
+                              className={`w-2 h-2 rounded-full ${
+                                item.status_jeep === "Tersedia"
+                                  ? "bg-green-600"
+                                  : item.status_jeep === "On Track"
+                                    ? "bg-red-600"
+                                    : "bg-gray-400"
+                              }`}
+                            ></span>
+                            {item.status_jeep}
+                          </span>
+                        </td>
+                        {/* <td className="p-2 text-center">
+                          <span
+                            className={`px-2 py-1 text-[14px] font-semibold rounded-full ${
+                              item.status_jeep === "Tersedia"
+                                ? "bg-green-100 text-green-600"
+                                : item.status_jeep === "On Track"
+                                  ? "bg-red-100 text-red-600"
+                                  : "text-gray-700"
+                            }`}
+                          >
+                            {item.status_jeep}
+                          </span>
+                        </td> */}
+
+                        {/* <td
+                          className={`inline-block px-2 py-1 text-center text-xs font-semibold rounded-full ${
+                            item.status_jeep === "Tersedia"
+                              ? "bg-green-100 text-green-800"
+                              : item.status_jeep === "On Track"
+                                ? "bg-red-100 text-red-800"
+                                : "text-gray-700"
+                          }`}
+                        >
                           {item.status_jeep}
+                        </td> */}
+
+                        {/* <td className="p-2 text-center text-gray-750">
+                          {item.status_jeep}
+                        </td> */}
+                        <td className="p-2 text-center">
+                          <button
+                            onClick={() => {
+                              if (item?.telepon) {
+                                window.open(
+                                  `https://wa.me/${item.telepon.replace(/^0/, "62")}`,
+                                  "_blank"
+                                );
+                              }
+                            }}
+                            disabled={!item?.telepon}
+                            className={`px-3 rounded-[10px] text-white ${
+                              item?.telepon
+                                ? "bg-green-500 hover:bg-green-600 cursor-pointer"
+                                : "bg-gray-400 cursor-not-allowed"
+                            } inline-block`}
+                          >
+                            WhatsApp
+                          </button>
                         </td>
                         <td className="p-2 text-center">
                           <button
