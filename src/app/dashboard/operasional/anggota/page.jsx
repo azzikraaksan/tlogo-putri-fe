@@ -272,7 +272,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "/components/Sidebar";
-import UserMenu from "/components/Pengguna";
+import LoadingFunny from "/components/LoadingFunny.jsx";
 import TambahAnggota from "/components/TambahAnggota";
 import DetailAnggota from "/components/LihatDetail";
 import SearchInput from "/components/Search";
@@ -292,6 +292,36 @@ const AnggotaPage = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [loading, setLoading] = useState(false);
 
+  // useEffect(() => {
+  //   const fetchUsers = async () => {
+  //     setLoading(true);
+  //     if (typeof window === "undefined") return;
+
+  //     const token = localStorage.getItem("access_token");
+  //     if (!token) return;
+
+  //     try {
+  //       const url = roleFilter
+  //         ? `http://localhost:8000/api/users/by-role?role=${roleFilter}`
+  //         : "http://localhost:8000/api/users/all";
+
+  //       const res = await fetch(url, {
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       });
+
+  //       const data = await res.json();
+  //       setUsers(data);
+  //     } catch (err) {
+  //       console.error("Gagal ambil data users:", err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchUsers();
+  // }, [roleFilter]);
   useEffect(() => {
     const fetchUsers = async () => {
       setLoading(true);
@@ -301,11 +331,7 @@ const AnggotaPage = () => {
       if (!token) return;
 
       try {
-        const url = roleFilter
-          ? `http://localhost:8000/api/users/by-role?role=${roleFilter}`
-          : "http://localhost:8000/api/users/all";
-
-        const res = await fetch(url, {
+        const res = await fetch("http://localhost:8000/api/users/all", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -321,16 +347,28 @@ const AnggotaPage = () => {
     };
 
     fetchUsers();
-  }, [roleFilter]);
+  }, []);
 
   const filteredData = users.filter((item) => {
     const search = searchTerm.toLowerCase();
-    return (
+    const matchSearch =
       (item?.email || "").toLowerCase().includes(search) ||
       (item?.peran || "").toLowerCase().includes(search) ||
-      (item?.status || "").toLowerCase().includes(search)
-    );
+      (item?.status || "").toLowerCase().includes(search);
+
+    const matchRole = roleFilter ? item?.role === roleFilter : true;
+
+    return matchSearch && matchRole;
   });
+
+  // const filteredData = users.filter((item) => {
+  //   const search = searchTerm.toLowerCase();
+  //   return (
+  //     (item?.email || "").toLowerCase().includes(search) ||
+  //     (item?.peran || "").toLowerCase().includes(search) ||
+  //     (item?.status || "").toLowerCase().includes(search)
+  //   );
+  // });
 
   const handleTambahAnggota = () => {
     setModeTambah(true);
@@ -388,17 +426,24 @@ const AnggotaPage = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
-        <div className="shadow-md p-6 rounded-lg text-center">
-          <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
+  const handleRoleSelect = (role) => {
+    setRoleFilter(role);
+    setIsDropdownOpen(false);
+  };
 
+  // if (loading) {
+  //   return (
+  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
+  //       <div className="shadow-md p-6 rounded-lg text-center">
+  //         <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
+  //         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+  if (loading) {
+    return <LoadingFunny />;
+  }
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -423,65 +468,46 @@ const AnggotaPage = () => {
             <h1 className="text-[32px] font-semibold mb-6 text-black">
               Daftar Anggota
             </h1>
-
             <div className="flex relative">
               <button
                 onClick={toggleDropdown}
                 className="bg-[#3D6CB9] rounded-[10px] text-white py-1 px-3 cursor-pointer hover:bg-[#7ba2d0] transition flex items-center"
               >
                 <ListFilter size={20} className="mr-2 w-[20px] h-auto" />
-                Filter
+                {roleFilter === "" ? "Filter" : roleFilter}
               </button>
-
               {isDropdownOpen && (
-                <div className="absolute top-full mt-2 shadow-md z-10">
-                  <ul>
-                    <li
-                      className="px-4 py-2 cursor-pointer hover:bg-[#7ba2d0] text-white bg-[#1C7AC8]"
-                      onClick={() => {
-                        setRoleFilter("");
-                        setIsDropdownOpen(false);
-                      }}
-                    >
-                      Semua
-                    </li>
-                    <li
-                      className="px-4 py-2 cursor-pointer hover:bg-[#7ba2d0] text-white bg-[#1C7AC8]"
-                      onClick={() => {
-                        setRoleFilter("Front Office");
-                        setIsDropdownOpen(false);
-                      }}
-                    >
-                      Front Office
-                    </li>
-                    <li
-                      className="px-4 py-2 cursor-pointer hover:bg-[#7ba2d0] text-white bg-[#1C7AC8]"
-                      onClick={() => {
-                        setRoleFilter("Owner");
-                        setIsDropdownOpen(false);
-                      }}
-                    >
-                      Owner
-                    </li>
-                    <li
-                      className="px-4 py-2 cursor-pointer hover:bg-[#7ba2d0] text-white bg-[#1C7AC8]"
-                      onClick={() => {
-                        setRoleFilter("Driver");
-                        setIsDropdownOpen(false);
-                      }}
-                    >
-                      Driver
-                    </li>
-                    <li
-                      className="px-4 py-2 cursor-pointer hover:bg-[#7ba2d0] text-white bg-[#1C7AC8]"
-                      onClick={() => {
-                        setRoleFilter("Pengurus");
-                        setIsDropdownOpen(false);
-                      }}
-                    >
-                      Pengurus
-                    </li>
-                  </ul>
+                <div className="absolute z-10 mt-10 bg-[#3D6CB9] text-white rounded-[10px] shadow-lg p-2">
+                  <button
+                    onClick={() => handleRoleSelect("")}
+                    className="block px-4 py-2 hover:bg-[#7ba2d0] hover:rounded-[10px] cursor-pointer w-full text-left"
+                  >
+                    Semua Role
+                  </button>
+                  <button
+                    onClick={() => handleRoleSelect("Front Office")}
+                    className="block px-4 py-2 hover:bg-[#7ba2d0] hover:rounded-[10px] cursor-pointer w-full text-left"
+                  >
+                    Front Office
+                  </button>
+                  <button
+                    onClick={() => handleRoleSelect("Driver")}
+                    className="block px-4 py-2 hover:bg-[#7ba2d0] hover:rounded-[10px] cursor-pointer w-full text-left"
+                  >
+                    Driver
+                  </button>
+                  <button
+                    onClick={() => handleRoleSelect("Owner")}
+                    className="block px-4 py-2 hover:bg-[#7ba2d0] hover:rounded-[10px] cursor-pointer w-full text-left"
+                  >
+                    Owner
+                  </button>
+                  <button
+                    onClick={() => handleRoleSelect("Pengurus")}
+                    className="block px-4 py-2 hover:bg-[#7ba2d0] hover:rounded-[10px] cursor-pointer w-full text-left"
+                  >
+                    Pengurus
+                  </button>
                 </div>
               )}
             </div>
@@ -522,11 +548,11 @@ const AnggotaPage = () => {
               <table className="w-full table-auto">
                 <thead className="bg-[#3D6CB9] text-white ">
                   <tr>
-                    <th className="p-2 text-center font-normal">ID</th>
                     <th className="p-2 text-center font-normal">Nama</th>
                     <th className="p-2 text-center font-normal">Email</th>
                     <th className="p-2 text-center font-normal">Peran</th>
                     <th className="p-2 text-center font-normal">Status</th>
+                    <th className="p-2 text-center font-normal">Kontak</th>
                     <th className="p-2 text-center font-normal">Aksi</th>
                     <th className="p-2 text-center font-normal">Hapus</th>
                   </tr>
@@ -539,9 +565,6 @@ const AnggotaPage = () => {
                         className="border-t border-[#808080] hover:bg-gray-50 transition-colors"
                       >
                         <td className="p-2 text-center text-gray-700">
-                          {item?.id || "-"}
-                        </td>
-                        <td className="p-2 text-center text-gray-700">
                           {item?.name || "-"}
                         </td>
                         <td className="p-2 text-center text-gray-700">
@@ -553,6 +576,40 @@ const AnggotaPage = () => {
                         <td className="p-2 text-center text-gray-700">
                           {item?.status || "-"}
                         </td>
+                        <td className="p-2 text-center">
+                          <button
+                            onClick={() => {
+                              if (item?.telepon) {
+                                window.open(
+                                  `https://wa.me/${item.telepon.replace(/^0/, "62")}`,
+                                  "_blank"
+                                );
+                              }
+                            }}
+                            disabled={!item?.telepon}
+                            className={`px-3 rounded-[10px] text-white ${
+                              item?.telepon
+                                ? "bg-green-500 hover:bg-green-600 cursor-pointer"
+                                : "bg-gray-400 cursor-not-allowed"
+                            } inline-block`}
+                          >
+                            WhatsApp
+                          </button>
+                        </td>
+
+                        {/* <td className="p-2 text-center">
+                          <button
+                            onClick={() =>
+                              window.open(
+                                `https://wa.me/${item?.telepon.replace(/^0/, "62")}`,
+                                "_blank"
+                              )
+                            }
+                            className="px-3 rounded-[10px] text-white bg-green-500 hover:bg-green-600 cursor-pointer inline-block"
+                          >
+                            WhatsApp
+                          </button>
+                        </td> */}
                         <td className="p-2 text-center">
                           <button
                             onClick={() => handleLihatDetail(item)}

@@ -1,304 +1,319 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Sidebar from "/components/Sidebar.jsx";
-import UserMenu from "/components/Pengguna.jsx";
-import withAuth from "/src/app/lib/withAuth";
-import axios from "axios";
-import { FileSpreadsheet, FileText } from "lucide-react";
-
+import { useState, useEffect, useCallback, useMemo } from "react";
+import Sidebar from "/components/Sidebar.jsx"; // Pastikan path ini benar
+import withAuth from "/src/app/lib/withAuth"; // Pastikan path ini benar
+import { FileText, FileSpreadsheet, ArrowLeft } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useRouter } from 'next/navigation';
 
-function ReportTahun() {
-  // States utama
-  const [report, setReport] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const API_BASE_URL = "http://localhost:8000/api";
 
-  // Tambahan states untuk kontrol UI
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [years, setYears] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [dataTahunan, setDataTahunan] = useState([]);
-  const [totalNetCashTahunan, setTotalNetCashTahunan] = useState(0);
-
-  // Format Rupiah utility
-  const formatRupiah = (number) => {
-    return number.toLocaleString("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
+const formatRupiah = (number) => {
+    if (number === null || typeof number === 'undefined' || isNaN(number)) {
+        return 'Rp. 0';
+    }
+    const formatter = new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
     });
-  };
+    return formatter.format(number).replace(/,/g, '.').replace('Rp', 'Rp.');
+};
 
-  // Ambil laporan awal
-  useEffect(() => {
-    setLoading(true);
-    fetch(`http://localhost:8000/api/reports/tahun?year=${selectedYear}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch data");
-        return res.json();
-      })
-      .then((data) => {
-        setReport(data[0] || null); // pastikan ada data
-        setDataTahunan(data);
-        if (data[0]) setTotalNetCashTahunan(Number(data[0].total_net_cash));
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, [selectedYear]);
+// Helper function untuk mendapatkan nama bulan
+const getMonthName = (monthNumber) => {
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    return monthNames[monthNumber - 1] || ""; // monthNumber adalah 1-12
+};
 
-  // Inisialisasi tahun (misal 5 tahun terakhir)
-  useEffect(() => {
-    const currentYear = new Date().getFullYear();
-    const generatedYears = [];
-    for (let y = currentYear; y >= currentYear - 5; y--) {
-      generatedYears.push(y);
-    }
-    setYears(generatedYears);
-  }, []);
+// Helper function untuk format periode laporan (misal: "Januari 2023")
+const formatMonthYearForDisplay = (month, year) => {
+    if (!month || !year) return "-";
+    return `${getMonthName(month)} ${year}`;
+};
 
-  // Handler buat laporan otomatis (placeholder)
-  const handleGenerateReport = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axios.post(
-        `http://localhost:8000/api/reports/generate`,
-        { year: selectedYear }
-      );
-      if (response.status === 200) {
-        setReport(response.data[0]);
-        setDataTahunan(response.data);
-        setTotalNetCashTahunan(Number(response.data[0].total_net_cash));
-      }
-    } catch (error) {
-      alert("Gagal membuat laporan otomatis: " + error.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const TahunanPage = ({ children }) => {
+    const [dataTahunan, setDataTahunan] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [isSidebarOpen, setSidebarOpen] = useState(true);
 
-  const handleExportExcel = () => {
-    const wsData = [
-      [
-        "ID Laporan Tahunan",
-        "Tahun",
-        "Total Cash",
-        "Total Operational",
-        "Total Expenditure",
-        "Total Net Cash",
-        "Total Clean Operations",
-        "Total Jeep Amount",
-      ],
-      ...dataTahunan.map((r) => [
-        r.id_laporan_tahunan || "-", // sesuaikan nama properti ID tahunan kalau ada
-        r.tahun || r.year || "-", // pastikan data tahunan punya properti ini
-        Number(r.total_cash).toLocaleString("id-ID", {
-          style: "currency",
-          currency: "IDR",
-        }),
-        Number(r.total_operational).toLocaleString("id-ID", {
-          style: "currency",
-          currency: "IDR",
-        }),
-        Number(r.total_expenditure).toLocaleString("id-ID", {
-          style: "currency",
-          currency: "IDR",
-        }),
-        Number(r.total_net_cash).toLocaleString("id-ID", {
-          style: "currency",
-          currency: "IDR",
-        }),
-        Number(r.total_clean_operations).toLocaleString("id-ID", {
-          style: "currency",
-          currency: "IDR",
-        }),
-        r.total_jeep_amount || "-",
-      ]),
+    const router = useRouter();
+
+    const handleGoBack = () => {
+        router.push("/dashboard/akuntansi/laporan-keuangan");
+    };
+
+    const loadDataFromBackend = useCallback(async () => {
+        setIsLoading(true);
+        setDataTahunan([]); // Kosongkan data sebelum fetch
+        try {
+            // Asumsi endpoint backend untuk laporan tahunan akan mengembalikan data per bulan
+            // sesuai struktur yang diberikan (rekapPerBulan)
+            const response = await fetch(
+                `${API_BASE_URL}/reports/tahun?year=${selectedYear}`
+            );
+            if (!response.ok) {
+                if (response.status === 404) {
+                    console.warn(`Data laporan tahunan (rekap per bulan) tidak ditemukan untuk Tahun ${selectedYear}`);
+                    setDataTahunan([]);
+                    return;
+                }
+                const errorText = await response.text();
+                throw new Error(`HTTP error! status: ${response.status}. Detail: ${errorText}`);
+            }
+            const rawData = await response.json();
+            // Backend mengembalikan array objek, atau objek dengan properti 'data'
+            const fetchedData = Array.isArray(rawData) ? rawData : rawData.data || [];
+
+            // PENYESUAIAN PEMETAAN DATA SESUAI BE BARU
+            const formattedData = fetchedData.map(item => ({
+                key: `${item.tahun}-${item.bulan}`, // Kunci unik untuk setiap baris (bulan)
+                tahun: item.tahun,
+                bulan: item.bulan, // Angka bulan (1-12)
+                periodeDisplay: formatMonthYearForDisplay(item.bulan, item.tahun),
+                total_cash: parseFloat(item.total_cash || 0),
+                total_operational: parseFloat(item.total_operational || 0),
+                total_expenditure: parseFloat(item.total_expenditure || 0),
+                total_net_cash: parseFloat(item.total_net_cash || 0),
+                total_clean_operations: parseFloat(item.total_clean_operations || 0),
+                total_jeep_amount: parseInt(item.total_jeep_amount || 0),
+            }));
+            setDataTahunan(formattedData);
+        } catch (error) {
+            console.error("Gagal memuat laporan tahunan dari backend:", error);
+            alert("Terjadi kesalahan saat memuat data laporan tahunan.");
+            setDataTahunan([]);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [selectedYear]);
+
+    useEffect(() => {
+        loadDataFromBackend();
+    }, [loadDataFromBackend]);
+
+    // Total kas bersih tahunan (akumulasi dari total_net_cash per bulan)
+    const totalNetCashTahunan = useMemo(() => {
+        return dataTahunan.reduce((sum, item) => sum + (item.total_net_cash || 0), 0);
+    }, [dataTahunan]);
+
+    const getExportFileName = (ext) => {
+        return `laporan_tahunan_${selectedYear}_rekap_bulanan.${ext}`; // Nama file lebih deskriptif
+    };
+
+    // PENYESUAIAN FUNGSI EKSPOR EXCEL
+    const handleExportExcelAction = () => {
+        if (dataTahunan.length === 0) {
+            alert("Data kosong, tidak bisa export Excel!");
+            return;
+        }
+        try {
+            const dataToExport = dataTahunan.map(item => ({
+                "Periode Laporan (Bulan)": item.periodeDisplay,
+                "Total Kas (Rp)": item.total_cash,
+                "Total Operasional (Rp)": item.total_operational,
+                "Total Pengeluaran (Rp)": item.total_expenditure,
+                "Total Operasional Bersih (Rp)": item.total_clean_operations,
+                "Total Kas Bersih (Rp)": item.total_net_cash,
+                "Total Jeep": item.total_jeep_amount,
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(dataToExport);
+            const columnWidths = Object.keys(dataToExport[0] || {}).map(key => ({ wch: Math.max(key.length, ...dataToExport.map(row => (row[key]?.toString() || "").length)) + 2 }));
+            ws['!cols'] = columnWidths;
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, `Laporan Tahunan ${selectedYear}`);
+            XLSX.writeFile(wb, getExportFileName("xlsx"));
+        } catch (error) {
+            console.error("Export Excel error:", error);
+            alert("Gagal export Excel!");
+        }
+    };
+
+    // PENYESUAIAN FUNGSI EKSPOR PDF
+    const handleExportPDFAction = () => {
+        if (dataTahunan.length === 0) {
+            alert("Data kosong, tidak bisa export PDF!");
+            return;
+        }
+        try {
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+            const tableColumn = [ // Sesuaikan dengan data yang ada
+                "Periode (Bulan)", "Tot. Kas", "Tot. Ops.", "Tot. Pengeluaran",
+                "Tot. Ops. Bersih", "Tot. Kas Bersih", "Tot. Jeep"
+            ];
+            const tableRows = dataTahunan.map((item) => [
+                item.periodeDisplay,
+                formatRupiah(item.total_cash),
+                formatRupiah(item.total_operational),
+                formatRupiah(item.total_expenditure),
+                formatRupiah(item.total_clean_operations),
+                formatRupiah(item.total_net_cash),
+                item.total_jeep_amount,
+            ]);
+
+            doc.setFontSize(14);
+            doc.text(`Laporan Tahunan (Rekap Per Bulan) - Tahun ${selectedYear}`, 40, 40);
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 55,
+                theme: 'grid',
+                styles: { fontSize: 7, cellPadding: 2, overflow: 'ellipsize', halign: 'center', valign: 'middle' },
+                headStyles: { fillColor: [61, 108, 185], textColor: [255,255,255], fontSize: 8, fontStyle: 'bold', halign: 'center' },
+                didDrawPage: function (data) {
+                    let str = "Halaman " + doc.internal.getNumberOfPages();
+                    doc.setFontSize(8);
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    doc.text(str, pageWidth - data.settings.margin.right - 40, doc.internal.pageSize.height - 30);
+                }
+            });
+            doc.save(getExportFileName("pdf"));
+        } catch (error) {
+            console.error("Export PDF error:", error);
+            alert("Gagal export PDF!");
+        }
+    };
+
+    // PENYESUAIAN HEADER TABEL
+    const tableHeaders = [
+        "Periode Laporan Bulan", "Total Kas", "Total Operasional",
+        "Total Pengeluaran", "Total Operasional Bersih", "Total Kas Bersih", "Total Jeep"
     ];
 
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Laporan Tahunan");
-    XLSX.writeFile(wb, "laporan_tahunan.xlsx");
-  };
+    const currentYearCtx = new Date().getFullYear();
+    const years = useMemo(() => {
+        const yearsArray = [];
+        const startYear = 2015; 
+        const endYear = currentYearCtx + 5;
+        for (let i = startYear; i <= endYear; i++) {
+            yearsArray.push(i);
+        }
+        return yearsArray.sort((a, b) => b - a); 
+    }, [currentYearCtx]);
 
-  const handleExportPDF = () => {
-    const doc = new jsPDF();
-
-    const columns = [
-      "ID Laporan Tahunan",
-      "Tahun",
-      "Total Cash",
-      "Total Operational",
-      "Total Expenditure",
-      "Total Net Cash",
-      "Total Clean Operations",
-      "Total Jeep Amount",
-    ];
-
-    const rows = dataTahunan.map((r) => [
-      r.id_laporan_tahunan || "-",
-      r.tahun || r.year || "-",
-      Number(r.total_cash).toLocaleString("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }),
-      Number(r.total_operational).toLocaleString("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }),
-      Number(r.total_expenditure).toLocaleString("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }),
-      Number(r.total_net_cash).toLocaleString("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }),
-      Number(r.total_clean_operations).toLocaleString("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }),
-      r.total_jeep_amount || "-",
-    ]);
-
-    autoTable(doc, {
-      head: [columns],
-      body: rows,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [61, 108, 185] },
-    });
-
-    doc.save("laporan_tahunan.pdf");
-  };
-  
-
-  if (loading) return <p>Loading data...</p>;
-  if (error) return <p>Error: {error}</p>;
-  if (!report) return <p>No data available</p>;
-
-  return (
-    <div className="flex relative bg-white min-h-screen">
-      <Sidebar />
-      <UserMenu />
-      <div className="flex-1 p-4 md:p-6 relative overflow-y-auto">
-        <h1 className="text-2xl md:text-3xl font-bold mb-6 text-black">
-          Laporan Tahunan
-        </h1>
-
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
-          <div className="flex gap-4">
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-              className="px-3 py-2 rounded-lg border border-gray-300 shadow bg-white text-black"
+    return (
+        <div className="flex">
+            <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+            <div
+                className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
+                style={{ marginLeft: isSidebarOpen ? 290 : 70 }}
             >
-              {years.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
+                <div className="flex-1 p-4 md:p-6 overflow-auto"> {/* Kontainer konten utama dengan scroll */}
+                    <h1
+                        className="text-[28px] md:text-[32px] font-semibold text-black flex items-center gap-3 cursor-pointer hover:text-[#3D6CB9] transition-colors mb-6"
+                        onClick={handleGoBack}
+                    >
+                        <ArrowLeft size={28} />
+                        Laporan Tahunan
+                    </h1>
 
-            <button
-              onClick={handleGenerateReport}
-              disabled={isLoading}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
-                isLoading
-                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-400 text-white hover:text-black"
-              }`}
-            >
-              Buat Laporan Otomatis
-            </button>
-          </div>
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+                        <div className="flex gap-4 flex-wrap items-center">
+                             <div className="flex gap-2 items-center">
+                                <span className="text-sm font-medium text-gray-700">Pilih Tahun:</span>
+                                <select
+                                    value={selectedYear}
+                                    onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
+                                    className="px-3 py-2 rounded-lg border border-gray-300 shadow-sm bg-white text-black cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#3D6CB9]"
+                                >
+                                    {years.map((year) => (
+                                        <option key={year} value={year}>
+                                            {year}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="flex gap-4 flex-wrap">
+                            <button
+                                onClick={handleExportExcelAction}
+                                disabled={dataTahunan.length === 0 || isLoading}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow transition-colors ${
+                                    dataTahunan.length === 0 || isLoading
+                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                        : "bg-green-100 text-black hover:bg-green-200"
+                                }`}
+                            >
+                                <FileSpreadsheet size={20} color={dataTahunan.length === 0 || isLoading ? "gray" : "green"} />
+                                <span>Ekspor Excel</span>
+                            </button>
+                            <button
+                                onClick={handleExportPDFAction}
+                                disabled={dataTahunan.length === 0 || isLoading}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow transition-colors ${
+                                    dataTahunan.length === 0 || isLoading
+                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                        : "bg-red-100 text-black hover:bg-red-200"
+                                }`}
+                            >
+                                <FileText size={20} color={dataTahunan.length === 0 || isLoading ? "gray" : "red"} />
+                                <span>Ekspor PDF</span>
+                            </button>
+                        </div>
+                    </div>
 
-          <div className="flex gap-3">
-            <button
-              onClick={handleExportPDF}
-              className="bg-[#3D6CB9] text-white font-semibold px-5 py-2 rounded cursor-pointer hover:bg-[#2b4d80] transition"
-            >
-              Export PDF
-            </button>
-            <button
-              onClick={handleExportExcel}
-              className="bg-[#3D6CB9] text-white font-semibold px-5 py-2 rounded cursor-pointer hover:bg-[#2b4d80] transition"
-            >
-              Export Excel
-            </button>
-          </div>
+                    {isLoading ? (
+                        <div className="text-center p-10 text-lg font-medium text-gray-700">Memuat data laporan tahunan...</div>
+                    ) : (
+                        <div className="overflow-x-auto rounded-lg shadow-md bg-white">
+                            <div className="max-h-[calc(100vh-260px)] overflow-y-auto">
+                                <table className="min-w-full table-auto text-sm">
+                                    <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10 shadow-sm">
+                                        <tr>
+                                            {tableHeaders.map((header) => (
+                                                <th key={header} className="p-3 text-center whitespace-nowrap font-semibold">
+                                                    {header}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200">
+                                        {dataTahunan.length === 0 ? (
+                                            <tr>
+                                                <td
+                                                    colSpan={tableHeaders.length}
+                                                    className="text-center p-6 text-gray-500 font-medium"
+                                                >
+                                                    Data Tidak Ditemukan untuk Tahun {selectedYear}
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            dataTahunan.map((item) => (
+                                                <tr key={item.key} className="hover:bg-gray-50 transition duration-150">
+                                                    {/* PENYESUAIAN RENDER DATA & PERATAAN TENGAH */}
+                                                    <td className="p-3 whitespace-nowrap text-center">{item.periodeDisplay}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_cash)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_operational)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_expenditure)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_clean_operations)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_net_cash)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{item.total_jeep_amount !== null ? item.total_jeep_amount : '-'}</td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {!isLoading && dataTahunan.length > 0 && (
+                         <div className="fixed bottom-4 right-4 bg-white text-black px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-20">
+                            <span className="font-bold text-lg">Total Kas Bersih Tahun Ini:</span>
+                            <span className="text-lg font-semibold text-[#3D6CB9]">{formatRupiah(totalNetCashTahunan)}</span>
+                        </div>
+                    )}
+                </div>
+                {children}
+            </div>
         </div>
+    );
+};
 
-        {/* Tabel horizontal dengan scroll jika perlu */}
-        <div className="overflow-x-auto bg-white rounded-xl shadow-md border border-gray-300">
-          <table className="min-w-full text-sm divide-y divide-gray-200">
-            <thead className="bg-[#3D6CB9] text-white">
-              <tr>
-                {[
-                  "ID Laporan Tahunan",
-                  "Tahun",
-                  "Total Cash",
-                  "Total Operational",
-                  "Total Expenditure",
-                  "Total Net Cash",
-                  "Total Clean Operations",
-                  "Total Jeep Amount",
-                ].map((header, i) => (
-                  <th
-                    key={i}
-                    className="px-6 py-3 border-b border-gray-300 font-semibold text-left whitespace-nowrap"
-                  >
-                    {header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-100">
-              <tr>
-                <td className="px-10 py-6 border-b border-gray-200 whitespace-nowrap">
-                  {report.id_laporan_tahunan || "-"}
-                </td>
-                <td className="px-6 py-3 border-b border-gray-200 whitespace-nowrap">
-                  {report.tahun || "-"}
-                </td>
-                <td className="px-6 py-3 border-b border-gray-200 whitespace-nowrap">
-                  {formatRupiah(Number(report.total_cash))}
-                </td>
-                <td className="px-6 py-3 border-b border-gray-200 whitespace-nowrap">
-                  {formatRupiah(Number(report.total_operational))}
-                </td>
-                <td className="px-6 py-3 border-b border-gray-200 whitespace-nowrap">
-                  {formatRupiah(Number(report.total_expenditure))}
-                </td>
-                <td className="px-6 py-3 border-b border-gray-200 whitespace-nowrap">
-                  {formatRupiah(Number(report.total_net_cash))}
-                </td>
-                <td className="px-6 py-3 border-b border-gray-200 whitespace-nowrap">
-                  {formatRupiah(Number(report.total_clean_operations))}
-                </td>
-                <td className="px-6 py-3 border-b border-gray-200 whitespace-nowrap">
-                  {report.total_jeep_amount || "-"}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div className="fixed bottom-4 right-4 bg-white text-black px-5 py-3 rounded-lg shadow-lg flex items-center gap-3 z-20 border border-gray-300">
-          <span className="font-bold text-lg">Total Kas Bersih:</span>
-          <span className="text-lg font-semibold text-blue-700">
-            {formatRupiah(totalNetCashTahunan)}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export default withAuth(ReportTahun);
+export default withAuth(TahunanPage);

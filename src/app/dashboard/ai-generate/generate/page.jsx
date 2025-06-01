@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Sidebar from "/components/Sidebar";
-import UserMenu from "/components/Pengguna";
 
 export default function Page() {
   const [inputValue, setInputValue] = useState("");
@@ -17,6 +16,7 @@ export default function Page() {
   const [customQuery, setCustomQuery] = useState(""); //customoptimize
   const [customOptimizeDone, setCustomOptimizeDone] = useState(false); // track apakah optimize/custom optimize sudah selesai
   const [statusMessage, setStatusMessage] = useState(""); // feedback sukses/gagal
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   const sendPrompt = async () => {
     if (!inputValue.trim()) return;
@@ -172,13 +172,28 @@ export default function Page() {
   const isEmpty = messages.length === 0 && !loading && !error;
 
   return (
-    <div className="flex bg-white min-h-screen relative">
-      <div className="absolute top-4 left-72">
-        <h1 className="text-[#000000] font-bold text-[32px]">Tlogo Generate Content</h1>
-      </div>
+    <div className="flex">
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
 
-      <UserMenu />
-      <Sidebar />
+      <div
+        className="transition-all duration-300 ease-in-out"
+        style={{
+          marginLeft: isSidebarOpen ? 290 : 70,
+        }}
+      ></div>
+
+      {/* <Sidebar /> */}
+
+      <div
+  className={`absolute top-4 transition-all duration-300 ease-in-out`}
+  style={{
+    left: isSidebarOpen ? 290 : 70, // biar sinkron sama sidebar
+  }}
+>
+  <h1 className="text-[#000000] font-bold text-[32px] pl-4">
+    Tlogo Generate Content
+  </h1>
+</div>
 
       <main className="flex-1 flex flex-col items-center px-12 py-18">
         <div

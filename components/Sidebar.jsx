@@ -20,11 +20,13 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import LoadingFunny from "/components/LoadingFunny.jsx";
 
 const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
   const router = useRouter();
   const pathname = usePathname();
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [isPemesananOpen, setIsPemesananOpen] = useState(false);
   const [isOperasionalOpen, setIsOperasionalOpen] = useState(false);
@@ -141,6 +143,7 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
   const handleLogout = async () => {
     const token = localStorage.getItem("access_token");
     try {
+      setLoading(true);
       const response = await fetch("http://localhost:8000/api/auth/logout", {
         method: "POST",
         headers: {
@@ -157,6 +160,8 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
       router.push("/");
     } catch (error) {
       console.error("Gagal logout:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -164,6 +169,31 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
     setShowLogoutConfirm(true); // buka popup konfirmasi
   };
 
+  // if (loading) {
+  //   return (
+  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
+  //       <div className="shadow-md p-6 rounded-lg text-center">
+  //         <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
+  //         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+  if (loading) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-[spin_0.5s_linear_infinite] mx-auto"></div>
+          <p className="text-blue-600 text-lg font-semibold animate-pulse">
+            Logging Out...
+          </p>
+        </div>
+      </div>
+    );
+  }
+  // if (loading) {
+  //   return <LoadingFunny className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90" />;
+  // }
   return (
     <>
       {/* Tombol Toggle */}
@@ -195,41 +225,41 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
           {userRole === "Front Office" && (
             <ul className={`space-y-4`}>
               <div className="mb-4 mt-4">
-                  <Link
-                    href="/dashboard"
-                    title="Dashboard"
-                    // className={`flex items-center pl-4 py-2 rounded-[6px] w-full hover:bg-blue-400 ${
-                    //   pathname === "/dashboard" ? "bg-blue-300" : ""
-                    // }`}
-                    className={`
+                <Link
+                  href="/dashboard"
+                  title="Dashboard"
+                  // className={`flex items-center pl-4 py-2 rounded-[6px] w-full hover:bg-blue-400 ${
+                  //   pathname === "/dashboard" ? "bg-blue-300" : ""
+                  // }`}
+                  className={`
   flex items-center px-2 pl-4 py-2 text-white hover:bg-blue-400 rounded-[6px] cursor-pointer
   ${isSidebarOpen ? "w-full pr-4" : "w-[32px]"}
   ${pathname === "/dashboard" ? "bg-blue-300" : ""}
 `}
 
-  //                   className={`
-  //   flex items-center px-2 pl-4 py-2 text-white hover:bg-blue-400 rounded-[6px] cursor-pointer
-  //   ${
-  //     pathname === "/dashboard"
-  //       ? "w-[275px] pr-4 hover:bg-blue-400"
-  //       : "w-[32px] hover:bg-blue-400"
-  //   }
-  // `}
-                    // className={`flex items-center rounded-[6px] py-2 ${
-                    //   pathname === "/dashboard" ? "bg-blue-300" : ""
-                    // } ${
-                    //   isSidebarOpen
-                    //     ? "pl-4 pr-4 w-full hover:bg-blue-400"
-                    //     : "w-[64px] justify-center hover:bg-blue-400"
-                    // }`}
-                  >
-                    <div className="w-6 flex justify-center items-center -ml-3 mr-3">
-                      <Compass size={20} />
-                    </div>
-                    <span className={`${isSidebarOpen ? "inline" : "hidden"}`}>
-                      Dashboard
-                    </span>
-                  </Link>
+                  //                   className={`
+                  //   flex items-center px-2 pl-4 py-2 text-white hover:bg-blue-400 rounded-[6px] cursor-pointer
+                  //   ${
+                  //     pathname === "/dashboard"
+                  //       ? "w-[275px] pr-4 hover:bg-blue-400"
+                  //       : "w-[32px] hover:bg-blue-400"
+                  //   }
+                  // `}
+                  // className={`flex items-center rounded-[6px] py-2 ${
+                  //   pathname === "/dashboard" ? "bg-blue-300" : ""
+                  // } ${
+                  //   isSidebarOpen
+                  //     ? "pl-4 pr-4 w-full hover:bg-blue-400"
+                  //     : "w-[64px] justify-center hover:bg-blue-400"
+                  // }`}
+                >
+                  <div className="w-6 flex justify-center items-center -ml-3 mr-3">
+                    <Compass size={20} />
+                  </div>
+                  <span className={`${isSidebarOpen ? "inline" : "hidden"}`}>
+                    Dashboard
+                  </span>
+                </Link>
               </div>
               <li>
                 <button
@@ -816,17 +846,18 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
   flex items-center px-2 pl-4 py-2 text-white hover:bg-blue-400 rounded-[6px] cursor-pointer
   ${isSidebarOpen ? "w-full pr-4" : "w-[32px]"}
   ${pathname === "/dashboard/penggajian/penggajian-utama" ? "bg-blue-300" : ""}
-`}>
-                        <img
-                          src="/images/gaji.png"
-                          alt="gaji"
-                          className="w-[20px] h-auto mr-2"
-                        />
+`}
+                  >
+                    <img
+                      src="/images/gaji.png"
+                      alt="gaji"
+                      className="w-[20px] h-auto mr-2"
+                    />
                     <span className={`${isSidebarOpen ? "inline" : "hidden"}`}>
                       Gaji
                     </span>
                   </Link>
-              </div>
+                </div>
                 <div className="mb-4 mt-4">
                   <Link
                     href="/dashboard/penggajian/laporan-gaji"
@@ -835,17 +866,18 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
   flex items-center px-2 pl-4 py-2 text-white hover:bg-blue-400 rounded-[6px] cursor-pointer
   ${isSidebarOpen ? "w-full pr-4" : "w-[32px]"}
   ${pathname === "/dashboard/penggajian/laporan-gaji" ? "bg-blue-300" : ""}
-`}>
-                        <img
-                          src="/images/laporan-penggajian.png"
-                          alt="laporan-penggajian"
-                          className="w-[20px] h-auto mr-2"
-                        />
+`}
+                  >
+                    <img
+                      src="/images/laporan-penggajian.png"
+                      alt="laporan-penggajian"
+                      className="w-[20px] h-auto mr-2"
+                    />
                     <span className={`${isSidebarOpen ? "inline" : "hidden"}`}>
                       Laporan Gaji
                     </span>
                   </Link>
-              </div>
+                </div>
               </li>
               {/* <li>
                 <button
@@ -930,13 +962,12 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
           <div className="mb-4 mt-4">
             <button
               onClick={handleLogoutClick}
-    //           className={`flex items-center px-2 gap-3 py-2 text-white hover:bg-blue-400 rounded-[6px] cursor-pointer
-    // ${isSidebarOpen ? "w-[275px] pr-4 hover:bg-blue-400" : "w-[32px] hover:bg-blue-400"}`}
-    className={`
+              //           className={`flex items-center px-2 gap-3 py-2 text-white hover:bg-blue-400 rounded-[6px] cursor-pointer
+              // ${isSidebarOpen ? "w-[275px] pr-4 hover:bg-blue-400" : "w-[32px] hover:bg-blue-400"}`}
+              className={`
   flex items-center px-2 py-2 gap-3 text-white hover:bg-blue-400 rounded-[6px] cursor-pointer
   ${isSidebarOpen ? "w-full pr-4" : "w-[32px]"}
 `}
-
             >
               <LogOut size={20} />
               <span className={`${isSidebarOpen ? "inline" : "hidden"}`}>

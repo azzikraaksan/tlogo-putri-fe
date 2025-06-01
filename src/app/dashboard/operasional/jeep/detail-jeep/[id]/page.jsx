@@ -4,23 +4,38 @@ import { useRouter, useParams } from "next/navigation";
 import withAuth from "/src/app/lib/withAuth";
 import { CircleArrowLeft } from "lucide-react";
 import Sidebar from "/components/Sidebar";
-import UserMenu from "/components/Pengguna";
+import LoadingFunny from "/components/LoadingFunny.jsx";
+import Hashids from "hashids";
 
 const DetailJeep = () => {
   const [jeepDetails, setJeepDetails] = useState(null);
   const router = useRouter();
   const params = useParams();
-  const id = params?.id;
+  // const id = params?.id;
+  const { id } = useParams();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-
+  const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
+  const [jeepId, setJeepId] = useState(null);
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     if (id) {
+      const decoded = hashids.decode(id);
+
+      if (decoded.length === 0) {
+        console.error("ID tidak valid atau gagal didecode.");
+        return;
+      }
+
+      const decodedId = decoded[0];
+      setJeepId(decodedId); // simpan jika butuh
+
       const fetchDetailsWithDriver = async () => {
         try {
+          setLoading(true);
           const token = localStorage.getItem("access_token");
 
           const [jeepRes, driversRes] = await Promise.all([
-            fetch(`http://localhost:8000/api/jeeps/id/${id}`, {
+            fetch(`http://localhost:8000/api/jeeps/id/${decodedId}`, {
               headers: { Authorization: `Bearer ${token}` },
             }),
             fetch("http://localhost:8000/api/users/by-role?role=Driver", {
@@ -45,6 +60,8 @@ const DetailJeep = () => {
           setJeepDetails(combinedData);
         } catch (error) {
           console.error("Gagal mengambil data:", error);
+        } finally {
+          setLoading(false);
         }
       };
 
@@ -52,31 +69,72 @@ const DetailJeep = () => {
     }
   }, [id]);
 
+  // useEffect(() => {
+  //   if (id) {
+  //     const fetchDetailsWithDriver = async () => {
+  //       try {
+  //         const token = localStorage.getItem("access_token");
+
+  //         const [jeepRes, driversRes] = await Promise.all([
+  //           fetch(`http://localhost:8000/api/jeeps/id/${id}`, {
+  //             headers: { Authorization: `Bearer ${token}` },
+  //           }),
+  //           fetch("http://localhost:8000/api/users/by-role?role=Driver", {
+  //             headers: { Authorization: `Bearer ${token}` },
+  //           }),
+  //         ]);
+
+  //         if (!jeepRes.ok || !driversRes.ok) throw new Error("Gagal fetch");
+
+  //         const jeepData = await jeepRes.json();
+  //         const driversData = await driversRes.json();
+
+  //         const driver = driversData?.data?.find(
+  //           (d) => d.id === jeepData.data.driver_id
+  //         );
+
+  //         const combinedData = {
+  //           ...jeepData.data,
+  //           driver_name: driver?.name || "-",
+  //         };
+
+  //         setJeepDetails(combinedData);
+  //       } catch (error) {
+  //         console.error("Gagal mengambil data:", error);
+  //       }
+  //     };
+
+  //     fetchDetailsWithDriver();
+  //   }
+  // }, [id]);
+
   const handleEditClick = () => {
-    router.push(`/dashboard/operasional/jeep/edit-jeep/${id}`);
+    router.push(`/dashboard/operasional/jeep/edit-jeep/${params.id}`);
   };
 
-  if (!jeepDetails) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-red bg-opacity-75">
-        <div className="bg-white shadow-md p-6 rounded-lg text-center">
-          <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
-      </div>
-    );
+  // if (!jeepDetails) {
+  //   return (
+  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-red bg-opacity-75">
+  //       <div className="bg-white shadow-md p-6 rounded-lg text-center">
+  //         <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
+  //         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+if (loading) {
+    return <LoadingFunny />;
   }
-
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
-            
-                  <div
-                    className="transition-all duration-300 ease-in-out"
-                    style={{
-                      marginLeft: isSidebarOpen ? 290 : 70,
-                    }}
-                  ></div>
+
+      <div
+        className="transition-all duration-300 ease-in-out"
+        style={{
+          marginLeft: isSidebarOpen ? 290 : 70,
+        }}
+      ></div>
       <div className="flex-1 p-6">
         <div className="flex items-center gap-2">
           <CircleArrowLeft
@@ -85,18 +143,8 @@ const DetailJeep = () => {
           />
           <h1 className="text-[32px] font-semibold">Detail Jeep</h1>
         </div>
-        <div className="flex items-start bg-[#EAEAEA] p-6 rounded-xl shadow-md w-[1080px] mx-auto mt-16">
-          <div className="w-40 h-40 mr-8">
-            {jeepDetails?.foto_jeep ? (
-              <img
-                src={`http://localhost/storage/${jeepDetails.foto_jeep}`}
-                alt="Foto Jeep"
-                className="w-full h-full object-cover rounded-lg"
-              />
-            ) : (
-              "-"
-            )}
-          </div>
+        {/* <div className="flex items-start bg-[#EAEAEA] p-6 rounded-xl shadow-md w-[1080px] mx-auto mt-16"> */}
+          <div className="flex items-start bg-[#EAEAEA] p-6 rounded-xl shadow-md w-[600px] mx-auto mt-16">
           <div className="flex-1 relative">
             <button
               onClick={handleEditClick}
@@ -104,12 +152,13 @@ const DetailJeep = () => {
             >
               Edit Jeep
             </button>
-            <div className="grid grid-cols-[250px_10px_auto] gap-y-6 text-gray-800 ml-70 mt-10 mb-10">
-              <div className="font-semibold text-[#1C7AC8]">Jeep ID</div>
+            {/* <div className="grid grid-cols-[250px_10px_auto] gap-y-6 text-gray-800 ml-70 mt-10 mb-10"> */}
+               <div className="grid grid-cols-[200px_10px_auto] gap-y-6 text-gray-800 mt-10 mb-10 ml-20">
+              {/* <div className="font-semibold text-[#1C7AC8]">Jeep ID</div>
               <div className="text-[#808080]">:</div>
               <div className="text-[#808080]">
                 {jeepDetails?.jeep_id || "-"}
-              </div>
+              </div> */}
 
               <div className="font-semibold text-[#1C7AC8]">Nama Driver</div>
               <div className="text-[#808080]">:</div>

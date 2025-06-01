@@ -4,7 +4,7 @@ import { useRouter, useParams } from "next/navigation";
 import withAuth from "/src/app/lib/withAuth";
 import { CircleArrowLeft } from "lucide-react";
 import Sidebar from "/components/Sidebar";
-import UserMenu from "/components/Pengguna";
+import LoadingFunny from "/components/LoadingFunny.jsx";
 import Hashids from "hashids";
 
 const DetailAnggota = () => {
@@ -12,10 +12,11 @@ const DetailAnggota = () => {
   const router = useRouter();
   const params = useParams();
   // const id = params?.id;
+  const [loading, setLoading] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
 
-  const decoded = hashids.decode(params.id); // misal params.id = 'XyZ12abc', hasilnya [2]
+  const decoded = hashids.decode(params.id);
   const id = decoded[0];
 
   useEffect(() => {
@@ -24,6 +25,7 @@ const DetailAnggota = () => {
       if (!token || !id) return;
 
       try {
+        setLoading(true);
         const res = await fetch("http://localhost:8000/api/users/all", {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -46,6 +48,8 @@ const DetailAnggota = () => {
         }
       } catch (error) {
         console.error("Gagal ambil data:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -56,17 +60,19 @@ const DetailAnggota = () => {
     router.push(`/dashboard/operasional/anggota/edit-anggota/${params.id}`);
   };
 
-  if (!userDetails) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-red bg-opacity-75">
-        <div className="bg-white shadow-md p-6 rounded-lg text-center">
-          <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
-      </div>
-    );
+  // if (!userDetails) {
+  //   return (
+  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-red bg-opacity-75">
+  //       <div className="bg-white shadow-md p-6 rounded-lg text-center">
+  //         <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
+  //         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
+  if (loading) {
+    return <LoadingFunny />;
   }
-
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -91,8 +97,10 @@ const DetailAnggota = () => {
           />
           <h1 className="text-[32px] font-semibold">Detail Anggota</h1>
         </div>
-        <div className="flex items-start bg-[#EAEAEA] p-6 rounded-xl shadow-md w-[1080px] mx-auto mt-16">
-          <div className="w-full h-full rounded-lg overflow-hidden border border-gray-300">
+        {/* <div className="flex items-start gap-10 bg-[#EAEAEA] p-6 rounded-xl shadow-md w-[1080px] mx-auto mt-16"> */}
+        <div className="flex items-center bg-[#EAEAEA] p-6 rounded-xl shadow-md w-[900px] mx-auto mt-16 gap-5">
+          {/* <div className="w-[220px] h-[280px] rounded-lg overflow-hidden border border-gray-300"> */}
+          <div className="w-[300px] h-[380px] rounded-lg overflow-hidden border border-gray-300">
             {userDetails?.foto_profil ? (
               <img
                 // src={`http://localhost:8000/storage/profile_images/${userDetails.foto_profil}`}
@@ -120,7 +128,7 @@ const DetailAnggota = () => {
             >
               Edit Anggota
             </button>
-            <div className="grid grid-cols-[250px_10px_auto] gap-y-6 text-gray-800 ml-70 mt-10 mb-10">
+            <div className="grid grid-cols-[250px_10px_auto] gap-y-6 text-gray-800 mt-10 mb-10">
               <div className="font-semibold text-[#1C7AC8]">Nama Lengkap</div>
               <div className="text-[#808080]">:</div>
               <div className="text-[#808080]">{userDetails?.name || "-"}</div>

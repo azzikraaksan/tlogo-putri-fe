@@ -1,270 +1,492 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import Sidebar from "/components/Sidebar.jsx";
-import UserMenu from "/components/Pengguna.jsx";
-import withAuth from "/src/app/lib/withAuth";
-import { FaCalendarAlt } from "react-icons/fa";
-import { RotateCcw } from "react-feather";
+import { useState, useRef, useEffect, useCallback } from "react";
+import Sidebar from "/components/Sidebar.jsx"; // Sesuaikan path jika diperlukan
+// import UserMenu from "/components/Pengguna.jsx"; // Sesuaikan path jika diperlukan
+import withAuth from "/src/app/lib/withAuth"; // Sesuaikan path jika diperlukan
+import {
+    CalendarDays,
+    FileText,
+    FileSpreadsheet,
+    RotateCcw,
+    Zap // Icon untuk generate laporan (Buat Laporan)
+} from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-
 import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-function RekapPresensiList() {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [tempDate, setTempDate] = useState(null);
-  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
-  const calendarRef = useRef();
+// --- Base URL untuk API backend Anda ---
+const API_BASE_URL = "http://localhost:8000/api";
 
-  const toggleDatePicker = () => {
-    setTempDate(selectedDate);
-    setIsDatePickerOpen(!isDatePickerOpen);
-  };
+// --- Helper Functions ---
 
-  const applyDateFilter = () => {
-    setSelectedDate(tempDate);
-    setIsDatePickerOpen(false);
-  };
-
-  const resetFilter = () => {
-    setSelectedDate(null);
-    setTempDate(null);
-    setIsDatePickerOpen(false);
-  };
-
-  async function fetchData() {
-    try {
-      setLoading(true);
-      let url = "http://localhost:8000/api/rekap-presensi/all";
-      if (selectedDate) {
-        const dateStr = selectedDate.toISOString().split("T")[0];
-        url += `?date=${dateStr}`;
-      }
-      const response = await fetch(url);
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
-      const jsonData = await response.json();
-      setData(jsonData);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+/**
+ * Memformat string tanggal atau objek Date ke tampilan DD-MM-YYYY.
+ * @param {string|Date} dateInput - String tanggal dari backend atau objek Date.
+ * @returns {string} - Tanggal dalam format DD-MM-YYYY atau '-'.
+ */
+const formatDateToDisplay = (dateInput) => {
+    if (!dateInput) return "-";
+    let d;
+    if (typeof dateInput === 'string') {
+        if (dateInput.includes('T')) {
+            d = new Date(dateInput);
+        } else {
+            const parts = dateInput.split(' ')[0].split('-');
+            if (parts.length === 3 && parts[0].length === 4) {
+                d = new Date(Date.UTC(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])));
+            } else {
+                d = new Date(dateInput);
+            }
+        }
+    } else if (dateInput instanceof Date) {
+        d = dateInput;
+    } else {
+        return "-";
     }
-  }
 
-  useEffect(() => {
-    fetchData();
-  }, [selectedDate]);
+    if (isNaN(d.getTime())) {
+        return dateInput.toString();
+    }
+    const day = d.getUTCDate().toString().padStart(2, "0");
+    const month = (d.getUTCMonth() + 1).toString().padStart(2, "0");
+    const year = d.getUTCFullYear();
+    return `${day}-${month}-${year}`;
+};
 
-  const handleExportExcel = () => {
-    if (data.length === 0) return;
+/**
+ * Memformat string tanggal atau objek Date untuk menampilkan HARI SAJA (DD).
+ * @param {string|Date} dateInput - String tanggal dari backend atau objek Date.
+ * @returns {string} - Tanggal dalam format DD atau '-'.
+ */
+const formatDateToDayOnly = (dateInput) => {
+    if (!dateInput) return "-";
+    let d;
+    if (typeof dateInput === 'string') {
+        if (dateInput.includes('T')) {
+            d = new Date(dateInput);
+        } else {
+            const parts = dateInput.split(' ')[0].split('-');
+            if (parts.length === 3 && parts[0].length === 4) {
+                // Menggunakan UTC untuk konsistensi jika tanggal dari DB adalah UTC date string
+                d = new Date(Date.UTC(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])));
+            } else {
+                d = new Date(dateInput);
+            }
+        }
+    } else if (dateInput instanceof Date) {
+        d = dateInput;
+    } else {
+        return "-";
+    }
 
-    const worksheet = XLSX.utils.json_to_sheet(data);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Presensi");
+    if (isNaN(d.getTime())) {
+        return "-";
+    }
+    // Menggunakan getUTCDate() agar konsisten jika input adalah string tanggal UTC tanpa timezon
+    return d.getUTCDate().toString().padStart(2, "0");
+};
 
-    const excelBuffer = XLSX.write(workbook, {
-      bookType: "xlsx",
-      type: "array",
-    });
-
-    const blob = new Blob([excelBuffer], {
-      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
-    });
-
-    saveAs(
-      blob,
-      `rekap_presensi_${new Date().toISOString().split("T")[0]}.xlsx`
-    );
-  };
-
-  const handleExportPDF = () => {
-    if (!data || data.length === 0) return;
-
-    const doc = new jsPDF();
-    doc.text("Rekap Presensi", 14, 10);
-
-    const tableColumn = [
-      "ID",
-      "User ID",
-      "Nama Lengkap",
-      "No HP",
-      "Role",
-      "Tgl Bergabung",
-      "Bulan",
-      "Tahun",
-      "Jumlah Kehadiran",
+/**
+ * Mengubah angka bulan menjadi nama bulan dalam bahasa Indonesia.
+ * @param {number|string} monthNumber - Angka bulan (1-12).
+ * @returns {string} - Nama bulan atau angka bulan jika tidak valid.
+ */
+const getMonthName = (monthNumber) => {
+    if (monthNumber == null || isNaN(parseInt(monthNumber))) return "-";
+    const num = parseInt(monthNumber);
+    const monthNames = [
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
     ];
+    if (num >= 1 && num <= 12) {
+        return monthNames[num - 1];
+    }
+    return monthNumber.toString(); // Fallback jika angka tidak valid
+};
 
-    const tableRows = data.map((item) => [
-      item.id_presensi,
-      item.user_id,
-      item.nama_lengkap,
-      item.no_hp || "-",
-      item.role || "-",
-      new Date(item.tanggal_bergabung).toLocaleDateString(),
-      item.bulan,
-      item.tahun,
-      item.jumlah_kehadiran,
-    ]);
 
-    autoTable(doc, {
-      head: [tableColumn],
-      body: tableRows,
-      startY: 20,
-      styles: {
-        fontSize: 10,
-      },
-      headStyles: {
-        fillColor: [22, 160, 133],
-      },
-      alternateRowStyles: {
-        fillColor: [238, 238, 238],
-      },
-      margin: { top: 10 },
-    });
+/**
+ * Memformat objek Date atau string tanggal ke format YYYY-MM-DD.
+ * @param {Date|string} date - Objek Date atau string tanggal.
+ * @returns {string|null} - Tanggal dalam format YYYY-MM-DD atau null.
+ */
+const formatToISODate = (date) => {
+    if (!date) return null;
+    const d = date instanceof Date ? date : new Date(date);
+    if (isNaN(d.getTime())) return null;
+    // Menggunakan getUTC... untuk menghindari masalah timezone saat konversi ke ISO string
+    const year = d.getUTCFullYear();
+    const month = (d.getUTCMonth() + 1).toString().padStart(2, '0');
+    const day = d.getUTCDate().toString().padStart(2, '0');
+    return `${year}-${month}-${day}`;
+};
 
-    const filename = `rekap_presensi_${new Date().toISOString().split("T")[0]}.pdf`;
-    doc.save(filename);
-  };
 
-  return (
-    <div className="flex relative bg-gray-50 min-h-screen">
-      <UserMenu />
-      <Sidebar />
-      <div className="flex-1 p-4 md:p-6 overflow-x-hidden flex flex-col">
-        <h1 className="text-3xl font-bold mb-6 text-black">Presensi</h1>
+// --- Komponen PresensiPage ---
+const PresensiPage = ({ children }) => {
+    const [dataPresensi, setDataPresensi] = useState([]);
+    const [filteredData, setFilteredData] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+    const [selectedDateForFilter, setSelectedDateForFilter] = useState(null);
+    const [tempDateForPicker, setTempDateForPicker] = useState(null);
+    const calendarRef = useRef(null);
 
-        <div className="flex flex-col md:flex-row items-center justify-between mb-6 gap-4">
-          <div className="relative" ref={calendarRef}>
-            <button
-              onClick={selectedDate ? resetFilter : toggleDatePicker}
-              className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black cursor-pointer"
+    const fetchAndFilterPresensiData = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(`${API_BASE_URL}/rekap-presensi/all`);
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP error! Status: ${response.status}. Detail: ${errorText || 'Tidak ada detail error.'}`);
+            }
+            const result = await response.json();
+            const fetchedRawData = Array.isArray(result) ? result : result.data || [];
+            if (!Array.isArray(fetchedRawData)) {
+                console.error("Data dari backend (/rekap-presensi/all) bukan array:", fetchedRawData);
+                throw new Error("Format data dari backend tidak valid.");
+            }
+            setDataPresensi(fetchedRawData);
+
+            if (selectedDateForFilter) {
+                const formattedFilterDate = formatToISODate(selectedDateForFilter);
+                console.log("Filtering by date (ISO):", formattedFilterDate);
+                setFilteredData(
+                    fetchedRawData.filter(item => {
+                        // Pastikan item.tanggal_bergabung ada dan valid sebelum diformat
+                        if (!item.tanggal_bergabung) return false;
+                        const itemDate = formatToISODate(new Date(item.tanggal_bergabung));
+                        return itemDate === formattedFilterDate;
+                    })
+                );
+            } else {
+                setFilteredData(fetchedRawData);
+            }
+        } catch (error) {
+            console.error("Gagal memuat data presensi:", error);
+            alert(`Terjadi kesalahan saat memuat data presensi: ${error.message}.`);
+            setDataPresensi([]);
+            setFilteredData([]);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [selectedDateForFilter]);
+
+    useEffect(() => {
+        fetchAndFilterPresensiData();
+        const handleDataUpdateListener = () => fetchAndFilterPresensiData();
+        window.addEventListener("dataPresensiUpdated", handleDataUpdateListener);
+        return () => {
+            window.removeEventListener("dataPresensiUpdated", handleDataUpdateListener);
+        };
+    }, [fetchAndFilterPresensiData]);
+
+    const applyDateFilter = () => {
+        setSelectedDateForFilter(tempDateForPicker);
+        setIsDatePickerOpen(false);
+    };
+
+    const resetFilter = () => {
+        setSelectedDateForFilter(null);
+        setTempDateForPicker(null);
+        setIsDatePickerOpen(false);
+    };
+
+    const getExportFileName = (ext) => {
+        const dateSuffix = selectedDateForFilter ? formatToISODate(selectedDateForFilter).replace(/-/g, '') : "all";
+        const currentDate = new Date().toISOString().split("T")[0].replace(/-/g, '');
+        return `laporan_rekap_presensi_${dateSuffix}_${currentDate}.${ext}`;
+    };
+
+    const handleExportExcel = () => {
+        if (filteredData.length === 0) {
+            alert("Data kosong, tidak bisa export Excel!");
+            return;
+        }
+        try {
+            const dataToExport = filteredData.map(item => ({
+                'Nama Lengkap': item.nama_lengkap,
+                'No. HP': item.no_hp || '-',
+                'Role': item.role || '-',
+                // MODIFIED: Menggunakan formatDateToDayOnly untuk kolom 'Tanggal Bergabung'
+                'Tanggal Bergabung': item.tanggal_bergabung ? formatDateToDayOnly(item.tanggal_bergabung) : '-',
+                // MODIFIED: Menggunakan getMonthName untuk kolom 'Bulan'
+                'Bulan': getMonthName(item.bulan),
+                'Tahun': item.tahun,
+                'Jumlah Kehadiran': item.jumlah_kehadiran,
+            }));
+            const ws = XLSX.utils.json_to_sheet(dataToExport);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Rekap Presensi");
+            XLSX.writeFile(wb, getExportFileName("xlsx"));
+        } catch (error) {
+            console.error("Export Excel error:", error);
+            alert("Gagal export Excel!");
+        }
+    };
+
+    const handleExportPDF = () => {
+        if (filteredData.length === 0) {
+            alert("Data kosong, tidak bisa export PDF!");
+            return;
+        }
+        try {
+            const doc = new jsPDF('landscape');
+            const tableColumn = [
+                // MODIFIED: Menyesuaikan header kolom jika diperlukan (misalnya, "Tgl. Bergabung")
+                "Nama Lengkap", "No. HP", "Role", "Tgl. Bergabung", "Bulan", "Tahun", "Jml. Hadir"
+            ];
+            const tableRows = filteredData.map((item) => [
+                item.nama_lengkap,
+                item.no_hp || '-',
+                item.role || '-',
+                // MODIFIED: Menggunakan formatDateToDayOnly
+                item.tanggal_bergabung ? formatDateToDayOnly(item.tanggal_bergabung) : '-',
+                // MODIFIED: Menggunakan getMonthName
+                getMonthName(item.bulan),
+                item.tahun,
+                item.jumlah_kehadiran,
+            ]);
+
+            doc.text(
+                `Laporan Rekap Presensi ${selectedDateForFilter ? `(Filter: ${formatDateToDisplay(selectedDateForFilter)})` : "(Semua Data)"}`,
+                14, 15
+            );
+
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 20,
+                theme: 'grid',
+                styles: { fontSize: 8, cellPadding: 2, halign: 'center' },
+                headStyles: { fillColor: [61, 108, 185], textColor: 255, fontStyle: 'bold', halign: 'center' },
+                alternateRowStyles: { fillColor: [240, 240, 240] },
+                didDrawPage: function (data) {
+                    let str = "Halaman " + doc.internal.getNumberOfPages();
+                    doc.setFontSize(8);
+                    const pageHeight = doc.internal.pageSize.height || doc.internal.pageSize.getHeight();
+                    doc.text(str, data.settings.margin.left, pageHeight - 10);
+                }
+            });
+            doc.save(getExportFileName("pdf"));
+        } catch (error) {
+            console.error("Export PDF error:", error);
+            alert("Gagal export PDF!");
+        }
+    };
+
+    const handleGeneratePresensiReport = async () => {
+        if (!confirm("Apakah Anda yakin ingin memicu rekapitulasi laporan presensi dari backend?")) {
+            return;
+        }
+        const originalIsLoading = isLoading;
+        setIsLoading(true);
+        try {
+            let payload = {};
+            if (selectedDateForFilter) {
+                const month = (selectedDateForFilter.getUTCMonth() + 1).toString(); // Gunakan getUTCMonth untuk konsistensi
+                const year = selectedDateForFilter.getUTCFullYear().toString(); // Gunakan getUTCFullYear
+                payload = { bulan: month, tahun: year };
+            } else {
+                const now = new Date();
+                payload = {
+                    bulan: (now.getUTCMonth() + 1).toString(),
+                    tahun: now.getUTCFullYear().toString()
+                };
+            }
+            const response = await fetch(`${API_BASE_URL}/rekap-presensi/rekap`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                throw new Error(`Gagal memicu rekap presensi: ${response.status}. ${errorData.message || ''}`);
+            }
+            const result = await response.json();
+            alert(`Proses rekapitulasi presensi berhasil dipicu di backend. ${result.message || 'Memuat data terbaru...'}`);
+            await fetchAndFilterPresensiData();
+        } catch (error) {
+            console.error("Error saat memicu rekap presensi:", error);
+            alert(`Gagal memicu rekap presensi: ${error.message}`);
+            setIsLoading(originalIsLoading);
+        }
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (calendarRef.current && !calendarRef.current.contains(event.target)) {
+                setIsDatePickerOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, [calendarRef]);
+
+    const tableDisplayHeaders = [
+        // MODIFIED: Menyesuaikan header untuk mencerminkan perubahan format
+        "Nama Lengkap", "No. HP", "Role", "Tgl. Bergabung", "Bulan", "Tahun", "Jumlah Kehadiran"
+    ];
+    const [isSidebarOpen, setSidebarOpen] = useState(true);
+
+    return (
+        <div className="flex">
+            <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+            <div
+                className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
+                style={{
+                    marginLeft: isSidebarOpen ? 290 : 70,
+                }}
             >
-              {selectedDate ? (
-                <>
-                  <RotateCcw size={20} />
-                  <span>Set Ulang</span>
-                </>
-              ) : (
-                <>
-                  <FaCalendarAlt size={20} />
-                  <span>Pilih Tanggal</span>
-                </>
-              )}
-            </button>
+                <div className="flex-1 p-4 md:p-6 relative">
+                    <h1 className="text-[28px] md:text-[32px] font-semibold text-black mb-6">
+                        Presensi
+                    </h1>
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+                        <div className="flex flex-wrap gap-4 items-center">
+                            <div className="relative" ref={calendarRef}>
+                                {!selectedDateForFilter ? (
+                                    <button
+                                        onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+                                        className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black cursor-pointer"
+                                    >
+                                        <CalendarDays size={20} />
+                                        <span>Pilih Tanggal</span>
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={resetFilter}
+                                        className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black cursor-pointer"
+                                    >
+                                        <RotateCcw size={20} />
+                                        <span>Atur Ulang</span>
+                                    </button>
+                                )}
+                                {isDatePickerOpen && (
+                                    <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-12 left-0 md:left-auto" style={{ minWidth: '280px' }}>
+                                        <DatePicker
+                                            selected={tempDateForPicker}
+                                            onChange={(date) => setTempDateForPicker(date)}
+                                            inline
+                                            dateFormat="dd-MM-yyyy"
+                                            showPopperArrow={false}
+                                        />
+                                        <div className="mt-4 flex justify-between">
+                                            <button
+                                                onClick={() => setIsDatePickerOpen(false)}
+                                                className="px-4 py-2 bg-red-200 text-black rounded hover:bg-red-500 hover:text-white cursor-pointer"
+                                            >
+                                                Batal
+                                            </button>
+                                            <button
+                                                onClick={applyDateFilter}
+                                                className="px-4 py-2 bg-[#B8D4F9] text-black rounded hover:bg-[#3D6CB9] hover:text-white cursor-pointer"
+                                            >
+                                                Pilih Tanggal
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <button
+                                onClick={handleGeneratePresensiReport}
+                                disabled={isLoading}
+                                className={`flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black ${isLoading ? "cursor-not-allowed opacity-70" : "cursor-pointer"
+                                    }`}
+                            >
+                                <Zap size={20} />
+                                <span>Buat Laporan</span>
+                            </button>
+                        </div>
+                        <div className="flex flex-wrap gap-4 items-center">
+                            <button
+                                onClick={handleExportExcel}
+                                disabled={filteredData.length === 0 || isLoading}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${(filteredData.length === 0 || isLoading)
+                                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                        : "bg-green-100 text-black hover:bg-green-200 cursor-pointer"
+                                    }`}
+                            >
+                                <FileSpreadsheet size={20} color={(filteredData.length === 0 || isLoading) ? "gray" : "green"} />
+                                <span>Ekspor Excel</span>
+                            </button>
+                            <button
+                                onClick={handleExportPDF}
+                                disabled={filteredData.length === 0 || isLoading}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${(filteredData.length === 0 || isLoading)
+                                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                                        : "bg-red-100 text-black hover:bg-red-200 cursor-pointer"
+                                    }`}
+                            >
+                                <FileText size={20} color={(filteredData.length === 0 || isLoading) ? "gray" : "red"} />
+                                <span>Ekspor PDF</span>
+                            </button>
+                        </div>
+                    </div>
 
-            {isDatePickerOpen && (
-              <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-12">
-                <DatePicker
-                  selected={tempDate}
-                  onChange={(date) => setTempDate(date)}
-                  inline
-                  dateFormat="dd-MM-yyyy"
-                  showPopperArrow={false}
-                />
-                <div className="mt-4 flex justify-between">
-                  <button
-                    onClick={() => setIsDatePickerOpen(false)}
-                    className="px-4 py-2 bg-red-200 text-black rounded hover:bg-red-500 hover:text-white cursor-pointer"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    onClick={applyDateFilter}
-                    disabled={!tempDate}
-                    className={`px-4 py-2 rounded cursor-pointer ${
-                      tempDate
-                        ? "bg-[#B8D4F9] text-black hover:bg-[#3D6CB9] hover:text-white"
-                        : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    }`}
-                  >
-                    Pilih Tanggal
-                  </button>
+                    {isLoading && !isDatePickerOpen ? (
+                        <div className="text-center p-10 text-lg font-medium text-gray-700">
+                            Memuat data rekap presensi, mohon tunggu...
+                        </div>
+                    ) : (
+                        <div className="overflow-x-auto rounded-lg shadow">
+                            <div className="max-h-[calc(100vh-280px)] overflow-y-auto">
+                                <table className="min-w-full table-auto bg-white text-sm">
+                                    <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
+                                        <tr>
+                                            {tableDisplayHeaders.map((header, index, arr) => (
+                                                <th
+                                                    key={header}
+                                                    className={`p-3 text-center whitespace-nowrap`}
+                                                    style={{
+                                                        borderTopLeftRadius: index === 0 ? "0.5rem" : undefined,
+                                                        borderTopRightRadius: index === arr.length - 1 ? "0.5rem" : undefined,
+                                                    }}
+                                                >
+                                                    {header}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredData.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={tableDisplayHeaders.length} className="text-center p-4 text-gray-500 font-medium">Data Tidak Ditemukan</td>
+                                            </tr>
+                                        ) : (
+                                            filteredData.map((item, idx) => (
+                                                <tr
+                                                    key={item.id_presensi || `presensi-${idx}`}
+                                                    className="border-b text-center border-gray-200 hover:bg-gray-100 transition duration-150 ease-in-out"
+                                                >
+                                                    <td className="p-3 whitespace-nowrap">{item.nama_lengkap || '-'}</td>
+                                                    <td className="p-3 whitespace-nowrap">{item.no_hp || '-'}</td>
+                                                    <td className="p-3 whitespace-nowrap">{item.role || '-'}</td>
+                                                    {/* MODIFIED: Menggunakan formatDateToDayOnly untuk tampilan tabel */}
+                                                    <td className="p-3 whitespace-nowrap">{formatDateToDayOnly(item.tanggal_bergabung)}</td>
+                                                    {/* MODIFIED: Menggunakan getMonthName untuk tampilan tabel */}
+                                                    <td className="p-3 whitespace-nowrap">{getMonthName(item.bulan)}</td>
+                                                    <td className="p-3 whitespace-nowrap">{item.tahun || '-'}</td>
+                                                    <td className="p-3 whitespace-nowrap">{item.jumlah_kehadiran == null ? '-' : item.jumlah_kehadiran}</td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+                    {children}
                 </div>
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={handleExportPDF}
-              className="bg-[#3D6CB9] text-white font-semibold px-5 py-2 rounded cursor-pointer hover:bg-[#2b4d80] transition"
-            >
-              Export PDF
-            </button>
-            <button
-              onClick={handleExportExcel}
-              className="bg-[#3D6CB9] text-white font-semibold px-5 py-2 rounded cursor-pointer hover:bg-[#2b4d80] transition"
-            >
-              Export Excel
-            </button>
-          </div>
+            </div>
         </div>
+    );
+};
 
-        {loading ? (
-          <p>Loading data...</p>
-        ) : error ? (
-          <p className="text-red-600">Error: {error}</p>
-        ) : data.length === 0 ? (
-          <p>Data tidak ditemukan.</p>
-        ) : (
-          <div className="overflow-y-auto max-h-[541px] rounded-lg shadow mb-8">
-            <table className="min-w-full table-auto bg-white text-sm">
-              <thead className="bg-[#3D6CB9] text-white">
-                <tr>
-                  <th className="px-4 py-3 text-center">ID Presensi</th>
-                  <th className="px-4 py-3 text-center">User ID</th>
-                  <th className="px-4 py-3 text-left">Nama Lengkap</th>
-                  <th className="px-4 py-3 text-center">No HP</th>
-                  <th className="px-4 py-3 text-center">Role</th>
-                  <th className="px-4 py-3 text-center">Tanggal Bergabung</th>
-                  <th className="px-4 py-3 text-center">Bulan</th>
-                  <th className="px-4 py-3 text-center">Tahun</th>
-                  <th className="px-4 py-3 text-center">Jumlah Kehadiran</th>
-                </tr>
-              </thead>
-              <tbody className="text-gray-800">
-                {data.map((item) => (
-                  <tr
-                    key={item.id_presensi}
-                    className="hover:bg-gray-100 border-b"
-                  >
-                    <td className="px-4 py-2 text-center">
-                      {item.id_presensi}
-                    </td>
-                    <td className="px-4 py-2 text-center">{item.user_id}</td>
-                    <td className="px-4 py-2">{item.nama_lengkap}</td>
-                    <td className="px-4 py-2 text-center">
-                      {item.no_hp || "-"}
-                    </td>
-                    <td className="px-4 py-2 text-center">
-                      {item.role || "-"}
-                    </td>
-                    <td className="px-4 py-2 text-center">
-                      {new Date(item.tanggal_bergabung).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-2 text-center">{item.bulan}</td>
-                    <td className="px-4 py-2 text-center">{item.tahun}</td>
-                    <td className="px-4 py-2 text-center">
-                      {item.jumlah_kehadiran}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-export default withAuth(RekapPresensiList);
+export default withAuth(PresensiPage);

@@ -1,324 +1,338 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Sidebar from "/components/Sidebar.jsx";
-import UserMenu from "/components/Pengguna.jsx";
-import withAuth from "/src/app/lib/withAuth";
-import axios from "axios";
-import { FileSpreadsheet, FileText } from "lucide-react";
-
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import Sidebar from "/components/Sidebar.jsx"; // Pastikan path ini benar
+import withAuth from "/src/app/lib/withAuth"; // Pastikan path ini benar
+import { FileText, FileSpreadsheet, ArrowLeft } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-const formatRupiah = (angka) => {
-  const number = parseFloat(angka);
-  if (isNaN(number)) return "-";
-  return number.toLocaleString("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  });
+const API_BASE_URL = "http://localhost:8000/api";
+
+const formatRupiah = (number) => {
+    if (number === null || typeof number === 'undefined' || isNaN(number)) {
+        return 'Rp. 0';
+    }
+    const formatter = new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2,
+    });
+    return formatter.format(number).replace(/,/g, '.').replace('Rp', 'Rp.');
 };
 
-const TriwulanPage = ({ children = null }) => {
-  const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedQuarter, setSelectedQuarter] = useState(1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [totalNetCashTriwulan, setTotalNetCashTriwulan] = useState(0);
+const getMonthName = (monthNumber) => {
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    return monthNames[monthNumber - 1] || "";
+};
 
-  const quarters = [
-    { value: 1, label: "Triwulan 1" },
-    { value: 2, label: "Triwulan 2" },
-    { value: 3, label: "Triwulan 3" },
-    { value: 4, label: "Triwulan 4" },
-  ];
+const TriwulanPage = ({ children }) => {
+    const router = useRouter();
+    const [dataTriwulan, setDataTriwulan] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSidebarOpen, setSidebarOpen] = useState(true);
 
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 5 }, (_, i) => currentYear - i);
-
-  // Fetch data awal saat komponen mount
-  useEffect(() => {
-    fetchData(selectedQuarter, selectedYear);
-  }, []);
-
-  // Fungsi fetch data dari API dengan filter triwulan dan tahun
-  const fetchData = async (quarter, year) => {
-    try {
-      setIsLoading(true);
-      const response = await axios.get(
-        "http://localhost:8000/api/reports/triwulan",
-        {
-          params: {
-            quarter,
-            year,
-          },
-        }
-      );
-      setData(response.data);
-
-      const total = response.data.reduce(
-        (sum, item) => sum + parseFloat(item.total_net_cash || 0),
-        0
-      );
-      setTotalNetCashTriwulan(total);
-    } catch (error) {
-      console.error("Gagal mengambil data:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Fungsi handler klik tombol buat laporan otomatis (fetch data ulang sesuai filter)
-  const handleGenerateReport = () => {
-    fetchData(selectedQuarter, selectedYear);
-  };
-
-  const handleExportExcel = () => {
-    const columns = [
-      "Tahun",
-      "Bulan",
-      "Minggu",
-      "Total Cash",
-      "Total Operational",
-      "Total Expenditure",
-      "Total Net Cash",
-      "Total Clean Operations",
-      "Total Jeep Amount",
-    ];
-
-    const wsData = [
-      columns,
-      ...data.map((item) => [
-        item.tahun || "-",
-        item.bulan || "-",
-        item.minggu || "-",
-        Number(item.total_cash).toLocaleString("id-ID", {
-          style: "currency",
-          currency: "IDR",
-        }),
-        Number(item.total_operational).toLocaleString("id-ID", {
-          style: "currency",
-          currency: "IDR",
-        }),
-        Number(item.total_expenditure).toLocaleString("id-ID", {
-          style: "currency",
-          currency: "IDR",
-        }),
-        Number(item.total_net_cash).toLocaleString("id-ID", {
-          style: "currency",
-          currency: "IDR",
-        }),
-        Number(item.total_clean_operations).toLocaleString("id-ID", {
-          style: "currency",
-          currency: "IDR",
-        }),
-        item.total_jeep_amount || "-",
-      ]),
-    ];
-
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Laporan Data");
-    XLSX.writeFile(wb, "laporan_data.xlsx");
-  };
-
-  const handleExportPDF = () => {
-    const doc = new jsPDF();
-
-    const columns = [
-      "Tahun",
-      "Bulan",
-      "Minggu",
-      "Total Cash",
-      "Total Operational",
-      "Total Expenditure",
-      "Total Net Cash",
-      "Total Clean Operations",
-      "Total Jeep Amount",
-    ];
-
-    const rows = data.map((item) => [
-      item.tahun || "-",
-      item.bulan || "-",
-      item.minggu || "-",
-      Number(item.total_cash).toLocaleString("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }),
-      Number(item.total_operational).toLocaleString("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }),
-      Number(item.total_expenditure).toLocaleString("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }),
-      Number(item.total_net_cash).toLocaleString("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }),
-      Number(item.total_clean_operations).toLocaleString("id-ID", {
-        style: "currency",
-        currency: "IDR",
-      }),
-      item.total_jeep_amount || "-",
-    ]);
-
-    autoTable(doc, {
-      head: [columns],
-      body: rows,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [61, 108, 185] },
+    const [selectedQuarter, setSelectedQuarter] = useState(() => {
+        const currentMonth = new Date().getMonth() + 1;
+        if (currentMonth >= 1 && currentMonth <= 3) return 1;
+        if (currentMonth >= 4 && currentMonth <= 6) return 2;
+        if (currentMonth >= 7 && currentMonth <= 9) return 3;
+        return 4;
     });
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
-    doc.save("laporan_data.pdf");
-  };
+    const handleGoBack = () => {
+        router.push("/dashboard/akuntansi/laporan-keuangan");
+    };
 
-  return (
-    <div className="flex relative bg-white-50 min-h-screen">
-      <UserMenu />
-      <Sidebar />
-      <div className="flex-1 p-4 md:p-6 relative overflow-y-auto">
-        <h1 className="text-[28px] md:text-[32px] font-bold mb-6 text-black">
-          Laporan Triwulan
-        </h1>
+    const loadDataFromBackend = useCallback(async () => {
+        setIsLoading(true);
+        setDataTriwulan([]); // Kosongkan data sebelum memuat yang baru
+        try {
+            const response = await fetch(
+                `${API_BASE_URL}/reports/triwulan?quarter=${selectedQuarter}&year=${selectedYear}`
+            );
+            if (!response.ok) {
+                if (response.status === 404) {
+                    setDataTriwulan([]);
+                    return;
+                }
+                const errorText = await response.text();
+                throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+            }
+            const rawData = await response.json();
+            const fetchedData = Array.isArray(rawData) ? rawData : (rawData.data || []);
 
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
-          <div className="flex gap-4">
-            <div className="flex gap-2 items-center">
-              <select
-                value={selectedQuarter}
-                onChange={(e) => setSelectedQuarter(parseInt(e.target.value))}
-                className="px-3 py-2 rounded-lg border border-gray-300 shadow bg-white text-black"
-              >
-                {quarters.map((quarter) => (
-                  <option key={quarter.value} value={quarter.value}>
-                    {quarter.label}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="px-3 py-2 rounded-lg border border-gray-300 shadow bg-white text-black"
-              >
-                {years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
+            const formattedData = fetchedData.map(item => ({
+                id: `${item.tahun}-${item.bulan}-${item.minggu}`,
+                minggu_display: `${item.minggu} (${getMonthName(item.bulan)} ${item.tahun})`,
+                original_minggu: item.minggu,
+                original_bulan: item.bulan,
+                original_tahun: item.tahun,
+                total_cash: parseFloat(item.total_cash || 0),
+                total_operational: parseFloat(item.total_operational || 0),
+                total_expenditure: parseFloat(item.total_expenditure || 0),
+                total_net_cash: parseFloat(item.total_net_cash || 0), // Ini adalah nilai per minggu
+                total_clean_operations: parseFloat(item.total_clean_operations || 0),
+                total_jeep_amount: parseInt(item.total_jeep_amount || 0),
+            }));
+            // Backend query sudah di orderBy('tahun', 'bulan', 'minggu_ke') ASC
+            // Jadi data sudah terurut dari minggu terawal ke terbaru.
+            setDataTriwulan(formattedData);
+        } catch (error) {
+            console.error("Gagal memuat laporan triwulan dari backend:", error);
+            alert("Terjadi kesalahan saat memuat data laporan triwulan.");
+            setDataTriwulan([]);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [selectedQuarter, selectedYear]);
+
+    useEffect(() => {
+        loadDataFromBackend();
+    }, [loadDataFromBackend]);
+
+    // PERUBAHAN: Mengambil nilai kas bersih dari minggu terakhir
+    const nilaiKasBersihAkhirPeriode = useMemo(() => {
+        if (dataTriwulan.length > 0) {
+            // Mengambil item terakhir dari array dataTriwulan (minggu paling akhir)
+            const lastWeekData = dataTriwulan[dataTriwulan.length - 1];
+            return lastWeekData.total_net_cash || 0;
+        }
+        return 0; // Default jika tidak ada data
+    }, [dataTriwulan]);
+
+    const getExportFileName = (ext) => {
+        return `laporan_triwulan_Q${selectedQuarter}_${selectedYear}.${ext}`;
+    };
+
+    const handleExportExcelAction = () => {
+        if (dataTriwulan.length === 0) {
+            alert("Data kosong, tidak bisa export Excel!");
+            return;
+        }
+        try {
+            const dataToExport = dataTriwulan.map(item => ({
+                "Periode Laporan": item.minggu_display,
+                "Total Kas (Rp)": item.total_cash,
+                "Total Operasional (Rp)": item.total_operational,
+                "Total Pengeluaran (Rp)": item.total_expenditure,
+                "Total Operasional Bersih (Rp)": item.total_clean_operations,
+                "Total Kas Bersih (Rp)": item.total_net_cash, // Nilai per minggu
+                "Total Jeep": item.total_jeep_amount,
+            }));
+
+            const ws = XLSX.utils.json_to_sheet(dataToExport);
+            const columnWidths = Object.keys(dataToExport[0] || {}).map(key => ({ wch: Math.max(key.length, ...dataToExport.map(row => (row[key]?.toString() || "").length)) + 2 }));
+            ws['!cols'] = columnWidths;
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, `Triwulan ${selectedQuarter} ${selectedYear}`);
+            XLSX.writeFile(wb, getExportFileName("xlsx"));
+        } catch (error) {
+            console.error("Export Excel error:", error);
+            alert("Gagal export Excel!");
+        }
+    };
+
+    const handleExportPDFAction = () => {
+        if (dataTriwulan.length === 0) {
+            alert("Data kosong, tidak bisa export PDF!");
+            return;
+        }
+        try {
+            const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+            const tableColumn = [
+                "Periode Laporan", "Total Kas", "Tot. Operasional",
+                "Tot. Pengeluaran", "Tot. Op. Bersih", "Tot. Kas Bersih", "Total Jeep"
+            ];
+            const tableRows = dataTriwulan.map((item) => [
+                item.minggu_display,
+                formatRupiah(item.total_cash),
+                formatRupiah(item.total_operational),
+                formatRupiah(item.total_expenditure),
+                formatRupiah(item.total_clean_operations),
+                formatRupiah(item.total_net_cash), // Nilai per minggu
+                item.total_jeep_amount,
+            ]);
+
+            doc.setFontSize(14);
+            doc.text(`Laporan Data Triwulan - Q${selectedQuarter} Tahun ${selectedYear}`, 40, 40);
+            autoTable(doc, {
+                head: [tableColumn],
+                body: tableRows,
+                startY: 55,
+                theme: 'grid',
+                styles: { fontSize: 7, cellPadding: 2, overflow: 'ellipsize', halign: 'center', valign: 'middle' },
+                headStyles: { fillColor: [61, 108, 185], textColor: [255,255,255], fontSize: 8, fontStyle: 'bold', halign: 'center' },
+                didDrawPage: function (data) {
+                    let str = "Halaman " + doc.internal.getNumberOfPages();
+                    doc.setFontSize(8);
+                    const pageWidth = doc.internal.pageSize.getWidth();
+                    doc.text(str, pageWidth - data.settings.margin.right - 40, doc.internal.pageSize.height - 30);
+                }
+            });
+            doc.save(getExportFileName("pdf"));
+        } catch (error) {
+            console.error("Export PDF error:", error);
+            alert("Gagal export PDF!");
+        }
+    };
+
+    const tableHeaders = [
+        "Periode Laporan", "Total Kas", "Total Operasional",
+        "Total Pengeluaran", "Total Operasional Bersih", "Total Kas Bersih", "Total Jeep"
+    ];
+
+    const quarters = [
+        { value: 1, label: "Triwulan 1 (Jan-Mar)" },
+        { value: 2, label: "Triwulan 2 (Apr-Jun)" },
+        { value: 3, label: "Triwulan 3 (Jul-Sep)" },
+        { value: 4, label: "Triwulan 4 (Okt-Des)" },
+    ];
+
+    const years = useMemo(() => {
+        const currentYear = new Date().getFullYear();
+        const yearsArray = [];
+        const startYear = currentYear - 5;
+        const endYear = currentYear + 5;
+        for (let i = startYear; i <= endYear; i++) {
+            yearsArray.push(i);
+        }
+        return yearsArray;
+    }, []);
+
+    return (
+        <div className="flex">
+            <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+            <div
+                className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
+                style={{ marginLeft: isSidebarOpen ? 290 : 70 }}
+            >
+                <div className="flex-1 p-4 md:p-6 overflow-auto"> {/* Konten utama dengan scroll */}
+                    <h1
+                        className="text-[28px] md:text-[32px] font-semibold text-black flex items-center gap-3 cursor-pointer hover:text-[#3D6CB9] transition-colors mb-6"
+                        onClick={handleGoBack}
+                    >
+                        <ArrowLeft size={28} />
+                        Laporan Triwulan
+                    </h1>
+
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+                        <div className="flex gap-4 flex-wrap items-center">
+                            <div className="flex gap-2 items-center">
+                                <span className="text-sm font-medium text-gray-700">Pilih Periode:</span>
+                                <select
+                                    value={selectedQuarter}
+                                    onChange={(e) => setSelectedQuarter(parseInt(e.target.value, 10))}
+                                    className="px-3 py-2 rounded-lg border border-gray-300 shadow-sm bg-white text-black cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#3D6CB9]"
+                                >
+                                    {quarters.map((quarter) => (
+                                        <option key={quarter.value} value={quarter.value}>
+                                            {quarter.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                <select
+                                    value={selectedYear}
+                                    onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
+                                    className="px-3 py-2 rounded-lg border border-gray-300 shadow-sm bg-white text-black cursor-pointer focus:outline-none focus:ring-1 focus:ring-[#3D6CB9]"
+                                >
+                                    {years.map((year) => (
+                                        <option key={year} value={year}>
+                                            {year}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="flex gap-4 flex-wrap">
+                            <button
+                                onClick={handleExportExcelAction}
+                                disabled={dataTriwulan.length === 0 || isLoading}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow transition-colors ${
+                                    (dataTriwulan.length === 0 || isLoading)
+                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                        : "bg-green-100 text-black hover:bg-green-200"
+                                }`}
+                            >
+                                <FileSpreadsheet size={20} color={(dataTriwulan.length === 0 || isLoading) ? "gray" : "green"} />
+                                <span>Ekspor Excel</span>
+                            </button>
+                            <button
+                                onClick={handleExportPDFAction}
+                                disabled={dataTriwulan.length === 0 || isLoading}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow transition-colors ${
+                                    (dataTriwulan.length === 0 || isLoading)
+                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                        : "bg-red-100 text-black hover:bg-red-200"
+                                }`}
+                            >
+                                <FileText size={20} color={(dataTriwulan.length === 0 || isLoading) ? "gray" : "red"} />
+                                <span>Ekspor PDF</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {isLoading ? (
+                        <div className="text-center p-10 text-lg font-medium text-gray-700">Memuat data laporan triwulan...</div>
+                    ) : (
+                        <div className="overflow-x-auto rounded-lg shadow-md bg-white">
+                            <div className="max-h-[calc(100vh-260px)] overflow-y-auto">
+                                <table className="min-w-full table-auto text-sm">
+                                    <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10 shadow-sm">
+                                        <tr>
+                                            {tableHeaders.map((header) => (
+                                                <th key={header} className="p-3 text-center whitespace-nowrap font-semibold">
+                                                    {header}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200">
+                                        {dataTriwulan.length === 0 ? (
+                                            <tr>
+                                                <td
+                                                    colSpan={tableHeaders.length}
+                                                    className="text-center p-6 text-gray-500 font-medium"
+                                                >
+                                                    Data Tidak Ditemukan untuk Triwulan {selectedQuarter} Tahun {selectedYear}
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            dataTriwulan.map((item) => (
+                                                <tr key={item.id} className="hover:bg-gray-50 transition duration-150">
+                                                    <td className="p-3 whitespace-nowrap text-center">{item.minggu_display}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_cash)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_operational)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_expenditure)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_clean_operations)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_net_cash)}</td>
+                                                    <td className="p-3 whitespace-nowrap text-center">{item.total_jeep_amount !== null ? item.total_jeep_amount : '-'}</td>
+                                                </tr>
+                                            ))
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* PERUBAHAN STYLE DAN POSISI TOTAL KAS BERSIH */}
+                    {!isLoading && dataTriwulan.length > 0 && (
+                        <div className="fixed bottom-4 right-4 bg-white text-black px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-20">
+                            <span className="font-bold text-lg">Total Kas Bersih Triwulan Ini:</span>
+                            <span className="text-lg font-semibold text-[#3D6CB9]">{formatRupiah(nilaiKasBersihAkhirPeriode)}</span>
+                        </div>
+                    )}
+                </div>
+                {children}
             </div>
-            <button
-              onClick={handleGenerateReport}
-              disabled={isLoading}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${
-                isLoading
-                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                  : "bg-[#3D6CB9] hover:bg-[#B8D4F9] text-white hover:text-black"
-              }`}
-            >
-              <span>Buat Laporan Otomatis</span>
-            </button>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              onClick={handleExportPDF}
-              className="bg-[#3D6CB9] text-white font-semibold px-5 py-2 rounded cursor-pointer hover:bg-[#2b4d80] transition"
-            >
-              Export PDF
-            </button>
-            <button
-              onClick={handleExportExcel}
-              className="bg-[#3D6CB9] text-white font-semibold px-5 py-2 rounded cursor-pointer hover:bg-[#2b4d80] transition"
-            >
-              Export Excel
-            </button>
-          </div>
         </div>
-
-        {isLoading ? (
-          <div className="text-center p-10">
-            Memuat data laporan triwulan...
-          </div>
-        ) : (
-          <div className="overflow-x-auto rounded-lg shadow">
-            <div className="max-h-[600px] overflow-y-auto">
-              <table className="min-w-full text-sm divide-y divide-gray-200">
-                <thead className="bg-[#3D6CB9] text-white">
-                  <tr>
-                    {[
-                      "Tahun",
-                      "Bulan",
-                      "Minggu",
-                      "Total Cash",
-                      "Total Operational",
-                      "Total Expenditure",
-                      "Total Net Cash",
-                      "Total Clean Operations",
-                      "Total Jeep Amount",
-                    ].map((header, i) => (
-                      <th
-                        key={i}
-                        className="px-4 py-3 border-b border-gray-300 font-semibold text-left whitespace-nowrap"
-                      >
-                        {header}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-100">
-                  {data.map((item, index) => (
-                    <tr key={index} className="hover:bg-gray-50 transition-all">
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        {item.tahun}
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        {item.bulan}
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        {item.minggu}
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        {formatRupiah(item.total_cash)}
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        {formatRupiah(item.total_operational)}
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        {formatRupiah(item.total_expenditure)}
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        {formatRupiah(item.total_net_cash)}
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        {formatRupiah(item.total_clean_operations)}
-                      </td>
-                      <td className="px-4 py-3 border-b border-gray-200">
-                        {item.total_jeep_amount}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        <div className="fixed bottom-4 right-4 bg-white text-black px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-20">
-          <span className="font-bold text-lg">Total Kas:</span>
-          <span className="text-lg font-semibold text-[#3D6CB9]">
-            {formatRupiah(totalNetCashTriwulan)}
-          </span>
-        </div>
-      </div>
-
-      {children}
-    </div>
-  );
+    );
 };
 
 export default withAuth(TriwulanPage);

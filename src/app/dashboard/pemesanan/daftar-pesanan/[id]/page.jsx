@@ -12,6 +12,7 @@ const DetailPemesanan = () => {
   const router = useRouter();
   const { id } = useParams();
   const [pesanan, setPesanan] = useState(null);
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -65,8 +66,14 @@ const DetailPemesanan = () => {
 
   return (
     <div className="flex justify-between items-start min-h-screen">
-      <UserMenu />
-      <Sidebar />
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+
+      <div
+        className="transition-all duration-300 ease-in-out"
+        style={{
+        marginLeft: isSidebarOpen ? 290 : 70,
+        }}>
+     </div>
       <div className="flex-1 p-6">
         <ToastContainer />
         <button

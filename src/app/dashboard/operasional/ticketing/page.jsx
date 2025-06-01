@@ -1,14 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
 import Sidebar from "/components/Sidebar.jsx";
-import UserMenu from "/components/Pengguna.jsx";
+import LoadingFunny from "/components/LoadingFunny.jsx";
 import SearchInput from "/components/Search.jsx";
 import TicketModal from "/components/TicketModal.jsx";
 import withAuth from "/src/app/lib/withAuth";
-import { Printer, ArchiveRestore, FileText } from "lucide-react";
+import { Printer, History, FileText } from "lucide-react";
 import { useRouter } from "next/navigation";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import Hashids from "hashids";
 
 const TicketingPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,6 +27,7 @@ const TicketingPage = () => {
   const [rotationData, setRotationData] = useState([]);
   const [isScheduled, setIsScheduled] = useState(false);
   const [loading, setLoading] = useState(false);
+  const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
 
   useEffect(() => {
     // const fetchTicketings = async () => {
@@ -168,11 +170,32 @@ const TicketingPage = () => {
 
       // setData(merged);
       // filter ulang tiket yang masih valid setelah penghapusan
-      const validTicketings = ticketingData.filter((item) => {
+      // const validTicketings = ticketingData.filter((item) => {
+      //   const driverRotation = rotationData.find(
+      //     (r) => r.driver_id === item.driver_id
+      //   );
+      //   return !(driverRotation && driverRotation.skip_reason); // hanya ambil yang TIDAK skip
+      // });
+      // filter tiket berdasarkan tanggal keberangkatan dulu
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const dayAfterTomorrow = new Date();
+      dayAfterTomorrow.setDate(today.getDate() + 2);
+      dayAfterTomorrow.setHours(0, 0, 0, 0);
+
+      const filteredByDateTicketings = ticketingData.filter((item) => {
+        if (!item.booking?.tour_date) return false;
+        const tourDate = new Date(item.booking.tour_date);
+        return tourDate >= today && tourDate < dayAfterTomorrow;
+      });
+
+      // lalu filter valid ticketings berdasarkan skip_reason juga
+      const validTicketings = filteredByDateTicketings.filter((item) => {
         const driverRotation = rotationData.find(
           (r) => r.driver_id === item.driver_id
         );
-        return !(driverRotation && driverRotation.skip_reason); // hanya ambil yang TIDAK skip
+        return !(driverRotation && driverRotation.skip_reason);
       });
 
       // mapping: gabungkan info assigned ke data yang valid
@@ -207,12 +230,13 @@ const TicketingPage = () => {
     }
 
     const rotationId = rotation.id;
-    const confirmLink = `http://localhost:3000/confirm/${rotationId}`;
+    const encodedId = hashids.encode(rotationId);
+    const confirmLink = `http://localhost:3000/confirm/${encodedId}`;
     const phone = item.driver?.telepon.replace(/^0/, "62");
 
     const message = encodeURIComponent(
-      `Halo, ini link konfirmasi keberangkatan kamu besok:\n${confirmLink}\n\n` +
-        `📋 Berikut daftar penjadwalan besok:\n👉 ${pdfUrl}`
+      `Halo, kamu telah dijadwalkan, ini link konfirmasi keberangkatan kamu:\n${confirmLink}\n\n` +
+        `📋 Silakan cek jadwal kamu disini:\n👉 ${pdfUrl}`
     );
 
     window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
@@ -387,6 +411,105 @@ const TicketingPage = () => {
     }
   };
 
+  const checkRollingStatus = async () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+
+    const besok = new Date();
+    besok.setDate(besok.getDate() + 1);
+    const tanggalBesok = besok.toISOString().split("T")[0];
+
+    try {
+      const resRotations = await fetch(
+        `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!resRotations.ok) throw new Error("Gagal fetch driver-rotations");
+
+      const rotationsData = await resRotations.json();
+      const unassignedDrivers = rotationsData.filter((r) => r.assigned === 1);
+
+      setIsAlreadyRolled(unassignedDrivers.length > 0);
+      setRotations(unassignedDrivers); // ← tampilkan yang belum ditugaskan
+    } catch (err) {
+      console.error("❌ Error cek rolling:", err);
+    }
+  };
+
+  const handleCheckbox = (bookingCode) => {
+    const isChecked = checked.includes(bookingCode);
+    const newChecked = isChecked
+      ? checked.filter((code) => code !== bookingCode)
+      : [...checked, bookingCode];
+
+    setChecked(newChecked);
+  };
+
+  const filteredData = data.filter(
+    (item) =>
+      (item.code_booking ?? "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (item.nama_pemesan ?? "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (item.no_handphone ?? "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (item.email ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.jeep?.no_lambung ?? "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (item.driver?.name ?? "").toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleAturJadwal = (bookingCode, selectedDriver) => {
+    const newData = data.map((item) =>
+      item.code_booking === bookingCode
+        ? { ...item, driver_name: selectedDriver }
+        : item
+    );
+    setData(newData);
+  };
+
+  const handleClickArsip = () => {
+    router.push("/dashboard/operasional/ticketing/history");
+  };
+
+  if (loading) {
+    return <LoadingFunny />;
+  }
+
+  // INI KIRIM TAPI TIDAK ENKRIPSI
+  // const handleSendWA = (item, rotationData, pdfUrl) => {
+  //   if (!pdfUrl) {
+  //     alert("Jadwal belum tersedia, silakan unduh jadwal dulu");
+  //     return;
+  //   }
+
+  //   const rotation = rotationData.find((r) => r.driver_id === item.driver_id);
+  //   if (!rotation) {
+  //     alert("Rotasi driver belum tersedia");
+  //     return;
+  //   }
+
+  //   const rotationId = rotation.id;
+  //   const confirmLink = `http://localhost:3000/confirm/${rotationId}`;
+  //   const phone = item.driver?.telepon.replace(/^0/, "62");
+
+  //   const message = encodeURIComponent(
+  //     `Halo, ini link konfirmasi keberangkatan kamu besok:\n${confirmLink}\n\n` +
+  //       `📋 Berikut daftar penjadwalan besok:\n👉 ${pdfUrl}`
+  //   );
+
+  //   window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
+  // };
   // const handleDepartureClick = async (item) => {
   //   const token = localStorage.getItem("access_token");
   //   if (!token) {
@@ -446,37 +569,6 @@ const TicketingPage = () => {
   //     alert("Terjadi kesalahan saat penugasan driver.");
   //   }
   // };
-
-  const checkRollingStatus = async () => {
-    const token = localStorage.getItem("access_token");
-    if (!token) return;
-
-    const besok = new Date();
-    besok.setDate(besok.getDate() + 1);
-    const tanggalBesok = besok.toISOString().split("T")[0];
-
-    try {
-      const resRotations = await fetch(
-        `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!resRotations.ok) throw new Error("Gagal fetch driver-rotations");
-
-      const rotationsData = await resRotations.json();
-      const unassignedDrivers = rotationsData.filter((r) => r.assigned === 1);
-
-      setIsAlreadyRolled(unassignedDrivers.length > 0);
-      setRotations(unassignedDrivers); // ← tampilkan yang belum ditugaskan
-    } catch (err) {
-      console.error("❌ Error cek rolling:", err);
-    }
-  };
 
   // const handleDepartureClick = async (item) => {
   //   const token = localStorage.getItem("access_token");
@@ -543,57 +635,6 @@ const TicketingPage = () => {
   //   }
   // };
 
-  const handleCheckbox = (bookingCode) => {
-    const isChecked = checked.includes(bookingCode);
-    const newChecked = isChecked
-      ? checked.filter((code) => code !== bookingCode)
-      : [...checked, bookingCode];
-
-    setChecked(newChecked);
-  };
-
-  const filteredData = data.filter(
-    (item) =>
-      (item.code_booking ?? "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      (item.nama_pemesan ?? "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      (item.no_handphone ?? "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      (item.email ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.jeep?.no_lambung ?? "")
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      (item.driver?.name ?? "").toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const handleAturJadwal = (bookingCode, selectedDriver) => {
-    const newData = data.map((item) =>
-      item.code_booking === bookingCode
-        ? { ...item, driver_name: selectedDriver }
-        : item
-    );
-    setData(newData);
-  };
-
-  const handleClickArsip = () => {
-    router.push("/dashboard/operasional/ticketing/arsip");
-  };
-
-  if (loading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
-        <div className="shadow-md p-6 rounded-lg text-center">
-          <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex">
       <Sidebar
@@ -616,11 +657,8 @@ const TicketingPage = () => {
             onClick={handleClickArsip}
             className="flex items-center gap-2 border border-gray-300 rounded-[13px] px-3 py-2 hover:bg-gray-100 transition-colors cursor-pointer"
           >
-            <ArchiveRestore
-              input="text"
-              className="text-gray-500 size-[18px]"
-            />
-            <div className="text-gray-500">Arsip</div>
+            <History input="text" className="text-gray-500 size-[18px]" />
+            <div className="text-gray-500">History</div>
           </button>
         </div>
         <div className="flex justify-end mb-3">
@@ -839,9 +877,9 @@ const TicketingPage = () => {
                       <button
                         onClick={() => handleSkipClick(item)}
                         disabled={item.assigned === 1}
-                        className={`px-2 py-1 text-sm rounded-[10px] transition-colors ${
+                        className={`px-2 rounded-[10px] transition-colors ${
                           item.assigned === 1
-                            ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                            ? "bg-gray-300 text-white cursor-not-allowed"
                             : "bg-red-200 text-red-600 hover:bg-red-300 cursor-pointer"
                         }`}
                       >
@@ -894,7 +932,7 @@ export default withAuth(TicketingPage);
 // import UserMenu from "/components/Pengguna.jsx";
 // import SearchInput from "/components/Search.jsx";
 // import withAuth from "/src/app/lib/withAuth";
-// import { Printer, ArchiveRestore } from "lucide-react";
+// import { Printer, History } from "lucide-react";
 // import { useRouter } from 'next/navigation';
 
 // const TicketingPage = () => {
@@ -974,7 +1012,7 @@ export default withAuth(TicketingPage);
 //             onClick={handleClickArsip}
 //             className="flex items-center gap-2 border border-gray-300 rounded-[13px] px-3 py-2 hover:bg-gray-100 transition-colors cursor-pointer"
 //           >
-//             <ArchiveRestore input="text" className="text-gray-500 size-[18px]" />
+//             <History input="text" className="text-gray-500 size-[18px]" />
 //             <div className="text-gray-500">Arsip</div>
 //           </button>
 //         </div>

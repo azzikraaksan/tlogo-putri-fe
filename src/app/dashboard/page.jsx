@@ -153,7 +153,7 @@
 
 "use client";
 import Sidebar from "/components/Sidebar.jsx";
-import UserMenu from "/components/Pengguna.jsx";
+import LoadingFunny from "/components/LoadingFunny.jsx";
 import withAuth from "/src/app/lib/withAuth.jsx";
 import React, { useState, useEffect } from "react";
 import { Bar } from "react-chartjs-2";
@@ -257,29 +257,31 @@ const DashboardPage = () => {
     fetchDataCounts();
   }, []);
 
+  // if (!jumlahAnggota && !jumlahDriver && !jumlahJeep && !userName && !userRole) {
+  //   return (
+  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-red bg-opacity-75">
+  //       <div className="bg-white shadow-md p-6 rounded-lg text-center">
+  //         <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
+  //         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
   if (!jumlahAnggota && !jumlahDriver && !jumlahJeep && !userName && !userRole) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-red bg-opacity-75">
-        <div className="bg-white shadow-md p-6 rounded-lg text-center">
-          <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
-      </div>
-    );
+    return <LoadingFunny />;
   }
-  
 
   return (
      <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       <div
-        className="flex-1 p-6 transition-all duration-300 ease-in-out"
+        className="flex-1 p-10 transition-all duration-300 ease-in-out"
         style={{
           marginLeft: isSidebarOpen ? 290 : 70,
         }}
       >
-        <div className="mb-16 flex items-center gap-4 mt-8">
+        <div className="mb-16 flex items-center gap-2 mt-8">
           <h1 className="text-[32px] font-normal text-gray-700">Selamat datang,</h1>
           <p className="text-[32px] font-bold text-[#3D6CB9]">{userRole}</p>
         </div>

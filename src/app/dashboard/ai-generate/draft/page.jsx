@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Sidebar from '/components/Sidebar.jsx';
-import UserMenu from '/components/Pengguna.jsx';
 import SearchInput from '/components/Search.jsx';
 import EditorArtikel from '/components/EditArtikel.jsx';
 import { FiEdit, FiRotateCcw, FiTrash2 } from 'react-icons/fi';
+import Sidebar from "/components/Sidebar";
+import Hashids from 'hashids';
 
 function formatStatus(status) {
   if (!status) return 'Konsep'; // default
@@ -23,11 +23,16 @@ export default function Page() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  const selectedId = searchParams.get('id');
-  const selectedArticle = data.find((item) => item.id === Number(selectedId));
+  const selectedIdHash = searchParams.get('id');
+  const decodedIds = selectedIdHash ? hashids.decode(selectedIdHash) : [];
+  const selectedId = decodedIds.length > 0 ? decodedIds[0] : null;
+  const selectedArticle = data.find((item) => item.id === selectedId);
+
 
   const tabs = [
     { label: 'Semua', value: 'semua' },
@@ -181,7 +186,14 @@ export default function Page() {
     return (
       <div className="min-h-screen flex bg-white font-poppins">
         <aside className="w-64">
-          <Sidebar />
+          <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+          
+                <div
+                  className="transition-all duration-300 ease-in-out"
+                  style={{
+                    marginLeft: isSidebarOpen ? 290 : 70,
+                  }}
+                ></div>
         </aside>
         <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
           <EditorArtikel
@@ -197,15 +209,19 @@ export default function Page() {
   }
 
   return (
-    <div className="min-h-screen flex bg-white font-poppins">
-      <aside className="w-64">
-        <Sidebar />
-      </aside>
+    <div className="flex bg-white font-poppins">
+        <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+          
+                <div
+                  className="transition-all duration-300 ease-in-out"
+                  style={{
+                    marginLeft: isSidebarOpen ? 290 : 70,
+                  }}
+                ></div>
 
-      <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
+      <main className="md:px-10 py-6 space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-black">Daftar Artikel</h1>
-          <UserMenu />
         </div>
 
         <div className="flex flex-wrap justify-between items-center gap-1">
@@ -301,7 +317,10 @@ export default function Page() {
                         ) : (
                           <>
                         <button
-                          onClick={() => router.push(`/dashboard/ai-generate/draft?id=${item.id}`)}
+                          onClick={() => {
+                            const encodedId = hashids.encode(item.id);
+                            router.push(`/dashboard/ai-generate/draft?id=${encodedId}`);
+                          }}
                           title="Edit"
                           className="text-blue-600 hover:text-blue-800 leading-none flex items-center justify-center cursor-pointer"
                           >

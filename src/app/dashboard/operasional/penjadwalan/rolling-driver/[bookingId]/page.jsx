@@ -570,10 +570,11 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Sidebar from "/components/Sidebar.jsx";
-import UserMenu from "/components/Pengguna.jsx";
+import LoadingFunny from "/components/LoadingFunny.jsx";
 import SearchInput from "/components/Search.jsx";
 import withAuth from "/src/app/lib/withAuth";
-import { RefreshCcw } from "lucide-react";
+import { CircleArrowLeft } from "lucide-react";
+import Hashids from "hashids";
 
 const PenjadwalanPage = () => {
   const router = useRouter();
@@ -590,75 +591,41 @@ const PenjadwalanPage = () => {
   const bookingId = params?.bookingId;
   const [rotations, setRotations] = useState([]);
   const [unassignedDrivers, setUnassignedDrivers] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
+  const bookingHash = params?.bookingId;
+const decoded = hashids.decode(bookingHash);
+const decodedBookingId = decoded?.[0];
+useEffect(() => {
+  const fetchBookingDetail = async () => {
+    const token = localStorage.getItem("access_token");
+    if (!token || !decodedBookingId) return;
 
+    try {
+      const res = await fetch(
+        `http://localhost:8000/api/bookings/${decodedBookingId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (!res.ok) throw new Error("Gagal mengambil detail booking");
+
+      const json = await res.json();
+      setBookingData(json);
+      console.log("Booking detail:", json);
+    } catch (error) {
+      console.error("Gagal mengambil detail booking:", error);
+    }
+  };
+
+  fetchBookingDetail();
+  checkRollingStatus();
+
+  if (selectedDriver) {
+    fetchJeepByDriver(selectedDriver.driver_id);
+  }
+}, [decodedBookingId, selectedDriver]);
   // useEffect(() => {
-  //   const fetchRotations = async () => {
-  //     const token = localStorage.getItem("access_token");
-  //     console.log("Token ditemukan?", !!token);
-
-  //     if (!token) return;
-
-  //     try {
-  //       const besok = new Date();
-  //       besok.setDate(besok.getDate() + 1);
-  //       const tanggalBesok = besok.toISOString().split("T")[0];
-
-  //       console.log("Tanggal besok:", tanggalBesok);
-
-  //       const response = await fetch(
-  //         `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
-  //         {
-  //           headers: { Authorization: `Bearer ${token}` },
-  //         }
-  //       );
-
-  //       console.log("Status response:", response.status);
-
-  //       if (!response.ok) {
-  //         const errorText = await response.text();
-  //         console.error("Respon tidak OK:", errorText);
-  //         throw new Error("Gagal mengambil data driver rotations");
-  //       }
-
-  //       const json = await response.json();
-  //       console.log("Data JSON diterima:", json);
-
-  //       setData(json);
-  //     } catch (error) {
-  //       console.error("Gagal mengambil data:", error);
-  //     }
-  //     console.log("Booking ID dari URL:", bookingId);
-  //   };
-
-  //   fetchRotations();
-
-  //   // ini tambahannn
-  //   // const fetchBookingDetail = async () => {
-  //   //   const token = localStorage.getItem("access_token");
-  //   //   if (!token || !bookingId) return;
-
-  //   //   try {
-  //   //     const res = await fetch(
-  //   //       `http://localhost:8000/api/payment/orders/${bookingId}`,
-  //   //       {
-  //   //         headers: { Authorization: `Bearer ${token}` },
-  //   //       }
-  //   //     );
-  //   //     if (!res.ok) throw new Error("Gagal mengambil detail booking");
-
-  //   //     const json = await res.json();
-  //   //     setBookingData(json);
-  //   //     console.log("FULL JSON (array):", json);
-
-  //   //     const detail = json[0];
-  //   //     setBookingData(detail);
-
-  //   //     console.log("Booking ID:", detail.booking_id);
-  //   //   } catch (error) {
-  //   //     console.error("Gagal mengambil detail order:", error);
-  //   //   }
-  //   // };
-
   //   const fetchBookingDetail = async () => {
   //     const token = localStorage.getItem("access_token");
   //     if (!token || !bookingId) return;
@@ -680,50 +647,21 @@ const PenjadwalanPage = () => {
   //     }
   //   };
 
-  //   fetchRotations();
+  //   // Hanya panggil checkRollingStatus, karena sudah lengkap dan difilter
   //   fetchBookingDetail();
   //   checkRollingStatus();
-  //   // fetchJeepByDriver();
+
   //   if (selectedDriver) {
   //     fetchJeepByDriver(selectedDriver.driver_id);
   //   }
   // }, [bookingId, selectedDriver]);
-  useEffect(() => {
-    const fetchBookingDetail = async () => {
-      const token = localStorage.getItem("access_token");
-      if (!token || !bookingId) return;
-
-      try {
-        const res = await fetch(
-          `http://localhost:8000/api/bookings/${bookingId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (!res.ok) throw new Error("Gagal mengambil detail booking");
-
-        const json = await res.json();
-        setBookingData(json);
-        console.log("Booking detail:", json);
-      } catch (error) {
-        console.error("Gagal mengambil detail booking:", error);
-      }
-    };
-
-    // Hanya panggil checkRollingStatus, karena sudah lengkap dan difilter
-    fetchBookingDetail();
-    checkRollingStatus();
-
-    if (selectedDriver) {
-      fetchJeepByDriver(selectedDriver.driver_id);
-    }
-  }, [bookingId, selectedDriver]);
 
   const fetchJeepByDriver = async (driverId) => {
     const token = localStorage.getItem("access_token");
     if (!token) return;
 
     try {
+      setLoading(true);
       const response = await fetch(
         `http://localhost:8000/api/jeeps/driver/${driverId}`,
         {
@@ -739,6 +677,8 @@ const PenjadwalanPage = () => {
     } catch (error) {
       console.error(error);
       return null;
+    } finally {
+      setLoading(false);
     }
   };
   const handleDepartureClick = async (item) => {
@@ -758,66 +698,135 @@ const PenjadwalanPage = () => {
     }
   };
 
+  // const fetchDataAndCreateTicket = async (driverId) => {
+  //   const token = localStorage.getItem("access_token");
+  //   if (!token || !bookingId || !driverId) return;
+
+  //   try {
+  //     // Ambil data dari 2 endpoint: booking + jeep
+  //     const [jeepRes, bookingRes] = await Promise.all([
+  //       fetch(`http://localhost:8000/api/jeeps/driver/${driverId}`, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }),
+  //       fetch(`http://localhost:8000/api/bookings/${bookingId}`, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }),
+  //     ]);
+
+  //     if (!jeepRes.ok || !bookingRes.ok) {
+  //       throw new Error("Gagal mengambil data dari endpoint");
+  //     }
+
+  //     const jeepData = await jeepRes.json();
+  //     const booking = await bookingRes.json();
+
+  //     const jeep = jeepData.data[0];
+
+  //     const payload = {
+  //       code_booking: booking.order_id || "", // sesuaikan dengan struktur dari endpoint `bookings/:id`
+  //       nama_pemesan: booking.customer_name || "",
+  //       no_handphone: booking.customer_phone || "",
+  //       email: booking.customer_email || "",
+  //       driver_id: String(jeep?.driver_id),
+  //       jeep_id: String(jeep?.jeep_id),
+  //       booking_id: booking.booking_id,
+  //     };
+
+  //     console.log("Payload siap dikirim:", payload);
+
+  //     const ticketRes = await fetch(
+  //       "http://localhost:8000/api/ticketings/create",
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //         body: JSON.stringify(payload),
+  //       }
+  //     );
+
+  //     if (!ticketRes.ok) {
+  //       const errorText = await ticketRes.text();
+  //       console.error("Respon Gagal:", errorText);
+  //       throw new Error("Gagal mencetak tiket");
+  //     }
+
+  //     const ticketResult = await ticketRes.json();
+  //     console.log("Tiket berhasil dicetak:", ticketResult);
+  //   } catch (error) {
+  //     console.error("Terjadi kesalahan:", error.message);
+  //   }
+  // };
+
   const fetchDataAndCreateTicket = async (driverId) => {
-    const token = localStorage.getItem("access_token");
-    if (!token || !bookingId || !driverId) return;
+  const token = localStorage.getItem("access_token");
+  if (!token || !bookingId || !driverId) return;
 
-    try {
-      // Ambil data dari 2 endpoint: booking + jeep
-      const [jeepRes, bookingRes] = await Promise.all([
-        fetch(`http://localhost:8000/api/jeeps/driver/${driverId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch(`http://localhost:8000/api/bookings/${bookingId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-      ]);
+  const decoded = hashids.decode(bookingId);
+  const decodedBookingId = decoded?.[0];
 
-      if (!jeepRes.ok || !bookingRes.ok) {
-        throw new Error("Gagal mengambil data dari endpoint");
-      }
+  if (!decodedBookingId) {
+    console.error("Gagal decode bookingId");
+    return;
+  }
 
-      const jeepData = await jeepRes.json();
-      const booking = await bookingRes.json();
+  try {
+    const [jeepRes, bookingRes] = await Promise.all([
+      fetch(`http://localhost:8000/api/jeeps/driver/${driverId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+      fetch(`http://localhost:8000/api/bookings/${decodedBookingId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
+    ]);
 
-      const jeep = jeepData.data[0];
-
-      const payload = {
-        code_booking: booking.order_id || "", // sesuaikan dengan struktur dari endpoint `bookings/:id`
-        nama_pemesan: booking.customer_name || "",
-        no_handphone: booking.customer_phone || "",
-        email: booking.customer_email || "",
-        driver_id: String(jeep?.driver_id),
-        jeep_id: String(jeep?.jeep_id),
-        booking_id: booking.booking_id,
-      };
-
-      console.log("Payload siap dikirim:", payload);
-
-      const ticketRes = await fetch(
-        "http://localhost:8000/api/ticketings/create",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      if (!ticketRes.ok) {
-        const errorText = await ticketRes.text();
-        console.error("Respon Gagal:", errorText);
-        throw new Error("Gagal mencetak tiket");
-      }
-
-      const ticketResult = await ticketRes.json();
-      console.log("Tiket berhasil dicetak:", ticketResult);
-    } catch (error) {
-      console.error("Terjadi kesalahan:", error.message);
+    if (!jeepRes.ok || !bookingRes.ok) {
+      throw new Error("Gagal mengambil data dari endpoint");
     }
-  };
+
+    const jeepData = await jeepRes.json();
+    const booking = await bookingRes.json();
+
+    const jeep = jeepData.data[0];
+
+    const payload = {
+      code_booking: booking.order_id || "",
+      nama_pemesan: booking.customer_name || "",
+      no_handphone: booking.customer_phone || "",
+      email: booking.customer_email || "",
+      driver_id: String(jeep?.driver_id),
+      jeep_id: String(jeep?.jeep_id),
+      booking_id: booking.booking_id,
+    };
+
+    const ticketRes = await fetch(
+      "http://localhost:8000/api/ticketings/create",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!ticketRes.ok) {
+      const errorText = await ticketRes.text();
+      console.error("Respon Gagal:", errorText);
+      throw new Error("Gagal mencetak tiket");
+    }
+
+    const ticketResult = await ticketRes.json();
+    console.log("Tiket berhasil dicetak:", ticketResult);
+
+    // ✅ Redirect setelah berhasil
+    router.push("/dashboard/operasional/ticketing");
+  } catch (error) {
+    console.error("Terjadi kesalahan:", error.message);
+  }
+};
 
   const handleLanjutTicketing = () => {
     router.push("/dashboard/operasional/ticketing");
@@ -894,38 +903,41 @@ const PenjadwalanPage = () => {
     }
   };
 
-const checkRollingStatus = async () => {
-  const token = localStorage.getItem("access_token");
-  if (!token) return;
+  const checkRollingStatus = async () => {
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
 
-  const besok = new Date();
-  besok.setDate(besok.getDate() + 1);
-  const tanggalBesok = besok.toISOString().split("T")[0];
+    const besok = new Date();
+    besok.setDate(besok.getDate() + 1);
+    const tanggalBesok = besok.toISOString().split("T")[0];
 
-  try {
-    // Ambil data driver-rotations untuk tanggal besok
-    const resRotations = await fetch(
-      `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    if (!resRotations.ok) throw new Error("Gagal fetch driver-rotations");
-    const rotationsData = await resRotations.json();
+    try {
+      setLoading(true);
+      // Ambil data driver-rotations untuk tanggal besok
+      const resRotations = await fetch(
+        `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (!resRotations.ok) throw new Error("Gagal fetch driver-rotations");
+      const rotationsData = await resRotations.json();
 
-    // ✅ Filter driver yang:
-    // belum assigned DAN tidak memiliki skip_reason
-    const unassignedRotations = rotationsData.filter(
-      (r) => r.assigned === 0 && (!r.skip_reason || r.skip_reason === "")
-    );
+      // ✅ Filter driver yang:
+      // belum assigned DAN tidak memiliki skip_reason
+      const unassignedRotations = rotationsData.filter(
+        (r) => r.assigned === 0 && (!r.skip_reason || r.skip_reason === "")
+      );
 
-    console.log("✅ Driver yang bisa dipilih:", unassignedRotations);
+      console.log("✅ Driver yang bisa dipilih:", unassignedRotations);
 
-    // Set state jika perlu
-    setIsAlreadyRolled(rotationsData.length > 0); // Atur ini sesuai logika kamu
-    setRotations(unassignedRotations);
-  } catch (err) {
-    console.error("Error cek rolling:", err);
-  }
-};
+      // Set state jika perlu
+      setIsAlreadyRolled(rotationsData.length > 0); // Atur ini sesuai logika kamu
+      setRotations(unassignedRotations);
+    } catch (err) {
+      console.error("Error cek rolling:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // const checkRollingStatus = async () => {
   //   const token = localStorage.getItem("access_token");
@@ -956,7 +968,12 @@ const checkRollingStatus = async () => {
   //     console.error("Error cek rolling:", err);
   //   }
   // };
-
+  const handleKembali = () => {
+    router.back();
+  };
+  if (loading) {
+    return <LoadingFunny />;
+  }
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -968,9 +985,16 @@ const checkRollingStatus = async () => {
         }}
       ></div>
       <div className="flex-1 p-6">
-        <h1 className="text-[32px] font-semibold mb-6 text-black">
-          Atur Driver
-        </h1>
+        <div className="flex items-center gap-3 mb-6">
+          <CircleArrowLeft
+            onClick={handleKembali}
+            className="cursor-pointer"
+            size={28}
+          />
+          <h1 className="text-[32px] font-semibold text-black">
+            Atur Driver
+          </h1>
+        </div>
 
         <div>
           <div className="flex justify-end mb-3">

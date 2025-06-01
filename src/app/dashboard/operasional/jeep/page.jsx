@@ -1,14 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 import Sidebar from "/components/Sidebar.jsx";
-import UserMenu from "/components/Pengguna.jsx";
+import LoadingFunny from "/components/LoadingFunny.jsx";
 import SearchInput from "/components/Search.jsx";
 import TambahJeep from "/components/TambahJeep";
 import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
 import { Trash2, Plus } from "lucide-react";
+import Hashids from "hashids";
 
 const JeepPage = () => {
+  const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
   const [jeepData, setJeepData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [modeTambah, setModeTambah] = useState(false);
@@ -113,34 +115,31 @@ const JeepPage = () => {
     }
   };
 
+  // const handleAturJeep = (jeep_id) => {
+  // router.push(`/dashboard/operasional/jeep/detail-jeep/${jeep_id}`);
+  // };
   const handleAturJeep = (jeep_id) => {
-    router.push(`/dashboard/operasional/jeep/detail-jeep/${jeep_id}`);
+    const encryptedId = hashids.encode(jeep_id);
+    router.push(`/dashboard/operasional/jeep/detail-jeep/${encryptedId}`);
   };
 
   const handleKembali = () => setModeTambah(false);
   const handleTambahJeep = () => setModeTambah(true);
 
   if (loading) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
-        <div className="shadow-md p-6 rounded-lg text-center">
-          <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
-      </div>
-    );
+    return <LoadingFunny />;
   }
 
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
-            
-                  <div
-                    className="transition-all duration-300 ease-in-out"
-                    style={{
-                      marginLeft: isSidebarOpen ? 290 : 70,
-                    }}
-                  ></div>
+
+      <div
+        className="transition-all duration-300 ease-in-out"
+        style={{
+          marginLeft: isSidebarOpen ? 290 : 70,
+        }}
+      ></div>
       <div className="flex-1 p-6">
         {modeTambah ? (
           <TambahJeep onKembali={handleKembali} />
@@ -149,7 +148,7 @@ const JeepPage = () => {
             <h1 className="text-[32px] font-semibold mb-6 text-black">
               Daftar Jeep
             </h1>
-          
+
             <div className="flex">
               <button
                 onClick={handleTambahJeep}
@@ -173,7 +172,6 @@ const JeepPage = () => {
               <table className="w-full table-auto">
                 <thead className="bg-[#3D6CB9] text-white ">
                   <tr>
-                    <th className="p-2 text-center font-normal">Jeep ID</th>
                     <th className="p-2 text-center font-normal">No. Lambung</th>
                     <th className="p-2 text-center font-normal">Nama Driver</th>
                     <th className="p-2 text-center font-normal">Plat</th>
@@ -190,9 +188,6 @@ const JeepPage = () => {
                         key={item.lambung}
                         className="border-t border-[#808080] hover:bg-gray-50 transition-colors"
                       >
-                        <td className="p-2 text-center text-gray-750">
-                          {item.jeep_id}
-                        </td>
                         <td className="p-2 text-center text-gray-750">
                           {item.lambung}
                         </td>
