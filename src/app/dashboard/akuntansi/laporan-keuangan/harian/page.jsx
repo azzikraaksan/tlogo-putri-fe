@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import Sidebar from "/components/Sidebar.jsx"; // Pastikan path ini benar
-// import UserMenu from "/components/Pengguna.jsx";
-import withAuth from "/src/app/lib/withAuth"; // Pastikan path ini benar
+import Sidebar from "/components/Sidebar.jsx";
+import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from 'next/navigation';
 import {
     CalendarDays,
@@ -19,10 +18,8 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-// Base URL untuk API backend Anda
 const API_BASE_URL = "http://localhost:8000/api";
 
-// Fungsi helper untuk format tanggal ke tampilan (DD-MM-YYYY)
 const formatDateToDisplay = (dateString) => {
     if (!dateString) return "";
     const d = new Date(dateString);
@@ -35,15 +32,22 @@ const formatDateToDisplay = (dateString) => {
     return `${day}-${month}-${year}`;
 };
 
-// Fungsi helper untuk format tanggal ke ISO (YYYY-MM-DD)
-const formatToISODate = (date) => {
-    if (!date) return null;
-    const d = date instanceof Date ? date : new Date(date);
+const formatToISODate_Local = (dateInput) => {
+    if (!dateInput) return null;
+    if (typeof dateInput === 'string' && dateInput.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+        return dateInput.split(' ')[0];
+    }
+    
+    const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
     if (isNaN(d.getTime())) return null;
-    return d.toISOString().split('T')[0];
+    
+    const year = d.getFullYear();
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    const day = d.getDate().toString().padStart(2, "0");
+    
+    return `${year}-${month}-${day}`;
 };
 
-// Fungsi helper untuk format angka ke Rupiah
 const formatRupiah = (number) => {
     if (number === null || typeof number === 'undefined' || isNaN(number)) {
         return 'Rp. 0';
@@ -57,7 +61,6 @@ const formatRupiah = (number) => {
     return formatter.format(number).replace(/,00$/, '').replace(/,/g, '.').replace('Rp', 'Rp.');
 };
 
-
 const HarianPage = () => {
     const [dataHarian, setDataHarian] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
@@ -66,7 +69,6 @@ const HarianPage = () => {
     const [tempDateForPicker, setTempDateForPicker] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const calendarRef = useRef(null);
-
     const router = useRouter();
 
     const handleGoBack = () => {
@@ -76,16 +78,32 @@ const HarianPage = () => {
     const loadAndFilterData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await fetch(`${API_BASE_URL}/dailyreports/alldaily`);
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP error! Status: ${response.status}. Detail: ${errorText || 'Tidak ada detail error.'}`);
+            let apiUrl = `${API_BASE_URL}/dailyreports/alldaily`;
+            if (selectedDateForFilter) {
+                const formattedDateForAPI = formatToISODate_Local(selectedDateForFilter); 
+                if (formattedDateForAPI) {
+                    apiUrl = `${API_BASE_URL}/dailyreports/alldaily?tanggal=${formattedDateForAPI}`;
+                }
             }
-            const data = await response.json();
-            const fetchedRawData = Array.isArray(data) ? data : data.data || [];
+            
+            const response = await fetch(apiUrl); 
+            const responseDataText = await response.text();
+
+            if (!response.ok) {
+                let errorMessage = `HTTP error! Status: ${response.status}.`;
+                try {
+                    const errorJson = JSON.parse(responseDataText);
+                    errorMessage += ` Pesan: ${errorJson.message || response.statusText}.`;
+                } catch (e) {
+                    errorMessage += ` Detail: ${response.statusText || 'Gagal mengambil data.'}`;
+                }
+                throw new Error(errorMessage);
+            }
+            
+            const data = JSON.parse(responseDataText); 
+            const fetchedRawData = data.data || []; 
 
             if (!Array.isArray(fetchedRawData)) {
-                console.error("Data dari backend bukan array atau tidak memiliki properti 'data':", fetchedRawData);
                 throw new Error("Format data dari backend tidak valid.");
             }
 
@@ -111,27 +129,27 @@ const HarianPage = () => {
                 updatedAt: item.updated_at,
             }));
 
-            setDataHarian(formattedData);
+            setDataHarian(formattedData); 
 
             if (selectedDateForFilter) {
-                const formattedFilterDate = formatToISODate(selectedDateForFilter);
-                setFilteredData(
-                    formattedData.filter(
-                        (item) => item.arrivalTime && formatToISODate(item.arrivalTime) === formattedFilterDate
-                    )
+                const localDateToFilter = formatToISODate_Local(selectedDateForFilter);
+                const clientFiltered = formattedData.filter(
+                    (item) => {
+                        const itemArrivalDateLocal = item.arrivalTime ? formatToISODate_Local(item.arrivalTime) : null;
+                        return item.arrivalTime && itemArrivalDateLocal === localDateToFilter;
+                    }
                 );
+                setFilteredData(clientFiltered);
             } else {
-                setFilteredData(formattedData);
+                setFilteredData(formattedData); 
             }
         } catch (error) {
-            console.error("Gagal memuat laporan harian dari backend:", error);
-            alert(`Terjadi kesalahan saat memuat data laporan harian: ${error.message}. Pastikan backend berjalan dan mengembalikan data yang valid.`);
             setDataHarian([]);
             setFilteredData([]);
         } finally {
             setIsLoading(false);
         }
-    }, [selectedDateForFilter]);
+    }, [selectedDateForFilter]); 
 
     useEffect(() => {
         loadAndFilterData();
@@ -143,7 +161,7 @@ const HarianPage = () => {
     };
 
     const resetFilter = () => {
-        setSelectedDateForFilter(null);
+        setSelectedDateForFilter(null); 
         setTempDateForPicker(null);
         setIsDatePickerOpen(false);
     };
@@ -166,8 +184,8 @@ const HarianPage = () => {
                 const errorData = await response.json().catch(() => response.text());
                 let errorMessage = `Gagal memicu generate laporan harian: ${response.status} ${response.statusText}`;
                 if (typeof errorData === 'object' && errorData !== null && errorData.message) {
-                    errorMessage += `. Detail: ${errorData.message}`;
-                } else if (typeof errorData === 'string') {
+                    errorMessage += `. Detail Backend: ${errorData.message}`;
+                } else if (typeof errorData === 'string' && errorData.length < 200) { 
                     errorMessage += `. Detail: ${errorData}`;
                 }
                 throw new Error(errorMessage);
@@ -176,15 +194,13 @@ const HarianPage = () => {
             alert(`Proses perhitungan laporan harian berhasil dipicu di backend. ${result.message || 'Memuat data terbaru...'}`);
             await loadAndFilterData(); 
         } catch (error) {
-            console.error("Error saat memicu generate laporan harian:", error);
-            alert(`Gagal memicu generate laporan harian: ${error.message}`);
         } finally {
             setIsLoading(false);
         }
     };
 
     const getExportFileName = (ext) => {
-        const date = selectedDateForFilter ? formatToISODate(selectedDateForFilter) : "semua_tanggal";
+        const date = selectedDateForFilter ? formatToISODate_Local(selectedDateForFilter) : "semua_tanggal";
         return `laporan_harian_${date}.${ext}`;
     };
 
@@ -224,7 +240,6 @@ const HarianPage = () => {
             XLSX.utils.book_append_sheet(wb, ws, "Laporan Harian");
             XLSX.writeFile(wb, getExportFileName("xlsx"));
         } catch (error) {
-            console.error("Export Excel error:", error);
             alert("Gagal export Excel!");
         }
     };
@@ -271,7 +286,7 @@ const HarianPage = () => {
                     fontSize: 7,
                     cellPadding: 2,
                     overflow: 'ellipsize', 
-                    halign: 'center', // Perataan default untuk semua sel jika tidak di-override
+                    halign: 'center', 
                     valign: 'middle'
                 },
                 headStyles: {
@@ -279,7 +294,7 @@ const HarianPage = () => {
                     textColor: [255, 255, 255],
                     fontSize: 8,
                     fontStyle: 'bold',
-                    halign: 'center', // Header juga center
+                    halign: 'center', 
                 },
                 didDrawPage: function (data) {
                     let str = "Halaman " + doc.internal.getNumberOfPages();
@@ -290,7 +305,6 @@ const HarianPage = () => {
             });
             doc.save(getExportFileName("pdf"));
         } catch (error) {
-            console.error("Export PDF error:", error);
             alert("Gagal export PDF!");
         }
     };
@@ -315,7 +329,7 @@ const HarianPage = () => {
     const [isSidebarOpen, setSidebarOpen] = useState(true);
 
     return (
-        <div className="flex">
+        <div className="flex h-screen">
             <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
             <div
                 className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
@@ -335,57 +349,53 @@ const HarianPage = () => {
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
                         <div className="flex flex-wrap gap-4">
                             <div className="relative" ref={calendarRef}>
-                                {!selectedDateForFilter ? (
-                                    <button
-                                        onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                                        className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black transition-colors"
-                                    >
-                                        <CalendarDays size={20} /> <span>Pilih Tanggal</span>
-                                    </button>
-                                ) : (
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-gray-700">
-                                            Filter: {formatDateToDisplay(selectedDateForFilter)}
-                                        </span>
+                            {!selectedDateForFilter ? (
+                                <button
+                                    onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+                                    className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black cursor-pointer"
+                                >
+                                    <CalendarDays size={20} />
+                                    <span>Pilih Tanggal</span>
+                                </button>
+                            ) : (
+                                <button
+                                    onClick={resetFilter}
+                                    className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black cursor-pointer"
+                                >
+                                    <RotateCcw size={20} />
+                                    <span>Atur Ulang</span>
+                                </button>
+                            )}
+
+                            {isDatePickerOpen && (
+                                <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-12" style={{minWidth: '280px'}}>
+                                    <DatePicker
+                                        selected={tempDateForPicker}
+                                        onChange={(date) => setTempDateForPicker(date)}
+                                        inline
+                                        dateFormat="dd-MM-yyyy"
+                                        showPopperArrow={false}
+                                    />
+                                    <div className="mt-4 flex justify-between">
                                         <button
-                                            onClick={resetFilter}
-                                            className="flex items-center gap-1 bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded-lg shadow text-gray-700 hover:text-black transition-colors text-sm"
-                                            title="Set Ulang Filter"
+                                            onClick={() => {
+                                                setTempDateForPicker(selectedDateForFilter);
+                                                setIsDatePickerOpen(false);
+                                            }}
+                                            className="px-4 py-2 bg-red-200 text-black rounded hover:bg-red-500 hover:text-white cursor-pointer"
                                         >
-                                            <RotateCcw size={16} /> <span>Reset</span>
+                                            Batal
+                                        </button>
+                                        <button
+                                            onClick={applyDateFilter}
+                                            className="px-4 py-2 bg-[#B8D4F9] text-black rounded hover:bg-[#3D6CB9] hover:text-white cursor-pointer"
+                                        >
+                                            Pilih Tanggal
                                         </button>
                                     </div>
-                                )}
-                                {isDatePickerOpen && (
-                                    <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-full">
-                                        <DatePicker
-                                            selected={tempDateForPicker}
-                                            onChange={(date) => setTempDateForPicker(date)}
-                                            inline
-                                            dateFormat="dd/MM/yyyy"
-                                            showPopperArrow={false}
-                                        />
-                                        <div className="mt-4 flex justify-between">
-                                            <button
-                                                onClick={() => {
-                                                    setTempDateForPicker(selectedDateForFilter); 
-                                                    setIsDatePickerOpen(false);
-                                                }}
-                                                className="px-4 py-2 bg-red-200 text-black rounded hover:bg-red-500 hover:text-white transition-colors"
-                                            >
-                                                Batal
-                                            </button>
-                                            <button
-                                                onClick={applyDateFilter}
-                                                className="px-4 py-2 bg-[#B8D4F9] text-black rounded hover:bg-[#3D6CB9] hover:text-white transition-colors"
-                                                disabled={!tempDateForPicker}
-                                            >
-                                                Pilih
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
+                                </div>
+                            )}
+                        </div>
                             <button
                                 onClick={handleGenerateDailyReport}
                                 disabled={isLoading}
@@ -433,7 +443,7 @@ const HarianPage = () => {
                         </div>
                     ) : (
                         <div className="overflow-x-auto rounded-lg shadow-md bg-white">
-                            <div className="max-h-[calc(100vh-280px)] overflow-y-auto">
+                            <div className="max-h-[calc(100vh-300px)] overflow-y-auto"> 
                                 <table className="min-w-full table-auto text-sm">
                                     <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10 shadow-sm">
                                         <tr>
@@ -463,7 +473,6 @@ const HarianPage = () => {
                                                     key={item.idDailyReport}
                                                     className="hover:bg-gray-50 transition duration-150"
                                                 >
-                                                    {/* PERUBAHAN: Semua <td> diubah ke text-center */}
                                                     <td className="p-3 whitespace-nowrap text-center">{item.stomachNo || '-'}</td>
                                                     <td className="p-3 whitespace-nowrap text-center">{item.touringPacket || '-'}</td>
                                                     <td className="p-3 whitespace-nowrap text-center">{item.information || '-'}</td>

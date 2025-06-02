@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import Sidebar from "/components/Sidebar.jsx"; // Pastikan path ini benar
-import withAuth from "/src/app/lib/withAuth"; // Pastikan path ini benar
+import Sidebar from "/components/Sidebar.jsx";
+import withAuth from "/src/app/lib/withAuth";
 import { FileText, FileSpreadsheet, ArrowLeft } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -24,13 +24,11 @@ const formatRupiah = (number) => {
     return formatter.format(number).replace(/,/g, '.').replace('Rp', 'Rp.');
 };
 
-// Helper function untuk mendapatkan nama bulan
 const getMonthName = (monthNumber) => {
     const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
-    return monthNames[monthNumber - 1] || ""; // monthNumber adalah 1-12
+    return monthNames[monthNumber - 1] || ""; 
 };
 
-// Helper function untuk format periode laporan (misal: "Januari 2023")
 const formatMonthYearForDisplay = (month, year) => {
     if (!month || !year) return "-";
     return `${getMonthName(month)} ${year}`;
@@ -50,16 +48,13 @@ const TahunanPage = ({ children }) => {
 
     const loadDataFromBackend = useCallback(async () => {
         setIsLoading(true);
-        setDataTahunan([]); // Kosongkan data sebelum fetch
+        setDataTahunan([]); 
         try {
-            // Asumsi endpoint backend untuk laporan tahunan akan mengembalikan data per bulan
-            // sesuai struktur yang diberikan (rekapPerBulan)
             const response = await fetch(
                 `${API_BASE_URL}/reports/tahun?year=${selectedYear}`
             );
             if (!response.ok) {
                 if (response.status === 404) {
-                    console.warn(`Data laporan tahunan (rekap per bulan) tidak ditemukan untuk Tahun ${selectedYear}`);
                     setDataTahunan([]);
                     return;
                 }
@@ -67,14 +62,12 @@ const TahunanPage = ({ children }) => {
                 throw new Error(`HTTP error! status: ${response.status}. Detail: ${errorText}`);
             }
             const rawData = await response.json();
-            // Backend mengembalikan array objek, atau objek dengan properti 'data'
             const fetchedData = Array.isArray(rawData) ? rawData : rawData.data || [];
 
-            // PENYESUAIAN PEMETAAN DATA SESUAI BE BARU
             const formattedData = fetchedData.map(item => ({
-                key: `${item.tahun}-${item.bulan}`, // Kunci unik untuk setiap baris (bulan)
+                key: `${item.tahun}-${item.bulan}`, 
                 tahun: item.tahun,
-                bulan: item.bulan, // Angka bulan (1-12)
+                bulan: item.bulan, 
                 periodeDisplay: formatMonthYearForDisplay(item.bulan, item.tahun),
                 total_cash: parseFloat(item.total_cash || 0),
                 total_operational: parseFloat(item.total_operational || 0),
@@ -85,8 +78,6 @@ const TahunanPage = ({ children }) => {
             }));
             setDataTahunan(formattedData);
         } catch (error) {
-            console.error("Gagal memuat laporan tahunan dari backend:", error);
-            alert("Terjadi kesalahan saat memuat data laporan tahunan.");
             setDataTahunan([]);
         } finally {
             setIsLoading(false);
@@ -97,16 +88,14 @@ const TahunanPage = ({ children }) => {
         loadDataFromBackend();
     }, [loadDataFromBackend]);
 
-    // Total kas bersih tahunan (akumulasi dari total_net_cash per bulan)
     const totalNetCashTahunan = useMemo(() => {
         return dataTahunan.reduce((sum, item) => sum + (item.total_net_cash || 0), 0);
     }, [dataTahunan]);
 
     const getExportFileName = (ext) => {
-        return `laporan_tahunan_${selectedYear}_rekap_bulanan.${ext}`; // Nama file lebih deskriptif
+        return `laporan_tahunan_${selectedYear}_rekap_bulanan.${ext}`; 
     };
 
-    // PENYESUAIAN FUNGSI EKSPOR EXCEL
     const handleExportExcelAction = () => {
         if (dataTahunan.length === 0) {
             alert("Data kosong, tidak bisa export Excel!");
@@ -130,12 +119,10 @@ const TahunanPage = ({ children }) => {
             XLSX.utils.book_append_sheet(wb, ws, `Laporan Tahunan ${selectedYear}`);
             XLSX.writeFile(wb, getExportFileName("xlsx"));
         } catch (error) {
-            console.error("Export Excel error:", error);
             alert("Gagal export Excel!");
         }
     };
 
-    // PENYESUAIAN FUNGSI EKSPOR PDF
     const handleExportPDFAction = () => {
         if (dataTahunan.length === 0) {
             alert("Data kosong, tidak bisa export PDF!");
@@ -143,7 +130,7 @@ const TahunanPage = ({ children }) => {
         }
         try {
             const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-            const tableColumn = [ // Sesuaikan dengan data yang ada
+            const tableColumn = [ 
                 "Periode (Bulan)", "Tot. Kas", "Tot. Ops.", "Tot. Pengeluaran",
                 "Tot. Ops. Bersih", "Tot. Kas Bersih", "Tot. Jeep"
             ];
@@ -175,12 +162,10 @@ const TahunanPage = ({ children }) => {
             });
             doc.save(getExportFileName("pdf"));
         } catch (error) {
-            console.error("Export PDF error:", error);
             alert("Gagal export PDF!");
         }
     };
 
-    // PENYESUAIAN HEADER TABEL
     const tableHeaders = [
         "Periode Laporan Bulan", "Total Kas", "Total Operasional",
         "Total Pengeluaran", "Total Operasional Bersih", "Total Kas Bersih", "Total Jeep"
@@ -204,7 +189,7 @@ const TahunanPage = ({ children }) => {
                 className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
                 style={{ marginLeft: isSidebarOpen ? 290 : 70 }}
             >
-                <div className="flex-1 p-4 md:p-6 overflow-auto"> {/* Kontainer konten utama dengan scroll */}
+                <div className="flex-1 p-4 md:p-6 overflow-auto"> 
                     <h1
                         className="text-[28px] md:text-[32px] font-semibold text-black flex items-center gap-3 cursor-pointer hover:text-[#3D6CB9] transition-colors mb-6"
                         onClick={handleGoBack}
@@ -286,7 +271,6 @@ const TahunanPage = ({ children }) => {
                                         ) : (
                                             dataTahunan.map((item) => (
                                                 <tr key={item.key} className="hover:bg-gray-50 transition duration-150">
-                                                    {/* PENYESUAIAN RENDER DATA & PERATAAN TENGAH */}
                                                     <td className="p-3 whitespace-nowrap text-center">{item.periodeDisplay}</td>
                                                     <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_cash)}</td>
                                                     <td className="p-3 whitespace-nowrap text-center">{formatRupiah(item.total_operational)}</td>

@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import Sidebar from "/components/Sidebar.jsx";
-// import UserMenu from "/components/Pengguna.jsx";
 import withAuth from "/src/app/lib/withAuth";
 import TambahPengeluaran from "/components/TambahPengeluaran.jsx";
 import {
@@ -15,8 +14,11 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Link from "next/link";
+import Hashids from "hashids";
 
-// Base URL for your API
+const HASHIDS_SECRET = process.env.NEXT_PUBLIC_HASHIDS_SECRET || "fallback_secret_salt_pengeluaran_jika_env_tidak_ada";
+const hashids = new Hashids(HASHIDS_SECRET, 20);
+
 const API_BASE_URL = 'http://localhost:8000/api';
 
 const formatDateToDisplay = (dateInput) => {
@@ -27,7 +29,7 @@ const formatDateToDisplay = (dateInput) => {
             d = new Date(dateInput);
         } else {
             const parts = dateInput.split('-');
-            if (parts.length === 3 && parts[0].length === 4) {
+            if (parts.length === 3 && parts[0].length === 4) { 
                 d = new Date(Date.UTC(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])));
             } else {
                 d = new Date(dateInput);
@@ -54,6 +56,28 @@ const formatCurrency = (number) => {
     return `Rp 0`;
 };
 
+const filterByMonthAndYearHelper = (data, referenceDate) => {
+    if (!Array.isArray(data) || !referenceDate) return [];
+    const targetMonth = referenceDate.getMonth();
+    const targetYear = referenceDate.getFullYear();
+
+    return data.filter(item => {
+        if (!item.issue_date) return false;
+        let itemDate;
+        if (typeof item.issue_date === 'string' && item.issue_date.includes('T')) {
+            itemDate = new Date(item.issue_date);
+        } else if (typeof item.issue_date === 'string' && item.issue_date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const parts = item.issue_date.split('-');
+            itemDate = new Date(Date.UTC(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])));
+        } else {
+            itemDate = new Date(item.issue_date);
+        }
+        if (isNaN(itemDate.getTime())) return false;
+        return itemDate.getMonth() === targetMonth && itemDate.getFullYear() === targetYear;
+    });
+};
+
+
 const PengeluaranPage = ({ children }) => {
     const [dataPengeluaran, setDataPengeluaran] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
@@ -63,88 +87,89 @@ const PengeluaranPage = ({ children }) => {
     const [isTambahModalOpen, setIsTambahModalOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const calendarRef = useRef(null);
+    const datePickerDropdownRef = useRef(null);
 
-    // State untuk menyimpan data pengeluaran bulan ini saja
     const [currentMonthExpenditures, setCurrentMonthExpenditures] = useState([]);
     const [totalCurrentMonthExpenditure, setTotalCurrentMonthExpenditure] = useState(0);
+    const [reportedMonths, setReportedMonths] = useState({});
 
-    // State untuk melacak bulan yang sudah dilaporkan
-    const [reportedMonths, setReportedMonths] = useState({}); // { 'YYYY-MM': true/false }
+    const [totalForDisplayedPeriod, setTotalForDisplayedPeriod] = useState(0);
+    const [labelForDisplayedPeriod, setLabelForDisplayedPeriod] = useState("Total Bulan Ini:");
 
-    // Fungsi untuk mendapatkan tanggal awal dan akhir bulan saat ini
+
     const getCurrentMonthDateRange = () => {
         const today = new Date();
         const year = today.getFullYear();
-        const month = today.getMonth(); // 0-indexed
-
+        const month = today.getMonth();
         const startDate = new Date(year, month, 1);
-        const endDate = new Date(year, month + 1, 0); // Last day of the current month
-        return { startDate, endDate };
+        return { startDate };
     };
 
-    // Fungsi untuk memfilter data berdasarkan bulan saat ini
     const filterByCurrentMonth = useCallback((rawData) => {
-        if (!Array.isArray(rawData)) {
-            console.warn("Raw data for month filter is not an array, setting to empty array.");
-            return [];
-        }
+        if (!Array.isArray(rawData)) return [];
+        const { startDate } = getCurrentMonthDateRange();
+        const currentMonthSystem = startDate.getMonth();
+        const currentYearSystem = startDate.getFullYear();
+        const currentMonthKey = `${currentYearSystem}-${(currentMonthSystem + 1).toString().padStart(2, '0')}`;
 
-        const { startDate, endDate } = getCurrentMonthDateRange();
-        const currentMonthKey = `${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}`;
-
-        const filtered = rawData.filter(item => {
-            const itemDate = item.issue_date ? new Date(item.issue_date) : null;
-            const itemMonthKey = itemDate ? `${itemDate.getFullYear()}-${(itemDate.getMonth() + 1).toString().padStart(2, '0')}` : null;
-            return itemDate && itemMonthKey === currentMonthKey && !reportedMonths[currentMonthKey];
+        return rawData.filter(item => {
+            if (!item.issue_date) return false;
+            const itemDate = new Date(item.issue_date);
+            if (isNaN(itemDate.getTime())) return false;
+            const itemMonth = itemDate.getMonth();
+            const itemYear = itemDate.getFullYear();
+            return itemMonth === currentMonthSystem && itemYear === currentYearSystem && !reportedMonths[currentMonthKey];
         });
-        return filtered;
     }, [reportedMonths]);
 
 
-    // Fungsi untuk memfilter data berdasarkan tanggal spesifik yang dipilih
     const filterBySpecificDate = useCallback((rawData, dateFilter) => {
-        if (!Array.isArray(rawData) || !dateFilter) {
-            return [];
-        }
+        if (!Array.isArray(rawData) || !dateFilter) return [];
         const formattedFilterDate = formatDateToDisplay(dateFilter);
         return rawData.filter(item => {
-            const itemDate = item.issue_date ? new Date(item.issue_date) : null;
-            return itemDate && formatDateToDisplay(itemDate) === formattedFilterDate;
+            if (!item.issue_date) return false;
+            const itemDisplayDate = formatDateToDisplay(item.issue_date);
+            return itemDisplayDate === formattedFilterDate;
         });
     }, []);
 
-    // Memperbarui applyFilterToData untuk memperhitungkan filter bulan ini dan filter tanggal spesifik
     const applyFilterToData = useCallback((rawData, dateFilter) => {
         if (!Array.isArray(rawData)) {
-            console.warn("Data mentah untuk filter bukan array, mengatur filteredData menjadi array kosong.");
             setFilteredData([]);
+            setTotalForDisplayedPeriod(0);
+            setLabelForDisplayedPeriod("Total Bulan Ini:");
             setCurrentMonthExpenditures([]);
             setTotalCurrentMonthExpenditure(0);
             return;
         }
-
+    
         let dataToDisplayInTable = [];
-        let dataForCurrentMonthProcessing = [];
-
-        if (dateFilter) {
-            // Jika ada filter tanggal spesifik, gunakan itu untuk tampilan tabel
+        let expendituresForSumCalculation; 
+        const today = new Date();
+    
+        if (dateFilter) { 
             dataToDisplayInTable = filterBySpecificDate(rawData, dateFilter);
-        } else {
-            // Default: tampilkan data bulan ini yang belum dilaporkan
-            dataToDisplayInTable = filterByCurrentMonth(rawData);
+            expendituresForSumCalculation = dataToDisplayInTable; 
+            
+            setLabelForDisplayedPeriod(`Total ${formatDateToDisplay(dateFilter)}:`);
+    
+        } else { 
+            expendituresForSumCalculation = filterByMonthAndYearHelper(rawData, today);
+            dataToDisplayInTable = expendituresForSumCalculation; 
+            
+            setLabelForDisplayedPeriod("Total Bulan Ini:");
         }
-        
-        // Selalu hitung dan simpan pengeluaran bulan ini terlepas dari filter tampilan
-        // Ini adalah data yang akan dilaporkan
-        dataForCurrentMonthProcessing = filterByCurrentMonth(rawData);
-        
-        setCurrentMonthExpenditures(dataForCurrentMonthProcessing); // Data bulan ini untuk laporan
-        setFilteredData(dataToDisplayInTable); // Data untuk ditampilkan di tabel
-
-        // Hitung total hanya untuk data bulan ini (yang akan dilaporkan)
-        const total = dataForCurrentMonthProcessing.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
-        setTotalCurrentMonthExpenditure(total);
-    }, [filterByCurrentMonth, filterBySpecificDate]);
+    
+        const totalSumForPeriod = expendituresForSumCalculation.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+        setTotalForDisplayedPeriod(totalSumForPeriod);
+        setFilteredData(dataToDisplayInTable);
+    
+        const dataForCurrentMonthReportProcessing = filterByCurrentMonth(rawData);
+        setCurrentMonthExpenditures(dataForCurrentMonthReportProcessing);
+        const totalForCurrentSystemMonthReport = dataForCurrentMonthReportProcessing.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
+        setTotalCurrentMonthExpenditure(totalForCurrentSystemMonthReport);
+    
+    }, [filterBySpecificDate, filterByCurrentMonth]); 
 
 
     const fetchExpenditureData = useCallback(async () => {
@@ -152,54 +177,33 @@ const PengeluaranPage = ({ children }) => {
         try {
             const url = `${API_BASE_URL}/expenditures/all`;
             const response = await fetch(url);
-
             if (!response.ok) {
-                const errorBody = await response.text();
-                console.error(`[fetchExpenditureData] HTTP Error! Status: ${response.status}, Status Text: ${response.statusText}, Response Body: ${errorBody}`);
                 throw new Error(`Gagal mengambil data pengeluaran: ${response.statusText || 'Kesalahan Server'}`);
             }
-
             const result = await response.json();
-            console.log("[fetchExpenditureData] Raw API Response:", result);
-
             let extractedData = [];
-            if (Array.isArray(result)) {
-                extractedData = result;
-            } else if (result && Array.isArray(result.data)) {
-                extractedData = result.data;
-            } else if (result && Array.isArray(result.expenditures)) {
-                extractedData = result.expenditures;
-            } else if (result && Array.isArray(result.expenditure)) {
-                extractedData = result.expenditure;
-            } else if (result && Array.isArray(result.salaries)) {
-                extractedData = result.salaries;
-            } else {
-                console.warn("[fetchExpenditureData] Struktur data respons API tidak sesuai harapan.", result);
-                extractedData = [];
-            }
-
-            console.log("[fetchExpenditureData] extractedData:", extractedData);
-
-            const cleanData = extractedData.filter(item =>
-                item && typeof item.expenditure_id !== 'undefined'
+            if (Array.isArray(result)) extractedData = result;
+            else if (result && Array.isArray(result.data)) extractedData = result.data;
+            else if (result && Array.isArray(result.expenditures)) extractedData = result.expenditures;
+            else if (result && Array.isArray(result.expenditure)) extractedData = result.expenditure;
+            else if (result && Array.isArray(result.salaries)) extractedData = result.salaries;
+            else extractedData = [];
+            
+            const cleanData = extractedData.filter(item => 
+                item && 
+                typeof item.expenditure_id !== 'undefined' && 
+                !isNaN(Number(item.expenditure_id)) 
             );
-
             setDataPengeluaran(cleanData);
             applyFilterToData(cleanData, selectedDateForFilter);
-
         } catch (error) {
-            console.error("[fetchExpenditureData] Kesalahan saat mengambil atau memproses data pengeluaran:", error);
-            alert(`Gagal mengambil data pengeluaran: ${error.message}`);
             setDataPengeluaran([]);
-            setFilteredData([]);
-            setCurrentMonthExpenditures([]);
-            setTotalCurrentMonthExpenditure(0);
+            applyFilterToData([], selectedDateForFilter); 
         } finally {
             setIsLoading(false);
         }
     }, [applyFilterToData, selectedDateForFilter]);
 
-    // Pindahkan definisi fungsi-fungsi ini ke atas, sebelum useEffect yang menggunakannya
     const applyDateFilter = () => {
         setSelectedDateForFilter(tempDateForPicker);
         setIsDatePickerOpen(false);
@@ -209,144 +213,97 @@ const PengeluaranPage = ({ children }) => {
         setSelectedDateForFilter(null);
         setTempDateForPicker(null);
         setIsDatePickerOpen(false);
-        fetchExpenditureData(); // Panggil ini untuk kembali ke tampilan bulan ini
-    }, [fetchExpenditureData]);
+    }, []);
+
 
     const handleGenerateReport = async () => {
-    const today = new Date();
-    const currentMonth = today.getMonth() + 1;
-    const currentYear = today.getFullYear();
-    const currentMonthKey = `${currentYear}-${currentMonth.toString().padStart(2, '0')}`;
-
-    // Pengecekan apakah bulan ini sudah pernah dilaporkan
-    if (reportedMonths[currentMonthKey]) {
-        alert("Laporan untuk bulan ini sudah dibuat.");
-        return;
-    }
-
-    // Pengecekan apakah ada data untuk dilaporkan
-    if (currentMonthExpenditures.length === 0) {
-        alert("Tidak ada pengeluaran untuk bulan ini yang dapat dilaporkan.");
-        return;
-    }
-
-    if (confirm(`Apakah Anda yakin ingin membuat laporan pengeluaran untuk bulan ini (Total: ${formatCurrency(totalCurrentMonthExpenditure)})? Data bulan ini akan ditandai sebagai 'dilaporkan' di tampilan.`)) {
-        try {
-            // Data yang akan dikirim ke backend
-            const reportData = {
-                monthKey: currentMonthKey,
-                expenditures: currentMonthExpenditures,
-                totalExpenditure: totalCurrentMonthExpenditure,
-                reportDate: today.toISOString() // Menambahkan tanggal laporan dibuat
-            };
-
-            console.log("Mengirim data laporan ke endpoint:", reportData);
-
-            // Panggilan ke endpoint untuk membuat/mengakses data laporan
-            const response = await fetch('http://localhost:8000/api/expenditures/generate', {
-                method: 'POST', // Atau metode yang sesuai (PUT, GET jika hanya mengakses)
-                headers: {
-                    'Content-Type': 'application/json',
-                    // Tambahkan header lain jika diperlukan, misalnya token autentikasi
-                    // 'Authorization': `Bearer ${yourAuthToken}`
-                },
-                body: JSON.stringify(reportData) // Mengirim data sebagai JSON
-            });
-
-            if (!response.ok) {
-                // Jika respons dari server tidak OK (misal status 4xx atau 5xx)
-                const errorData = await response.json().catch(() => ({ message: response.statusText }));
-                throw new Error(errorData.message || `Gagal menghubungi server: ${response.status}`);
-            }
-
-            // Jika berhasil, backend mungkin mengembalikan data konfirmasi
-            const result = await response.json();
-            console.log("Respons dari server:", result);
-
-            // Tandai bulan ini sebagai sudah dilaporkan secara lokal
-            setReportedMonths(prev => ({
-                ...prev,
-                [currentMonthKey]: true
-            }));
-
-            alert("Laporan pengeluaran bulanan berhasil dibuat dan dikirim ke server.");
-            
-            // Setelah laporan dibuat dan ditandai, segarkan tampilan
-            fetchExpenditureData(); 
-            
-        } catch (error) {
-            console.error("Gagal membuat laporan pengeluaran bulanan:", error);
-            alert(`Gagal membuat laporan pengeluaran bulanan: ${error.message}`);
+        const today = new Date();
+        const currentMonthKey = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}`;
+        if (reportedMonths[currentMonthKey]) {
+            alert("Laporan untuk bulan ini sudah dibuat.");
+            return;
         }
-    }
-};
+        if (currentMonthExpenditures.length === 0) {
+            alert("Tidak ada pengeluaran (yang belum dilaporkan) untuk bulan ini yang dapat dilaporkan.");
+            return;
+        }
+        if (confirm(`Apakah Anda yakin ingin membuat laporan pengeluaran untuk bulan ini (Total Pengeluaran: ${formatCurrency(totalCurrentMonthExpenditure)})? Data bulan ini akan ditandai sebagai 'dilaporkan' di tampilan.`)) {
+            try {
+                const reportData = {
+                    monthKey: currentMonthKey,
+                    expenditures: currentMonthExpenditures,
+                    totalExpenditure: totalCurrentMonthExpenditure,
+                    reportDate: today.toISOString()
+                };
+                const response = await fetch(`${API_BASE_URL}/expenditures/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reportData)
+                });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                    throw new Error(errorData.message || `Gagal menghubungi server: ${response.status}`);
+                }
+                await response.json();
+                setReportedMonths(prev => ({ ...prev, [currentMonthKey]: true }));
+                alert("Laporan pengeluaran bulanan berhasil dibuat dan dikirim ke server.");
+                fetchExpenditureData();
+            } catch (error) {
+                alert(`Gagal membuat laporan: ${error.message}`);
+            }
+        }
+    };
 
     useEffect(() => {
         fetchExpenditureData();
-        const handleDataUpdate = () => {
-            console.log("Menerima event dataPengeluaranUpdated, memuat ulang data pengeluaran...");
-            fetchExpenditureData();
-        };
+        const handleDataUpdate = () => fetchExpenditureData();
         window.addEventListener('dataPengeluaranUpdated', handleDataUpdate);
-        return () => {
-            window.removeEventListener('dataPengeluaranUpdated', handleDataUpdate);
-        };
+        return () => window.removeEventListener('dataPengeluaranUpdated', handleDataUpdate);
     }, [fetchExpenditureData]);
 
     useEffect(() => {
-        applyFilterToData(dataPengeluaran, selectedDateForFilter);
-    }, [dataPengeluaran, selectedDateForFilter, applyFilterToData]);
-
-    // Efek untuk memeriksa perubahan bulan dan mengatur ulang filter jika diperlukan
-    useEffect(() => {
-        const checkMonthChange = () => {
+        const periodicCheck = () => {
             const today = new Date();
-            const currentMonth = today.getMonth();
-            const currentYear = today.getFullYear();
-            
-            // Jika ada filter tanggal spesifik yang tidak lagi berada di bulan ini, reset
-            if (selectedDateForFilter && 
-                (selectedDateForFilter.getMonth() !== currentMonth || 
-                 selectedDateForFilter.getFullYear() !== currentYear)) {
-                resetFilter();
+            const currentSystemMonth = today.getMonth();
+            const currentSystemYear = today.getFullYear();
+            if (selectedDateForFilter) {
+                const selectedDateObject = new Date(selectedDateForFilter.getFullYear(), selectedDateForFilter.getMonth(), 1);
+                const currentSystemDateObject = new Date(currentSystemYear, currentSystemMonth, 1);
+                if (selectedDateObject < currentSystemDateObject &&
+                    (selectedDateForFilter.getMonth() !== currentSystemMonth || selectedDateForFilter.getFullYear() !== currentSystemYear)) {
+                }
             }
         };
-
-        // Jalankan sekali saat komponen dimuat
-        checkMonthChange();
-
-        // Atur interval untuk memeriksa perubahan bulan (misalnya setiap jam atau setiap hari)
-        const interval = setInterval(checkMonthChange, 1000 * 60 * 60 * 24); // Setiap hari
-
-        return () => clearInterval(interval);
+        const intervalId = setInterval(periodicCheck, 1000 * 60 * 60 * 24);
+        return () => clearInterval(intervalId);
     }, [selectedDateForFilter, resetFilter]);
 
 
-    const handleOpenTambahModal = () => {
-        setIsTambahModalOpen(true);
-    };
+    const handleOpenTambahModal = () => setIsTambahModalOpen(true);
+    const handleCloseTambahModal = () => setIsTambahModalOpen(false);
 
-    const handleCloseTambahModal = () => {
-        setIsTambahModalOpen(false);
-    };
-
-    const handleDeleteAction = async (expenditure_id) => {
-        if (!expenditure_id) {
-            console.error("[handleDeleteAction] ID Pengeluaran tidak ditemukan atau tidak valid untuk dihapus.");
-            alert("Gagal menghapus data: ID tidak valid.");
+    const handleDeleteAction = async (expenditureIdHash) => {
+        if (!expenditureIdHash) {
+            alert("Gagal menghapus data: ID Hash tidak valid.");
             return;
         }
-
+        const decodedIds = hashids.decode(expenditureIdHash);
+        if (decodedIds.length === 0) {
+            alert("Gagal menghapus data: Gagal decode ID Hash.");
+            return;
+        }
+        const expenditureIdNumeric = Number(decodedIds[0]); 
+        if (isNaN(expenditureIdNumeric)) {
+            alert("Gagal menghapus data: Hasil decode ID tidak numerik.");
+            return;
+        }
         if (confirm("Apakah Anda yakin ingin menghapus data ini?")) {
             try {
-                const deleteUrl = `${API_BASE_URL}/expenditures/delete/${expenditure_id}`;
+                const deleteUrl = `${API_BASE_URL}/expenditures/delete/${expenditureIdNumeric}`;
                 const response = await fetch(deleteUrl, {
                     method: 'DELETE',
-                    headers: {
-                        'Accept': 'application/json',
-                    },
+                    headers: { 'Accept': 'application/json' },
                 });
-
                 if (!response.ok) {
                     const errorText = await response.text();
                     let errorMessage = `Kesalahan HTTP saat menghapus! Status: ${response.status}`;
@@ -358,24 +315,32 @@ const PengeluaranPage = ({ children }) => {
                     }
                     throw new Error(errorMessage);
                 }
-
                 alert("Data berhasil dihapus.");
                 window.dispatchEvent(new CustomEvent('dataPengeluaranUpdated'));
             } catch (error) {
-                console.error("[handleDeleteAction] Kesalahan menghapus data pengeluaran:", error);
-                alert(`Gagal menghapus data pengeluaran: ${error.message}`);
+                alert(`Gagal menghapus data: ${error.message}`);
             }
         }
     };
 
     const getExportFileName = (ext) => {
         const date = new Date().toISOString().split("T")[0];
-        const filterInfo = selectedDateForFilter ? `_${formatDateToDisplay(selectedDateForFilter).replace(/\-/g, '')}` : '_current_month';
-        return `laporan_pengeluaran${filterInfo}_${date}.${ext}`;
+        let filterInfo;
+        if (selectedDateForFilter) {
+            const d = selectedDateForFilter.getDate().toString().padStart(2,'0');
+            const m = (selectedDateForFilter.getMonth() + 1).toString().padStart(2,'0');
+            const y = selectedDateForFilter.getFullYear();
+            filterInfo = `_tanggal_${d}${m}${y}`;
+        } else {
+            const today = new Date();
+            const m = (today.getMonth() + 1).toString().padStart(2,'0');
+            const y = today.getFullYear();
+            filterInfo = `_bulan_${m}${y}`;
+        }
+        return `laporan_pengeluaran${filterInfo}_${date.replace(/-/g, '')}.${ext}`;
     };
 
     const handleExportExcelAction = () => {
-        // Ekspor berdasarkan filteredData yang ditampilkan di tabel (bulan ini atau tanggal spesifik)
         if (!Array.isArray(filteredData) || filteredData.length === 0) {
             alert("Tidak ada data untuk diekspor ke Excel (sesuai filter saat ini)!");
             return;
@@ -388,60 +353,72 @@ const PengeluaranPage = ({ children }) => {
                 "Kategori": item.action,
             }));
             const ws = XLSX.utils.json_to_sheet(dataToExport);
+            ws['!cols'] = [{wch:20}, {wch:15, z: '#,##0'}, {wch:40}, {wch:20}];
+            
+            const totalRow = filteredData.length + 2; 
+            XLSX.utils.sheet_add_aoa(ws, [
+                [`${labelForDisplayedPeriod}`, totalForDisplayedPeriod]
+            ], { origin: `A${totalRow}` });
+            if(ws[`B${totalRow}`]) ws[`B${totalRow}`].z = '#,##0';
+
+
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Pengeluaran");
             XLSX.writeFile(wb, getExportFileName("xlsx"));
         } catch (error) {
-            console.error("Kesalahan export Excel:", error);
             alert("Gagal export Excel!");
         }
     };
 
     const handleExportPDFAction = () => {
-        // Ekspor berdasarkan filteredData yang ditampilkan di tabel (bulan ini atau tanggal spesifik)
         if (!Array.isArray(filteredData) || filteredData.length === 0) {
             alert("Tidak ada data untuk diekspor ke PDF (sesuai filter saat ini)!");
             return;
         }
         try {
             const doc = new jsPDF();
-            const tableColumn = [
-                "Tanggal Pengeluaran",
-                "Total",
-                "Keterangan",
-                "Kategori",
-            ];
+            const tableColumn = ["Tanggal Pengeluaran", "Total", "Keterangan", "Kategori"];
             const tableRows = filteredData.map((item) => [
                 formatDateToDisplay(item.issue_date),
                 formatCurrency(parseFloat(item.amount)),
                 item.information,
                 item.action,
             ]);
+            
+            let title = "Laporan Data Pengeluaran";
+            if (selectedDateForFilter) {
+                title += ` (${formatDateToDisplay(selectedDateForFilter)})`;
+            } else {
+                const today = new Date();
+                const monthYearFormat = new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(today);
+                title += ` (Bulan Ini: ${monthYearFormat})`;
+            }
+            doc.text(title, 14, 15);
 
-            doc.text(`Laporan Data Pengeluaran ${selectedDateForFilter ? `(${formatDateToDisplay(selectedDateForFilter)})` : '(Bulan Ini)'}`, 14, 15);
             autoTable(doc, {
                 head: [tableColumn],
                 body: tableRows,
                 startY: 20,
-                styles: {
-                    fontSize: 8,
-                    cellPadding: 2
-                },
-                headStyles: {
-                    fillColor: [61, 108, 185]
-                }
-                // Menghilangkan didDrawPage di sini karena total akan di luar tabel
+                styles: { fontSize: 8, cellPadding: 2 },
+                headStyles: { fillColor: [61, 108, 185] }
             });
+
+            const finalY = (doc).lastAutoTable.finalY || 25;
+            doc.setFontSize(10);
+            doc.text(`${labelForDisplayedPeriod} ${formatCurrency(totalForDisplayedPeriod)}`, 14, finalY + 10);
+
             doc.save(getExportFileName("pdf"));
         } catch (error) {
-            console.error("Kesalahan export PDF:", error);
             alert("Gagal export PDF!");
         }
     };
 
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (calendarRef.current && !calendarRef.current.contains(event.target)) {
+            if (
+                calendarRef.current && !calendarRef.current.contains(event.target) &&
+                (!datePickerDropdownRef.current || !datePickerDropdownRef.current.contains(event.target))
+            ) {
                 setIsDatePickerOpen(false);
             }
         };
@@ -453,178 +430,200 @@ const PengeluaranPage = ({ children }) => {
     const [isSidebarOpen, setSidebarOpen] = useState(true);
 
     return (
-     <div className="flex">
-       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
-       <div
-         className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
-         style={{
-           marginLeft: isSidebarOpen ? 290 : 70,
-         }}
-       >
-            <div className="flex-1 p-4 md:p-6 overflow-x-hidden">
-                <h1 className="text-[28px] md:text-[32px] font-semibold text-black mb-6">
-                    Pengeluaran
-                </h1>
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
-                    <div className="flex gap-4">
-                        <div className="relative" ref={calendarRef}>
-                            {!selectedDateForFilter ? (
-                                <button
-                                    onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                                    className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
-                                >
-                                    <CalendarDays size={20} /> <span>Pilih Tanggal</span>
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={resetFilter}
-                                    className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
-                                >
-                                    <RotateCcw size={20} /> <span>Atur Ulang</span>
-                                </button>
-                            )}
-                            {isDatePickerOpen && (
-                                <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-12 left-0">
-                                    <DatePicker
-                                        selected={tempDateForPicker}
-                                        onChange={(date) => setTempDateForPicker(date)}
-                                        inline
-                                        dateFormat="dd/MM/yyyy"
-                                        showPopperArrow={false}
-                                    />
-                                    <div className="mt-4 flex justify-between">
-                                        <button
-                                            onClick={() => {
-                                                setTempDateForPicker(selectedDateForFilter);
-                                                setIsDatePickerOpen(false);
-                                            }}
-                                            className="px-4 py-2 bg-red-200 text-black rounded hover:bg-red-500 hover:text-white"
-                                        >
-                                            Batal
-                                        </button>
-                                        <button
-                                            onClick={applyDateFilter}
-                                            className="px-4 py-2 bg-[#B8D4F9] text-black rounded hover:bg-[#3D6CB9] hover:text-white"
-                                        >
-                                            Pilih Tanggal
-                                        </button>
+        <div className="flex h-screen">
+            <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+            <div
+                className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
+                style={{ marginLeft: isSidebarOpen ? 290 : 70 }}
+            >
+                <div className="flex-1 p-4 md:p-6 overflow-x-hidden">
+                    <h1 className="text-[28px] md:text-[32px] font-semibold text-black mb-6">
+                        Pengeluaran
+                    </h1>
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+                        <div className="flex gap-4 flex-wrap">
+                            <div className="relative" ref={calendarRef}>
+                                {!selectedDateForFilter ? (
+                                    <button
+                                        onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+                                        className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
+                                    >
+                                        <CalendarDays size={20} /> <span>Pilih Tanggal</span>
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={resetFilter}
+                                        className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
+                                    >
+                                        <RotateCcw size={20} /> <span>Atur Ulang</span>
+                                    </button>
+                                )}
+                                {isDatePickerOpen && (
+                                    <div
+                                        ref={datePickerDropdownRef}
+                                        className="absolute z-[1000] mt-2 bg-white border rounded-lg shadow-lg p-4 top-full left-0 min-w-[280px]"
+                                    >
+                                        <DatePicker
+                                            selected={tempDateForPicker}
+                                            onChange={(date) => setTempDateForPicker(date)}
+                                            inline
+                                            dateFormat="dd/MM/yyyy"
+                                            showPopperArrow={false}
+                                        />
+                                        <div className="mt-4 flex justify-between">
+                                            <button
+                                                onClick={() => {
+                                                    setTempDateForPicker(selectedDateForFilter);
+                                                    setIsDatePickerOpen(false);
+                                                }}
+                                                className="px-4 py-2 bg-red-200 text-black rounded hover:bg-red-500 hover:text-white"
+                                            >
+                                                Batal
+                                            </button>
+                                            <button
+                                                onClick={applyDateFilter}
+                                                className="px-4 py-2 bg-[#B8D4F9] text-black rounded hover:bg-[#3D6CB9] hover:text-white"
+                                            >
+                                                Pilih Tanggal
+                                            </button>
+                                        </div>
                                     </div>
+                                )}
+                            </div>
+                            <button
+                                onClick={handleOpenTambahModal}
+                                className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
+                            >
+                                <PlusCircle size={20} /> <span>Tambah</span>
+                            </button>
+                            <button
+                                onClick={handleGenerateReport}
+                                className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
+                                title={reportedMonths[`${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}`] ? "Laporan bulan ini sudah dibuat" : (totalCurrentMonthExpenditure === 0 ? "Tidak ada data (unreported) untuk dilaporkan bulan ini" : "Buat laporan untuk bulan ini")}
+                            >
+                                <Zap size={20} />
+                                <span>Buat Laporan</span>
+                            </button>
+                        </div>
+                        <div className="flex gap-4 flex-wrap">
+                            <button
+                                onClick={handleExportExcelAction}
+                                disabled={!isDataAvailableForExport}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${isDataAvailableForExport ? "bg-green-100 text-black hover:bg-[#B8D4F9]" : "bg-gray-200 text-gray-500 cursor-not-allowed"}`}
+                            >
+                                <FileSpreadsheet size={20} color={isDataAvailableForExport ? "green" : "gray"} /> <span>Ekspor Excel</span>
+                            </button>
+                            <button
+                                onClick={handleExportPDFAction}
+                                disabled={!isDataAvailableForExport}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${isDataAvailableForExport ? "bg-red-100 text-black hover:bg-[#B8D4F9]" : "bg-gray-200 text-gray-500 cursor-not-allowed"}`}
+                            >
+                                <FileText size={20} color={isDataAvailableForExport ? "red" : "gray"} /> <span>Ekspor PDF</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {isLoading ? (
+                        <div className="text-center p-10">Memuat data pengeluaran...</div>
+                    ) : (
+                        <div className="flex flex-col">
+                            <div className="overflow-y-auto max-h-[calc(100vh-320px)] rounded-lg shadow mb-8">
+                                <table className="min-w-full table-auto bg-white text-sm">
+                                    <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
+                                        <tr>
+                                            {["Tanggal Pengeluaran", "Total", "Keterangan", "Kategori", "Aksi"]
+                                                .map((header, index, arr) => (
+                                                    <th
+                                                        key={header}
+                                                        className={`p-2 text-center`}
+                                                        style={{
+                                                            borderTopLeftRadius: index === 0 ? "0.5rem" : undefined,
+                                                            borderTopRightRadius: index === arr.length - 1 ? "0.5rem" : undefined
+                                                        }}
+                                                    >
+                                                        {header}
+                                                    </th>
+                                                ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredData.length === 0 ? (
+                                            <tr>
+                                                <td colSpan={5} className="text-center p-4 text-gray-500 font-medium">
+                                                    Data Tidak Ditemukan 
+                                                    {selectedDateForFilter ? 
+                                                        ` untuk tanggal ${formatDateToDisplay(selectedDateForFilter)}` : 
+                                                        ` untuk bulan ${new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(new Date())}`
+                                                    }
+                                                </td>
+                                            </tr>
+                                        ) : (
+                                            filteredData.map((item) => {
+                                                const expenditureIdNumeric = Number(item.expenditure_id);
+                                                let encodedIdForLink = null;
+                                                let encodedIdForDelete = null;
+
+                                                if (!isNaN(expenditureIdNumeric)) {
+                                                    encodedIdForLink = hashids.encode(expenditureIdNumeric);
+                                                    encodedIdForDelete = hashids.encode(expenditureIdNumeric); 
+                                                }
+
+                                                return (
+                                                    <tr key={item.expenditure_id + (encodedIdForLink || Math.random())} className="border-b text-center border-blue-200 hover:bg-blue-100 transition duration-200">
+                                                        <td className="p-3">{formatDateToDisplay(item.issue_date)}</td>
+                                                        <td className="p-3">{formatCurrency(parseFloat(item.amount))}</td>
+                                                        <td className="p-3">{item.information}</td>
+                                                        <td className="p-3">{item.action}</td>
+                                                        <td className="p-3">
+                                                            <div className="flex justify-center gap-2">
+                                                                {encodedIdForLink ? (
+                                                                    <Link
+                                                                        href={`/dashboard/akuntansi/pengeluaran/edit-pengeluaran/${encodedIdForLink}`}
+                                                                        className="text-indigo-600 hover:underline"
+                                                                        title="Edit"
+                                                                    >
+                                                                        <Edit size={18} />
+                                                                    </Link>
+                                                                ) : (
+                                                                    <span title="ID tidak valid untuk edit">
+                                                                        <Edit size={18} className="text-gray-400 cursor-not-allowed" />
+                                                                    </span>
+                                                                )}
+                                                                <button
+                                                                    onClick={() => handleDeleteAction(encodedIdForDelete)} 
+                                                                    className="text-red-600 hover:text-red-800"
+                                                                    title="Hapus"
+                                                                    disabled={!encodedIdForDelete} 
+                                                                >
+                                                                    <Trash2 size={18} />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {!isLoading && (
+                                <div className="fixed bottom-4 right-4 bg-white text-black px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-20">
+                                    <span className="font-bold text-lg">{labelForDisplayedPeriod}</span>
+                                    <span className="text-lg font-semibold text-[#3D6CB9]">{formatCurrency(totalForDisplayedPeriod)}</span>
                                 </div>
                             )}
                         </div>
-                        <button
-                            onClick={handleOpenTambahModal}
-                            className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
-                        >
-                            <PlusCircle size={20} /> <span>Tambah</span>
-                        </button>
-                        {/* Tombol Buat Laporan diubah di sini */}
-                        <button
-                            onClick={handleGenerateReport}
-                            className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
-                        >
-                            <Zap size={20} /> {/* Warna ikon akan mengikuti warna teks */}
-                            <span>Buat Laporan</span>
-                        </button>
-                    </div>
-                    <div className="flex gap-4">
-                        <button
-                            onClick={handleExportExcelAction}
-                            disabled={!isDataAvailableForExport}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${isDataAvailableForExport ? "bg-green-100 text-black hover:bg-[#B8D4F9]" : "bg-gray-200 text-gray-500 cursor-not-allowed"}`}
-                        >
-                            <FileSpreadsheet size={20} color={isDataAvailableForExport ? "green" : "gray"} /> <span>Ekspor Excel</span>
-                        </button>
-                        <button
-                            onClick={handleExportPDFAction}
-                            disabled={!isDataAvailableForExport}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${isDataAvailableForExport ? "bg-red-100 text-black hover:bg-[#B8D4F9]" : "bg-gray-200 text-gray-500 cursor-not-allowed"}`}
-                        >
-                            <FileText size={20} color={isDataAvailableForExport ? "red" : "gray"} /> <span>Ekspor PDF</span>
-                        </button>
-                    </div>
+                    )}
                 </div>
 
-                {isLoading ? (
-                    <div className="text-center p-10">Memuat data pengeluaran...</div>
-                ) : (
-                    <div className="flex flex-col"> {/* Tambahkan flex-col untuk menempatkan total di bawah */}
-                        <div className="overflow-y-auto max-h-[541px] rounded-lg shadow mb-8">
-                            <table className="min-w-full table-auto bg-white text-sm">
-                                <thead className="bg-[#3D6CB9] text-white">
-                                    <tr>
-                                        {["Tanggal Pengeluaran", "Total", "Keterangan", "Kategori", "Aksi"]
-                                            .map((header, index, arr) => (
-                                                <th
-                                                    key={header}
-                                                    className={`p-2 text-center sticky top-0 z-10 bg-[#3D6CB9]`}
-                                                    style={{
-                                                        borderTopLeftRadius: index === 0 ? "0.5rem" : undefined,
-                                                        borderTopRightRadius: index === arr.length - 1 ? "0.5rem" : undefined
-                                                    }}
-                                                >
-                                                    {header}
-                                                </th>
-                                            ))}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredData.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={5} className="text-center p-4 text-gray-500 font-medium">Data Tidak Ditemukan {selectedDateForFilter ? `untuk tanggal ${formatDateToDisplay(selectedDateForFilter)}` : (reportedMonths[`${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}`] ? "untuk bulan ini (sudah dilaporkan)" : "")}</td>
-                                        </tr>
-                                    ) : (
-                                        filteredData.map((item) => (
-                                            <tr key={item.expenditure_id} className="border-b text-center border-blue-200 hover:bg-blue-100 transition duration-200">
-                                                <td className="p-3">{formatDateToDisplay(item.issue_date)}</td>
-                                                <td className="p-3">{formatCurrency(parseFloat(item.amount))}</td>
-                                                <td className="p-3">{item.information}</td>
-                                                <td className="p-3">{item.action}</td>
-                                                <td className="p-3">
-                                                    <div className="flex justify-center gap-2">
-                                                        <Link
-                                                            href={`/dashboard/akuntansi/pengeluaran/edit-pengeluaran/${item.expenditure_id}`}
-                                                            className="text-indigo-600 hover:underline"
-                                                            title="Edit"
-                                                        >
-                                                            <Edit size={18} />
-                                                        </Link>
-                                                        <button
-                                                            onClick={() => handleDeleteAction(item.expenditure_id)}
-                                                            className="text-red-600 hover:text-red-800"
-                                                            title="Hapus"
-                                                        >
-                                                            <Trash2 size={18} />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
-                        {/* Total Pengeluaran dipindahkan ke pojok kanan bawah */}
-                                {filteredData.length > 0 && (
-                                    <div className="fixed bottom-4 right-4 bg-white text-black px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-20"> 
-                                            <span className="font-bold text-lg">Total Pengeluaran:</span> 
-                                            <span className="text-lg font-semibold text-[#3D6CB9]">{formatCurrency(totalCurrentMonthExpenditure)}</span> 
-                                    </div>
-                                )}
-                        
-                    </div>
-                )}
+                <TambahPengeluaran
+                    isOpen={isTambahModalOpen}
+                    onClose={handleCloseTambahModal}
+                    onAddData={() => window.dispatchEvent(new CustomEvent('dataPengeluaranUpdated'))}
+                    initialDate={selectedDateForFilter || new Date()}
+                />
+                {children}
             </div>
-
-            <TambahPengeluaran
-                isOpen={isTambahModalOpen}
-                onClose={handleCloseTambahModal}
-                onAddData={() => window.dispatchEvent(new CustomEvent('dataPengeluaranUpdated'))}
-                initialDate={new Date()}
-            />
-
-            {children}
-        </div>
         </div>
     );
 };

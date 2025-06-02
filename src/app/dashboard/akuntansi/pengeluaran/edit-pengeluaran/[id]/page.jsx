@@ -4,11 +4,13 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter, useParams } from "next/navigation";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import Hashids from "hashids";
 
-// Menggunakan konstanta base URL API
+const HASHIDS_SECRET = process.env.NEXT_PUBLIC_HASHIDS_SECRET || "fallback_secret_salt_pengeluaran_jika_env_tidak_ada";
+const hashids = new Hashids(HASHIDS_SECRET, 20);
+
 const API_BASE_URL = 'http://localhost:8000/api';
 
-// Fungsi pembantu format tanggal, disamakan dengan TambahPengeluaran.js
 const formatDateForAPI = (date) => {
     if (!date) return null;
     const d = date instanceof Date ? date : new Date(date);
@@ -21,7 +23,6 @@ const formatDateForDisplay = (date) => {
     return isNaN(d.getTime()) ? "" : `${d.getDate().toString().padStart(2, "0")}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getFullYear()}`;
 };
 
-// Fungsi parsing tanggal dari string (API/string lain) ke Date object (tetap dibutuhkan untuk Edit)
 const parseApiDateToDateObject = (dateStr) => {
     if (!dateStr) return null;
     let d;
@@ -37,10 +38,10 @@ const parseApiDateToDateObject = (dateStr) => {
 const EditPengeluaranPage = () => {
     const router = useRouter();
     const params = useParams();
-    const { id: expenditure_id } = params;
+    const { id: expenditureIdHash } = params;
 
+    const [numericExpenditureId, setNumericExpenditureId] = useState(null);
     const [formData, setFormData] = useState({
-        expenditure_id: "", // Ditampilkan, tapi tidak diubah pengguna
         issue_date: "",
         amount: "",
         information: "",
@@ -50,9 +51,8 @@ const EditPengeluaranPage = () => {
     const [selectedDateForPicker, setSelectedDateForPicker] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [errorFetching, setErrorFetching] = useState(null);
 
-    // Kategori pengeluaran disamakan dengan TambahPengeluaran.js
-    // Perhatikan penggunaan "Lain-Lain" (kapital) untuk value
     const expenditureCategories = [
         { value: "", label: "Pilih Kategori" },
         { value: "Gaji", label: "Gaji Karyawan" },
@@ -62,14 +62,34 @@ const EditPengeluaranPage = () => {
         { value: "Lain-Lain", label: "Lain-lain (isi di bawah)" },
     ];
 
+    useEffect(() => {
+        setIsLoading(true); 
+        if (expenditureIdHash) {
+            const decodedIds = hashids.decode(expenditureIdHash);
+            if (decodedIds.length > 0 && !isNaN(Number(decodedIds[0]))) {
+                setNumericExpenditureId(Number(decodedIds[0]));
+                setErrorFetching(null); 
+            } else {
+                setErrorFetching("ID Pengeluaran tidak valid atau tidak dapat didecode.");
+                setNumericExpenditureId(null);
+                setIsLoading(false); 
+            }
+        } else {
+            setErrorFetching("ID Pengeluaran tidak ditemukan di URL.");
+            setNumericExpenditureId(null);
+            setIsLoading(false); 
+        }
+    }, [expenditureIdHash]);
+
     const fetchExpenditureDetail = useCallback(async () => {
-        if (!expenditure_id) {
+        if (!numericExpenditureId) {
+            if (!errorFetching) setErrorFetching("Gagal mengambil detail: ID tidak tersedia.");
             setIsLoading(false);
             return;
         }
-        setIsLoading(true);
+
         try {
-            const response = await fetch(`${API_BASE_URL}/expenditures/${expenditure_id}`);
+            const response = await fetch(`${API_BASE_URL}/expenditures/${numericExpenditureId}`);
             if (!response.ok) {
                 const errorText = await response.text();
                 let msg = `Kesalahan HTTP! Status: ${response.status}`;
@@ -85,18 +105,14 @@ const EditPengeluaranPage = () => {
             if (dataToEdit) {
                 let initialAction = dataToEdit.action || "";
                 let initialOtherCategoryInfo = "";
-
                 const isPredefinedCategory = expenditureCategories.some(
                     (cat) => cat.value === initialAction && cat.value !== ""
                 );
-
                 if (!isPredefinedCategory && initialAction) {
                     initialOtherCategoryInfo = initialAction;
-                    initialAction = "Lain-Lain"; // Sesuaikan dengan value kategori baru
+                    initialAction = "Lain-Lain";
                 }
-
                 setFormData({
-                    expenditure_id: dataToEdit.expenditure_id || "",
                     issue_date: formatDateForDisplay(dataToEdit.issue_date) || "",
                     amount: dataToEdit.amount?.toString() || "",
                     information: dataToEdit.information || "",
@@ -104,22 +120,22 @@ const EditPengeluaranPage = () => {
                     other_category_info: initialOtherCategoryInfo,
                 });
                 setSelectedDateForPicker(parseApiDateToDateObject(dataToEdit.issue_date));
+                setErrorFetching(null); 
             } else {
-                // alert("Data pengeluaran tidak ditemukan."); // Ditangani oleh blok render di bawah
-                setFormData(prev => ({ ...prev, expenditure_id: null })); // Tandai data tidak ada
+                setErrorFetching("Data pengeluaran tidak ditemukan untuk ID ini.");
             }
         } catch (error) {
-            console.error("Gagal ambil data pengeluaran:", error);
-            alert(`Gagal ambil data: ${error.message}`);
-            setFormData(prev => ({ ...prev, expenditure_id: null })); // Tandai data tidak ada
+            setErrorFetching(`Gagal mengambil data detail: ${error.message}`);
         } finally {
-            setIsLoading(false);
+            setIsLoading(false); 
         }
-    }, [expenditure_id, router]); // expenditureCategories bisa ditambahkan jika dinamis
+    }, [numericExpenditureId, errorFetching]); 
 
     useEffect(() => {
-        fetchExpenditureDetail();
-    }, [fetchExpenditureDetail]);
+        if (numericExpenditureId !== null && !errorFetching) { 
+            fetchExpenditureDetail();
+        }
+    }, [numericExpenditureId, errorFetching, fetchExpenditureDetail]);
 
     const handleInputChange = useCallback((e) => {
         const { name, value } = e.target;
@@ -137,7 +153,6 @@ const EditPengeluaranPage = () => {
             alert("Harap isi semua field yang wajib diisi (Tanggal, Jumlah, Keterangan, Kategori)!");
             return false;
         }
-        // Sesuaikan dengan value kategori baru "Lain-Lain"
         if (action === "Lain-Lain" && !other_category_info.trim()) {
             alert("Harap isi keterangan untuk kategori 'Lain-lain'.");
             return false;
@@ -156,19 +171,19 @@ const EditPengeluaranPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!validateForm()) return;
+        if (!validateForm() || !numericExpenditureId) {
+            if (!numericExpenditureId) alert("ID Pengeluaran tidak valid untuk update.");
+            return;
+        }
         setIsSubmitting(true);
-
         try {
             const dataToSend = {
                 issue_date: formatDateForAPI(selectedDateForPicker),
                 amount: parseFloat(formData.amount),
                 information: formData.information.trim(),
-                // Sesuaikan dengan value kategori baru "Lain-Lain"
                 action: formData.action === "Lain-Lain" ? formData.other_category_info.trim() : formData.action,
             };
-
-            const response = await fetch(`${API_BASE_URL}/expenditures/update/${expenditure_id}`, {
+            const response = await fetch(`${API_BASE_URL}/expenditures/update/${numericExpenditureId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -176,7 +191,6 @@ const EditPengeluaranPage = () => {
                 },
                 body: JSON.stringify(dataToSend),
             });
-
             if (!response.ok) {
                 const errorText = await response.text();
                 let errorMessage = `Kesalahan HTTP! Status: ${response.status}`;
@@ -190,13 +204,10 @@ const EditPengeluaranPage = () => {
                 } catch { errorMessage += `, Respons Mentah: ${errorText.substring(0, 100)}...`; }
                 throw new Error(errorMessage);
             }
-
             alert("Data berhasil diperbarui!");
             window.dispatchEvent(new CustomEvent('dataPengeluaranUpdated'));
             router.back();
         } catch (error) {
-            console.error("Gagal update data:", error);
-            alert(`Gagal update: ${error.message}`);
         } finally {
             setIsSubmitting(false);
         }
@@ -206,7 +217,7 @@ const EditPengeluaranPage = () => {
         router.back();
     };
 
-    if (isLoading) {
+    if (isLoading) { 
         return (
             <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
                 <div className="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-lg">
@@ -216,12 +227,11 @@ const EditPengeluaranPage = () => {
         );
     }
 
-    // formData.expenditure_id bisa null jika fetch gagal atau data tidak ditemukan
-    if (formData.expenditure_id === null || (formData.expenditure_id === "" && !isLoading)) {
-         return (
+    if (errorFetching || numericExpenditureId === null) { 
+        return (
             <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
                 <div className="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-lg text-center">
-                    Data pengeluaran tidak ditemukan atau ID tidak valid.
+                    <p className="text-red-600 mb-4">{errorFetching || "ID Pengeluaran tidak valid atau data tidak ditemukan."}</p>
                     <button
                         onClick={handleCancel}
                         className="mt-6 px-4 py-2 text-sm font-medium text-white bg-[#3D6CB9] rounded-md hover:bg-[#315694] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3D6CB9]"
@@ -232,13 +242,12 @@ const EditPengeluaranPage = () => {
             </div>
         );
     }
-    // Style container utama disamakan dengan TambahPengeluaran
+    
     return (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-            {/* Penyesuaian style pada div inner modal */}
-            <div className="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-lg transform transition-all relative max-h-[90vh] overflow-y-auto"> {/* max-h dan overflow-y-auto dipertahankan untuk form panjang */}
+            <div className="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-lg transform transition-all relative max-h-[90vh] overflow-y-auto">
                 <h2 className="text-xl font-semibold mb-4 text-gray-700">
-                    Edit Data Pengeluaran {/* ID bisa tetap di judul jika diinginkan atau cukup di field */}
+                    Edit Data Pengeluaran
                 </h2>
                 <button
                     onClick={handleCancel}
@@ -247,23 +256,7 @@ const EditPengeluaranPage = () => {
                 >
                     &times;
                 </button>
-
                 <form onSubmit={handleSubmit}>
-                    {/* ID Pengeluaran (diletakkan paling atas, disabled) */}
-                    <div className="mb-4">
-                        <label htmlFor="expenditure_id_display" className="block text-sm font-medium text-gray-700 mb-1">
-                            ID Pengeluaran
-                        </label>
-                        <input
-                            type="text"
-                            id="expenditure_id_display"
-                            value={formData.expenditure_id}
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 sm:text-sm cursor-not-allowed"
-                            disabled
-                        />
-                    </div>
-
-                    {/* Tanggal Pengeluaran */}
                     <div className="mb-4">
                         <label htmlFor="issue_date_edit" className="block text-sm font-medium text-gray-700 mb-1">
                             Tanggal Pengeluaran <span className="text-red-500">*</span>
@@ -274,13 +267,11 @@ const EditPengeluaranPage = () => {
                             dateFormat="dd-MM-yyyy"
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             wrapperClassName="w-full"
-                            id="issue_date_edit" // ID unik untuk edit form
+                            id="issue_date_edit"
                             autoComplete="off"
                             required
                         />
                     </div>
-
-                    {/* Jumlah (Rp) */}
                     <div className="mb-4">
                         <label htmlFor="amount_edit" className="block text-sm font-medium text-gray-700 mb-1">
                             Jumlah (Rp) <span className="text-red-500">*</span>
@@ -288,25 +279,23 @@ const EditPengeluaranPage = () => {
                         <input
                             type="number"
                             name="amount"
-                            id="amount_edit" // ID unik untuk edit form
+                            id="amount_edit"
                             value={formData.amount}
                             onChange={handleInputChange}
                             placeholder="Contoh: 150000"
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                             required
-                            min="0.01" // Jumlah harus lebih dari 0
-                            step="0.01" // Untuk desimal (sesuaikan jika perlu integer)
+                            min="0.01"
+                            step="0.01"
                         />
                     </div>
-
-                    {/* Keterangan */}
                     <div className="mb-4">
                         <label htmlFor="information_edit" className="block text-sm font-medium text-gray-700 mb-1">
                             Keterangan <span className="text-red-500">*</span>
                         </label>
                         <textarea
                             name="information"
-                            id="information_edit" // ID unik untuk edit form
+                            id="information_edit"
                             rows="3"
                             value={formData.information}
                             onChange={handleInputChange}
@@ -315,15 +304,13 @@ const EditPengeluaranPage = () => {
                             required
                         ></textarea>
                     </div>
-
-                    {/* Kategori Pengeluaran (menggunakan mb-6 seperti di TambahPengeluaran) */}
                     <div className="mb-6">
                         <label htmlFor="action_edit" className="block text-sm font-medium text-gray-700 mb-1">
                             Kategori Pengeluaran <span className="text-red-500">*</span>
                         </label>
                         <select
                             name="action"
-                            id="action_edit" // ID unik untuk edit form
+                            id="action_edit"
                             value={formData.action}
                             onChange={handleInputChange}
                             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
@@ -336,9 +323,7 @@ const EditPengeluaranPage = () => {
                             ))}
                         </select>
                     </div>
-
-                    {/* Detail Kategori Lainnya (kondisional) */}
-                    {formData.action === "Lain-Lain" && ( // Disesuaikan dengan value kategori "Lain-Lain"
+                    {formData.action === "Lain-Lain" && (
                         <div className="mb-4">
                             <label htmlFor="other_category_info_edit" className="block text-sm font-medium text-gray-700 mb-1">
                                 Detail Kategori Lainnya <span className="text-red-500">*</span>
@@ -346,7 +331,7 @@ const EditPengeluaranPage = () => {
                             <input
                                 type="text"
                                 name="other_category_info"
-                                id="other_category_info_edit" // ID unik untuk edit form
+                                id="other_category_info_edit"
                                 value={formData.other_category_info}
                                 onChange={handleInputChange}
                                 placeholder="Contoh: Pembayaran listrik bulanan"
@@ -355,8 +340,6 @@ const EditPengeluaranPage = () => {
                             />
                         </div>
                     )}
-                    
-                    {/* Tombol Aksi Form (pt-3 disamakan dengan TambahPengeluaran) */}
                     <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-200">
                         <button
                             type="button"

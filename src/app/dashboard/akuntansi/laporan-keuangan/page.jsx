@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Sidebar from "/components/Sidebar.jsx";
-// import UserMenu from "/components/Pengguna.jsx";
 import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
 import {
@@ -12,7 +11,6 @@ import { TrendingUp, TrendingDown, DollarSign, FileText, BarChart2, ChevronRight
 
 const API_BASE_URL = "http://localhost:8000/api";
 
-// Fungsi utilitas untuk format angka ke format mata uang Rupiah
 const formatCurrency = (value, type = "full") => {
     if (typeof value !== 'number' || isNaN(value)) return type === "axis" ? '0' : 'Rp 0';
 
@@ -115,7 +113,6 @@ const KeuanganPage = () => {
                 marginKasBersih,
             });
         } catch (error) {
-            console.error("Error (simulated) fetching summary data:", error);
             setSummaryCardData({ totalPemasukan: 0, totalPengeluaran: 0, totalKas: 0, persenPemasukan: null, persenPengeluaran: null, marginKasBersih: null });
         } finally {
             setIsLoadingSummary(false);
@@ -149,7 +146,6 @@ const KeuanganPage = () => {
             }));
             setChartData12Months(transformedData);
         } catch (error) {
-            console.error("Error (simulated) fetching 12-month chart data:", error);
             setChartData12Months([]);
         } finally {
             setIsLoadingChart(false);
