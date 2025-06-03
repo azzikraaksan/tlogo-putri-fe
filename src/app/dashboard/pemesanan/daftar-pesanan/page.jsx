@@ -7,12 +7,13 @@ import SearchInput from "/components/Search.jsx";
 import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
 import { Eye, Pencil, Archive } from "lucide-react";
+import Hashids from "hashids";
+import LoadingFunny from "/components/LoadingFunny.jsx";
 
 const formatNomorWA = (no) => no.replace(/^0/, "62");
 
 const DaftarPesanan = () => {
   const [orders, setOrders] = useState([]);
-  const [archivedOrders, setArchivedOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("Semua");
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -22,6 +23,8 @@ const DaftarPesanan = () => {
   const [showHistory, setShowHistory] = useState(false);
   const router = useRouter();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
+  const [remainingPayment, setRemainingPayment] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,53 +40,91 @@ const DaftarPesanan = () => {
     };
 
     fetchData();
-    const storedArchived = localStorage.getItem("archivedOrders");
-    if (storedArchived) {
-      setArchivedOrders(JSON.parse(storedArchived));
-    }
     setIsMounted(true);
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("archivedOrders", JSON.stringify(archivedOrders));
-  }, [archivedOrders]);
+    const fetchRemainingPayment = async () => {
+      if (!selectedOrder) return;
+
+      try {
+        const res = await fetch(`http://localhost:8000/api/orders/${selectedOrder.order_id}/remaining-payment`);
+        if (!res.ok) throw new Error(`Gagal fetch, status: ${res.status}`);
+        const text = await res.text();
+        if (!text) throw new Error("Response kosong dari server");
+
+        const data = JSON.parse(text);
+        setRemainingPayment(data.remaining_amount);
+      } catch (error) {
+        console.error("Gagal mengambil sisa pembayaran:", error.message);
+        setRemainingPayment(null);
+      }
+    };
+
+    fetchRemainingPayment();
+  }, [selectedOrder]);
 
   if (loading)
     return (
-      <div className="flex items-center justify-center h-screen">
-        Memuat data pemesanan...
-      </div>
+      <LoadingFunny/>
     );
   if (!isMounted) return null;
 
-  const handleArchive = (id) => {
-    const selected = orders.find((item) => item.booking_id === id);
-    if (!selected) return;
+  const handleArchive = async (id) => {
+    try {
+      const token = localStorage.getItem("access_token");
 
-    if (selected.booking_status !== "expire") {
-      alert("Hanya pesanan dengan status 'expire' yang dapat diarsipkan.");
-      return;
+      if (!token) {
+        console.error("Token tidak ditemukan. Pastikan user sudah login.");
+        return;
+      }
+      
+      const res = await fetch(`http://localhost:8000/api/bookings/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ booking_status: "cancel" }),
+      });
+      
+
+  
+      const responseText = await res.text(); // ambil teks respon apa pun
+      console.log("Server response:", res.status, responseText);
+  
+      if (!res.ok) {
+        alert(`Gagal mengarsipkan pesanan. Status: ${res.status}`);
+        return;
+      }
+  
+      const updated = await fetch("http://localhost:8000/api/bookings");
+      const updatedData = await updated.json();
+      setOrders(updatedData);
+    } catch (error) {
+      console.error("Network/Parsing error saat arsip:", error);
+      alert("Terjadi kesalahan jaringan saat mengarsipkan.");
     }
-
-    setArchivedOrders((prev) => [...prev, selected]);
-    setOrders((prev) => prev.filter((item) => item.booking_id !== id));
   };
+  
 
-  const filteredData = (showHistory ? archivedOrders : orders).filter((item) => {
-    const matchesSearch =
-      (item.order_id || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.created_at || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.customer_phone || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.customer_email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (item.customer_name || "").toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredData = orders
+    .filter((item) => showHistory ? item.booking_status === "cancel" : item.booking_status !== "cancel")
+    .filter((item) => {
+      const matchesSearch =
+        (item.order_id || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.created_at || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.customer_phone || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.customer_email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.customer_name || "").toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus =
-      statusFilter === "Semua" ||
-      (statusFilter === "Sudah Bayar" && item.payment_status === "paid") ||
-      (statusFilter === "Belum Lunas" && item.payment_status === "unpaid");
+      const matchesStatus =
+        statusFilter === "Semua" ||
+        (statusFilter === "Sudah Bayar" && item.payment_status === "paid") ||
+        (statusFilter === "Belum Lunas" && item.payment_status === "unpaid");
 
-    return matchesSearch && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    });
 
   return (
     <div className="flex">
@@ -130,29 +171,29 @@ const DaftarPesanan = () => {
         </div>
         <div className="overflow-x-auto bg-white rounded-xl shadow">
           <table className="w-full table-auto">
-            <thead className="bg-[#3D6CB9] text-white">
-              <tr>
-                {showHistory ? (
-                  Object.keys(archivedOrders[0] || {}).map((key, index) => (
-                    <th key={index} className="p-3 text-center font-semibold">
-                      {key}
-                    </th>
-                  ))
-                ) : (
-                  <>
-                    <th className="p-3 text-center font-semibold">No</th>
-                    <th className="p-3 text-center font-semibold">Kode Pemesanan</th>
-                    <th className="p-3 text-center font-semibold">Nama</th>
-                    <th className="p-3 text-center font-semibold">No. HP</th>
-                    <th className="p-3 text-center font-semibold">Waktu Pemesanan</th>
-                    <th className="p-3 text-center font-semibold">Paket</th>
-                    <th className="p-3 text-center font-semibold">Status Pembayaran</th>
-                    <th className="p-3 text-center font-semibold">Booking Status</th>
-                    <th className="p-3 text-center font-semibold">Aksi</th>
-                  </>
-                )}
-              </tr>
-            </thead>
+          <thead className="bg-[#3D6CB9] text-white">
+            <tr>
+              {showHistory ? (
+                Object.keys(filteredData[0] || {}).map((key, index) => (
+                  <th key={index} className="p-3 text-center font-semibold">
+                    {key}
+                  </th>
+                ))
+              ) : (
+                <>
+                  <th className="p-3 text-center font-semibold">No</th>
+                  <th className="p-3 text-center font-semibold">Kode Pemesanan</th>
+                  <th className="p-3 text-center font-semibold">Nama</th>
+                  <th className="p-3 text-center font-semibold">No. HP</th>
+                  <th className="p-3 text-center font-semibold">Waktu Pemesanan</th>
+                  <th className="p-3 text-center font-semibold">Paket</th>
+                  <th className="p-3 text-center font-semibold">Status Pembayaran</th>
+                  <th className="p-3 text-center font-semibold">Booking Status</th>
+                  <th className="p-3 text-center font-semibold">Aksi</th>
+                </>
+              )}
+            </tr>
+          </thead>
             <tbody>
               {filteredData.length > 0 ? (
                 filteredData.map((item, index) => (
@@ -204,7 +245,9 @@ const DaftarPesanan = () => {
                             <Eye size={16} />
                           </button>
                           <button
-                            onClick={() => router.push(`/dashboard/pemesanan/daftar-pesanan/${item.booking_id}`)}
+                            onClick={() =>  {
+                              const encodeId =hashids.encode(item.booking_id);
+                              router.push(`/dashboard/pemesanan/daftar-pesanan/${encodeId}`)}}
                             className="text-blue-600 hover:text-blue-800 cursor-pointer"
                           >
                             <Pencil size={16} />
@@ -294,12 +337,12 @@ const DaftarPesanan = () => {
                   {/* Jika statusnya unpaid */}
                   {selectedOrder.payment_status === "unpaid" && (
                     <>
-                      <p><strong>Total Tagihan:</strong> Rp {Number(selectedOrder.gross_amount).toLocaleString("id-ID")}</p>
+                      <p><strong>Total Tagihan:</strong> Rp {Number(selectedOrder.gross_amount*selectedOrder.qty).toLocaleString("id-ID")}</p>
 
                       {selectedOrder.payment_type === "dp" && (
                         <>
                           <p><strong>Dibayar (DP):</strong> Rp {Number(selectedOrder.dp_amount).toLocaleString("id-ID")}</p>
-                          <p><strong>Sisa Pembayaran:</strong> Rp {(Number(selectedOrder.gross_amount) - Number(selectedOrder.dp_amount)).toLocaleString("id-ID")}</p>
+                          <p><strong>Sisa Pembayaran:</strong> {remainingPayment !== null ? `Rp ${Number(remainingPayment).toLocaleString("id-ID")}` : "Memuat..."}</p>
                           <p className="text-red-600 text-sm mt-2">
                             Ini adalah pembayaran DP. Silakan lunasi sebelum{" "}
                             <strong className="text-red-700">{selectedOrder.due_date}</strong>
