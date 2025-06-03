@@ -18,57 +18,6 @@ const LoginForm = () => {
     const role = localStorage.getItem("role");
   }, []);
 
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-
-  //   if (!email || !password) {
-  //     return alert("Email dan password wajib diisi!");
-  //   }
-
-  //   setLoading(true);
-
-  //   try {
-  //     const res = await fetch("http://localhost:8000/api/auth/login", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //       },
-  //       body: JSON.stringify({ email, password }),
-  //     });
-
-  //     const data = await res.json();
-  //     console.log("Login response:", data);
-
-  //     if (res.ok) {
-  //       const token = data.access_token;
-  //       const role = data.role;
-  //       const now = new Date().getTime();
-  //       const expireTime = now + 1 * 60 * 60 * 1000;
-
-  //       localStorage.setItem("access_token", token);
-  //       localStorage.setItem("token_exp", expireTime);
-  //       localStorage.setItem("user_role", role);
-
-  //       if (role === "Front Office") {
-  //         router.push("/dashboard");
-  //       } else if (role === "Admin") {
-  //         router.push("/dashboard");
-  //       } else if (role === "Owner") {
-  //         router.push("/dashboard/penggajian/penggajian-utama");
-  //       } else if (role === "Driver") {
-  //         router.push("/dashboard");
-  //       } else {
-  //         router.push("/dashboard2");
-  //       }
-  //     } else {
-  //       setError(data.message || "Login gagal, cek email & password");
-  //     }
-  //   } catch (error) {
-  //     console.error("Login error:", error);
-  //     alert(error.message);
-  //   }
-  // };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -121,10 +70,6 @@ const LoginForm = () => {
   };
 
   return (
-    // <div className="relative w-full h-screen bg-cover bg-center bg-[url('/images/login2.jpg')] filter brightness-75">
-    //   <div
-    //     className={`flex flex-col items-center justify-center min-h-screen ${loading ? "pointer-events-none" : ""}`}
-    //   >
     <div className="relative w-full h-screen bg-cover bg-center bg-[url('/images/login2.jpg')]">
       <div className="absolute inset-0 bg-black opacity-20"></div>
       <div
@@ -166,7 +111,6 @@ const LoginForm = () => {
               <span
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute top-[36px] right-4 transform -translate-y-1/2 cursor-pointer text-gray-500"
-                // className="absolute right-4 top-1/2 cursor-pointer text-gray-500"
               >
                 {showPassword ? <EyeClosed size={20} /> : <Eye size={20} />}
               </span>
