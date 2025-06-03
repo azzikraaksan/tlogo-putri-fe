@@ -40,7 +40,6 @@
 //     fetchUser();
 //   }, []);
 
-
 //   const handleChange = (e) => {
 //     if (e.target.type === "file") {
 //       setFormData({ ...formData, [e.target.name]: e.target.files[0] });
@@ -237,19 +236,20 @@
 
 // export default withAuth(EditAnggota);
 
-
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CircleArrowLeft } from "lucide-react";
 import Sidebar from "/components/Sidebar";
-import UserMenu from "/components/Pengguna";
+import LoadingFunny from "/components/LoadingFunny.jsx";
 
 const EditProfil = () => {
   const router = useRouter();
+  const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    username: "",
     role: "",
     status: "",
     alamat: "",
@@ -264,9 +264,9 @@ const EditProfil = () => {
 
   const roleFields = {
     "Front Office": [],
-    "Owner": ["alamat", "telepon", "foto_profil", "status", "jumlah_jeep"],
-    "Driver": ["alamat", "telepon", "foto_profil", "status"],
-    "Pengurus": ["alamat", "telepon", "foto_profil", "status"],
+    Owner: ["alamat", "telepon", "foto_profil", "status", "jumlah_jeep"],
+    Driver: ["alamat", "telepon", "foto_profil", "status"],
+    Pengurus: ["alamat", "telepon", "foto_profil", "status"],
   };
 
   useEffect(() => {
@@ -282,7 +282,9 @@ const EditProfil = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
-        setFormData(data);
+        if (data.success && data.data) {
+          setFormData(data.data); // ✅ hanya ambil data-nya saja
+        }
         setLoading(false);
       } catch (error) {
         console.error("Gagal ambil data:", error);
@@ -295,7 +297,7 @@ const EditProfil = () => {
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
-  
+
     if (type === "file") {
       setFormData({
         ...formData,
@@ -308,48 +310,90 @@ const EditProfil = () => {
       });
     }
   };
-  
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem("access_token");
-    if (!token) return;
-
+  const handleSubmit = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/api/users/update`, {
+      const res = await fetch("http://localhost:8000/api/users/update", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${user.token}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          id: user.role === "Front Office" ? userTargetId : undefined, // hanya kirim kalau FO
+          name: "Sky Muhammad Zulfan",
+        }),
       });
 
-      const result = await res.json();
-      if (result.success) {
-        alert("Data berhasil diperbarui!");
-        router.push("/dashboard/profil");
+      const data = await res.json();
+      if (!res.ok) {
+        console.error("Gagal update:", data.message || data);
       } else {
-        alert("Gagal update data: " + result.message);
+        console.log("Update berhasil:", data);
       }
-    } catch (error) {
-      console.error("Update error:", error);
+    } catch (err) {
+      console.error("Update error:", err);
     }
   };
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   const token = localStorage.getItem("access_token");
+  //   if (!token) return;
+
+  //   try {
+  //     const res = await fetch("http://localhost:8000/api/users/update", {
+  //       method: "PUT",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       body: JSON.stringify({
+  //         id: userRole === "FO" ? userIdTarget : undefined,
+  //       }),
+  //     });
+
+  //     const result = await res.json();
+  //     if (result.success) {
+  //       alert("Data berhasil diperbarui!");
+  //       router.push("/dashboard/profil");
+  //     } else {
+  //       alert("Gagal update data: " + result.message);
+  //     }
+  //   } catch (error) {
+  //     console.error("Update error:", error);
+  //   }
+  // };
 
   if (loading) return <div>Loading...</div>;
 
   return (
     <div className="flex">
-      <Sidebar />
-      <UserMenu />
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+
+      <div
+        className="transition-all duration-300 ease-in-out"
+        style={{
+          marginLeft: isSidebarOpen ? 290 : 70,
+        }}
+      ></div>
       <div className="flex-1 p-6">
         <div className="flex items-center gap-2">
-          <CircleArrowLeft onClick={() => router.back()} className="cursor-pointer" />
+          <CircleArrowLeft
+            onClick={() => router.back()}
+            className="cursor-pointer"
+          />
           <h1 className="text-[32px] font-semibold">Edit Profil</h1>
         </div>
-        <form onSubmit={handleSubmit} className="w-[650px] mx-auto mt-8 p-6 bg-white shadow-md rounded-xl space-y-4">
-          <div className="text-[16px] font-semibold text-[#1C7AC8]">Role: {formData.role || "-"}</div>
-          <div className="text-[16px] font-semibold text-[#1C7AC8]">Username: {formData.username || "-"}</div>
+        <form
+          onSubmit={handleSubmit}
+          className="w-[650px] mx-auto mt-8 p-6 bg-white shadow-md rounded-xl space-y-4"
+        >
+          <div className="text-[16px] font-semibold text-[#1C7AC8]">
+            Role: {formData.role || "-"}
+          </div>
+          <div className="text-[16px] font-semibold text-[#1C7AC8]">
+            Username: {formData.username || "-"}
+          </div>
           <input
             name="name"
             value={formData.name || ""}
@@ -364,7 +408,7 @@ const EditProfil = () => {
             className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
             placeholder="Email"
           />
-          
+
           {roleFields[formData.role]?.includes("alamat") && (
             <input
               name="alamat"

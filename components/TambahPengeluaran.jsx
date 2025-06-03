@@ -114,8 +114,6 @@ const TambahPengeluaran = ({ isOpen, onClose, onAddData, initialDate }) => {
             };
 
             // Log payload di konsol browser untuk debugging
-            console.log("[FE Debug] Payload yang akan dikirim:", payload);
-            console.log("[FE Debug] Tipe amount di payload:", typeof payload.amount, "nilai:", payload.amount);
 
 
             const response = await fetch(`${API_BASE_URL}/expenditures/create`, {
@@ -144,7 +142,6 @@ const TambahPengeluaran = ({ isOpen, onClose, onAddData, initialDate }) => {
             alert("Data pengeluaran berhasil ditambahkan!");
             onClose();
         } catch (error) {
-            console.error("Kesalahan menambahkan data pengeluaran:", error);
             alert(`Gagal menambahkan data pengeluaran: ${error.message}.`);
         } finally {
             setIsSubmitting(false);

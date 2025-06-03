@@ -2,12 +2,13 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "/components/Sidebar";
-import UserMenu from "/components/Pengguna";
+import LoadingFunny from "/components/LoadingFunny.jsx";
 
 export default function ProfilPage() {
   const [user, setUser] = useState(null);
   const router = useRouter();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -40,17 +41,9 @@ export default function ProfilPage() {
       `/dashboard/profil/edit-profil`
     );
   };
-
   if (!user) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-red bg-opacity-75">
-        <div className="bg-white shadow-md p-6 rounded-lg text-center">
-          <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
+      return <LoadingFunny />;
+    }
 
   return (
     <div className="flex">
@@ -59,7 +52,7 @@ export default function ProfilPage() {
             <div
               className="transition-all duration-300 ease-in-out"
               style={{
-                marginLeft: isSidebarOpen ? 275 : 80,
+                marginLeft: isSidebarOpen ? 290 : 70,
               }}
             ></div>
       <div className="flex-1 p-6">
@@ -79,12 +72,13 @@ export default function ProfilPage() {
             )}
           </div>
           <div className="flex-1 relative">
-          <button
+          {/* INI GATAUUU WKWKWKW */}
+          {/* <button
               onClick={handleEditClick}
               className="absolute top-0 right-0 bg-[#B8D4F9] hover:bg-[#6CAEE5] text-[#1C7AC8] text-sm px-4 py-1 rounded-[8px] cursor-pointer"
             >
-              Edit Anggota
-            </button>
+              Edit Profil Saya
+            </button> */}
             <div className="grid grid-cols-[250px_10px_auto] gap-y-6 text-gray-800 ml-70 mt-10 mb-10">
               <div className="font-semibold text-[#1C7AC8]">Nama Lengkap</div>
               <div className="text-[#808080]">:</div>

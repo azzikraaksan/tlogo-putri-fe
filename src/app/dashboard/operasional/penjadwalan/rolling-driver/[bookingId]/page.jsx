@@ -594,37 +594,38 @@ const PenjadwalanPage = () => {
   const [loading, setLoading] = useState(false);
   const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
   const bookingHash = params?.bookingId;
-const decoded = hashids.decode(bookingHash);
-const decodedBookingId = decoded?.[0];
-useEffect(() => {
-  const fetchBookingDetail = async () => {
-    const token = localStorage.getItem("access_token");
-    if (!token || !decodedBookingId) return;
+  const decoded = hashids.decode(bookingHash);
+  const decodedBookingId = decoded?.[0];
 
-    try {
-      const res = await fetch(
-        `http://localhost:8000/api/bookings/${decodedBookingId}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      if (!res.ok) throw new Error("Gagal mengambil detail booking");
+  useEffect(() => {
+    const fetchBookingDetail = async () => {
+      const token = localStorage.getItem("access_token");
+      if (!token || !decodedBookingId) return;
 
-      const json = await res.json();
-      setBookingData(json);
-      console.log("Booking detail:", json);
-    } catch (error) {
-      console.error("Gagal mengambil detail booking:", error);
+      try {
+        const res = await fetch(
+          `http://localhost:8000/api/bookings/${decodedBookingId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (!res.ok) throw new Error("Gagal mengambil detail booking");
+
+        const json = await res.json();
+        setBookingData(json);
+        console.log("Booking detail:", json);
+      } catch (error) {
+        console.error("Gagal mengambil detail booking:", error);
+      }
+    };
+
+    fetchBookingDetail();
+    checkRollingStatus();
+
+    if (selectedDriver) {
+      fetchJeepByDriver(selectedDriver.driver_id);
     }
-  };
-
-  fetchBookingDetail();
-  checkRollingStatus();
-
-  if (selectedDriver) {
-    fetchJeepByDriver(selectedDriver.driver_id);
-  }
-}, [decodedBookingId, selectedDriver]);
+  }, [decodedBookingId, selectedDriver]);
   // useEffect(() => {
   //   const fetchBookingDetail = async () => {
   //     const token = localStorage.getItem("access_token");
@@ -760,73 +761,73 @@ useEffect(() => {
   // };
 
   const fetchDataAndCreateTicket = async (driverId) => {
-  const token = localStorage.getItem("access_token");
-  if (!token || !bookingId || !driverId) return;
+    const token = localStorage.getItem("access_token");
+    if (!token || !bookingId || !driverId) return;
 
-  const decoded = hashids.decode(bookingId);
-  const decodedBookingId = decoded?.[0];
+    const decoded = hashids.decode(bookingId);
+    const decodedBookingId = decoded?.[0];
 
-  if (!decodedBookingId) {
-    console.error("Gagal decode bookingId");
-    return;
-  }
-
-  try {
-    const [jeepRes, bookingRes] = await Promise.all([
-      fetch(`http://localhost:8000/api/jeeps/driver/${driverId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      fetch(`http://localhost:8000/api/bookings/${decodedBookingId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-    ]);
-
-    if (!jeepRes.ok || !bookingRes.ok) {
-      throw new Error("Gagal mengambil data dari endpoint");
+    if (!decodedBookingId) {
+      console.error("Gagal decode bookingId");
+      return;
     }
 
-    const jeepData = await jeepRes.json();
-    const booking = await bookingRes.json();
+    try {
+      const [jeepRes, bookingRes] = await Promise.all([
+        fetch(`http://localhost:8000/api/jeeps/driver/${driverId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`http://localhost:8000/api/bookings/${decodedBookingId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
 
-    const jeep = jeepData.data[0];
-
-    const payload = {
-      code_booking: booking.order_id || "",
-      nama_pemesan: booking.customer_name || "",
-      no_handphone: booking.customer_phone || "",
-      email: booking.customer_email || "",
-      driver_id: String(jeep?.driver_id),
-      jeep_id: String(jeep?.jeep_id),
-      booking_id: booking.booking_id,
-    };
-
-    const ticketRes = await fetch(
-      "http://localhost:8000/api/ticketings/create",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
+      if (!jeepRes.ok || !bookingRes.ok) {
+        throw new Error("Gagal mengambil data dari endpoint");
       }
-    );
 
-    if (!ticketRes.ok) {
-      const errorText = await ticketRes.text();
-      console.error("Respon Gagal:", errorText);
-      throw new Error("Gagal mencetak tiket");
+      const jeepData = await jeepRes.json();
+      const booking = await bookingRes.json();
+
+      const jeep = jeepData.data[0];
+
+      const payload = {
+        code_booking: booking.order_id || "",
+        nama_pemesan: booking.customer_name || "",
+        no_handphone: booking.customer_phone || "",
+        email: booking.customer_email || "",
+        driver_id: String(jeep?.driver_id),
+        jeep_id: String(jeep?.jeep_id),
+        booking_id: booking.booking_id,
+      };
+
+      const ticketRes = await fetch(
+        "http://localhost:8000/api/ticketings/create",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!ticketRes.ok) {
+        const errorText = await ticketRes.text();
+        console.error("Respon Gagal:", errorText);
+        throw new Error("Gagal mencetak tiket");
+      }
+
+      const ticketResult = await ticketRes.json();
+      console.log("Tiket berhasil dicetak:", ticketResult);
+
+      // ✅ Redirect setelah berhasil
+      router.push("/dashboard/operasional/ticketing");
+    } catch (error) {
+      console.error("Terjadi kesalahan:", error.message);
     }
-
-    const ticketResult = await ticketRes.json();
-    console.log("Tiket berhasil dicetak:", ticketResult);
-
-    // ✅ Redirect setelah berhasil
-    router.push("/dashboard/operasional/ticketing");
-  } catch (error) {
-    console.error("Terjadi kesalahan:", error.message);
-  }
-};
+  };
 
   const handleLanjutTicketing = () => {
     router.push("/dashboard/operasional/ticketing");
@@ -991,9 +992,7 @@ useEffect(() => {
             className="cursor-pointer"
             size={28}
           />
-          <h1 className="text-[32px] font-semibold text-black">
-            Atur Driver
-          </h1>
+          <h1 className="text-[32px] font-semibold text-black">Atur Driver</h1>
         </div>
 
         <div>
@@ -1024,18 +1023,20 @@ ${
             </button>
           </div>
         </div>
+          <div className="flex justify-between items-center mb-4 px-2">
+            <p className="text-gray-700">
+              <span className="font-semibold">| Tanggal Keberangkatan:</span>{" "}
+              {bookingData?.tour_date || "-"}
+              <span className="font-semibold ml-10">| Nama Pemesan:</span>{" "}
+              {bookingData?.customer_name || "-"}
+            </p>
+          </div>
         <div className="overflow-x-auto bg-white rounded-xl shadow">
+
           <table className="w-full table-auto">
             <thead className="bg-[#3D6CB9] text-white">
               <tr>
-                {/* <th className="p-2 text-center font-normal">
-                  Tanggal Keberangkatan
-                </th> */}
                 <th className="p-2 text-center font-normal">Nama Driver</th>
-                {/* <th className="p-2 text-center font-normal">Status</th> */}
-                {/* <th className="p-2 text-center font-normal">Kontak</th> */}
-                {/* <th className="p-2 text-center font-normal">Konfirmasi</th> */}
-                {/* <th className="p-2 text-center font-normal">Alasan Skip</th> */}
                 <th className="p-2 text-center font-normal">Aksi</th>
               </tr>
             </thead>
@@ -1048,31 +1049,9 @@ ${
                       key={item.id}
                       className="border-t border-gray-300 hover:bg-gray-50 transition-colors"
                     >
-                      {/* <td className="p-2 text-center text-gray-700">
-                        {item.date}
-                      </td> */}
                       <td className="p-2 text-center text-gray-700">
                         {item.driver?.name}
                       </td>
-                      {/* <td className="p-2 text-center text-gray-700">
-                        {item.assigned ? "Sudah" : "Belum"}
-                      </td> */}
-                      {/* <td className="p-2 text-center text-gray-700">
-                        <a
-                          href={`https://wa.me/${item.driver?.telepon}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-3 bg-[#B8D4F9] rounded-[10px] text-[#1C7AC8] hover:bg-[#7ba2d0] cursor-pointer inline-block"
-                        >
-                          WhatsApp
-                        </a>
-                      </td> */}
-                      {/* <td className="p-2 text-center text-gray-700">
-                        {item.driver?.konfirmasi || "Bisa"}
-                      </td> */}
-                      {/* <td className="p-2 text-center text-gray-700">
-                        {item.skip_reason || "-"}
-                      </td> */}
                       <td className="p-2 text-center">
                         <button
                           onClick={() => handleDepartureClick(item)}

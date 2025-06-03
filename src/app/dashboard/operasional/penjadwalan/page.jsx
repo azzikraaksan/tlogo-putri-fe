@@ -226,6 +226,9 @@ const PenjadwalanPage = () => {
   const now = new Date();
   const [rotations, setRotations] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -241,6 +244,70 @@ const PenjadwalanPage = () => {
       setLoading(false)
     );
   }, []);
+
+  // const fetchOrders = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const token = localStorage.getItem("access_token");
+  //     if (!token) {
+  //       throw new Error("Token tidak ditemukan. Harap login terlebih dahulu.");
+  //     }
+
+  //     const [ordersResponse, ticketingResponse] = await Promise.all([
+  //       fetch("http://localhost:8000/api/bookings", {
+  //         method: "GET",
+  //         headers: {
+  //           Accept: "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }),
+  //       fetch("http://localhost:8000/api/ticketings/all", {
+  //         method: "GET",
+  //         headers: {
+  //           Accept: "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }),
+  //     ]);
+
+  //     if (!ordersResponse.ok || !ticketingResponse.ok) {
+  //       const ordersError = await ordersResponse.text();
+  //       const ticketingError = await ticketingResponse.text();
+  //       throw new Error(
+  //         `Gagal mengambil data:\nBookings: ${ordersError}\nTicketings: ${ticketingError}`
+  //       );
+  //     }
+
+  //     const ordersData = await ordersResponse.json();
+  //     const ticketingsData = await ticketingResponse.json();
+
+  //     const ticketingBookingIds = ticketingsData.map((t) => t.booking_id);
+  //     const filteredOrders = ordersData.filter((order) => {
+  //       if (ticketingBookingIds.includes(order.booking_id)) return false;
+
+  //       const startOfToday = new Date();
+  //       startOfToday.setHours(0, 0, 0, 0);
+  //       const endOfTomorrow = new Date();
+  //       endOfTomorrow.setDate(endOfTomorrow.getDate() + 1);
+  //       endOfTomorrow.setHours(23, 59, 59, 999);
+  //       const tourDateTime = new Date(`${order.tour_date}T${order.start_time}`);
+
+  //       return tourDateTime >= startOfToday && tourDateTime <= endOfTomorrow;
+  //     });
+
+  //     filteredOrders.sort((a, b) => {
+  //       const dateA = new Date(`${a.tour_date}T${a.start_time}`);
+  //       const dateB = new Date(`${b.tour_date}T${b.start_time}`);
+  //       return dateA - dateB;
+  //     });
+
+  //     setOrders(filteredOrders);
+  //   } catch (error) {
+  //     console.error("Error saat mengambil data:", error.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const fetchOrders = async () => {
     try {
@@ -279,17 +346,31 @@ const PenjadwalanPage = () => {
       const ticketingsData = await ticketingResponse.json();
 
       const ticketingBookingIds = ticketingsData.map((t) => t.booking_id);
+
+      const startOfToday = new Date();
+      startOfToday.setHours(0, 0, 0, 0);
+      const endOfTomorrow = new Date();
+      endOfTomorrow.setDate(endOfTomorrow.getDate() + 1);
+      endOfTomorrow.setHours(23, 59, 59, 999);
+
       const filteredOrders = ordersData.filter((order) => {
-        if (ticketingBookingIds.includes(order.booking_id)) return false;
+        const statusLower = order.booking_status?.toLowerCase();
 
-        const startOfToday = new Date();
-        startOfToday.setHours(0, 0, 0, 0);
-        const endOfTomorrow = new Date();
-        endOfTomorrow.setDate(endOfTomorrow.getDate() + 1);
-        endOfTomorrow.setHours(23, 59, 59, 999);
+        // filter status selain cancel dan expire
+        const isValidStatus =
+          statusLower !== "cancel" && statusLower !== "expire";
+
+        // filter yang belum ada tiket
+        const isNotAlreadyTicketed = !ticketingBookingIds.includes(
+          order.booking_id
+        );
+
+        // filter tanggal booking hari ini sampai besok
         const tourDateTime = new Date(`${order.tour_date}T${order.start_time}`);
+        const isInDateRange =
+          tourDateTime >= startOfToday && tourDateTime <= endOfTomorrow;
 
-        return tourDateTime >= startOfToday && tourDateTime <= endOfTomorrow;
+        return isValidStatus && isNotAlreadyTicketed && isInDateRange;
       });
 
       filteredOrders.sort((a, b) => {
@@ -313,6 +394,7 @@ const PenjadwalanPage = () => {
     }
 
     setLoading(true);
+    setIsLoading(true);
     try {
       const token = localStorage.getItem("access_token");
       if (!token)
@@ -441,25 +523,30 @@ const PenjadwalanPage = () => {
           }
         })
       );
-
       const failed = results.filter((r) => !r.success);
       if (failed.length > 0) {
         const msg = failed
           .map((f) => `• Booking ${f.bookingId}: ${f.message}`)
           .join("\n");
         alert(`❌ Beberapa tiket gagal dicetak:\n\n${msg}`);
+        // tetap reset loading dan selesai di finally
       } else {
-        alert("✅ Semua tiket berhasil dicetak!");
-      }
+        setShowSuccessModal(true);
+        setSelectedBookings([]);
+        fetchOrders();
 
-      setSelectedBookings([]);
-      fetchOrders();
-      router.push("/dashboard/operasional/ticketing");
+        setTimeout(() => {
+          setShowSuccessModal(false);
+          router.push("/dashboard/operasional/ticketing");
+        }, 1500);
+        return;
+      }
     } catch (error) {
       console.error("Gagal cetak tiket:", error.message);
       alert("Terjadi kesalahan saat cetak tiket.");
     } finally {
       setLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -470,7 +557,9 @@ const PenjadwalanPage = () => {
   // };
   const handleAturJadwal = (bookingId) => {
     const encryptedId = hashids.encode(bookingId);
-    router.push(`/dashboard/operasional/penjadwalan/rolling-driver/${encryptedId}`);
+    router.push(
+      `/dashboard/operasional/penjadwalan/rolling-driver/${encryptedId}`
+    );
   };
 
   const handleKembali = () => {
@@ -581,38 +670,6 @@ const PenjadwalanPage = () => {
     setSelectedBookings([...selectedBookings, bookingId]);
   };
 
-  // const handleRollingDriver = async () => {
-  //   try {
-  //     const res = await fetch(
-  //       "http://localhost:8000/api/driver-rotations/generate",
-  //       {
-  //         method: "POST",
-  //       }
-  //     );
-
-  //     const data = await res.json();
-
-  //     if (!res.ok) {
-  //       // jika errornya karena sudah dibuat
-  //       if (data.message === "Rotasi untuk besok sudah dibuat.") {
-  //         const today = new Date().toISOString().split("T")[0];
-  //         localStorage.setItem("lastRollingDate", today);
-  //         setHasRolledToday(true);
-  //       }
-  //       throw new Error(
-  //         `Gagal generate rotasi driver: ${JSON.stringify(data)}`
-  //       );
-  //     }
-
-  //     // jika sukses
-  //     const today = new Date().toISOString().split("T")[0];
-  //     localStorage.setItem("lastRollingDate", today);
-  //     setHasRolledToday(true);
-  //   } catch (error) {
-  //     console.error("Rolling driver gagal:", error.message);
-  //   }
-  // };
-
   // const handleRolling = async () => {
   //   setLoadingRotation(true);
   //   try {
@@ -665,53 +722,92 @@ const PenjadwalanPage = () => {
   // };
   const handleRolling = async () => {
     setLoadingRotation(true);
-    const token = localStorage.getItem("access_token");
-    if (!token) {
-      alert("Token tidak ditemukan. Silakan login ulang.");
-      setLoadingRotation(false);
-      return;
-    }
-
-    const besok = new Date();
-    besok.setDate(besok.getDate() + 1);
-    const tanggalBesok = besok.toISOString().split("T")[0];
-
     try {
-      //coba generate rotasi
-      const res = await fetch(
+      const token = localStorage.getItem("access_token");
+      const response = await fetch(
         "http://localhost:8000/api/driver-rotations/generate",
         {
           method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
-      if (res.status === 400) {
-        alert("Rolling driver sudah dilakukan hari ini. Tidak bisa mengulang.");
-        return;
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Gagal rolling: ${errorText}`);
       }
 
-      if (!res.ok) {
-        throw new Error("Gagal generate driver rotation");
-      }
+      // Update status rolling di localStorage dan state
+      const today = new Date().toISOString().split("T")[0];
+      localStorage.setItem("lastRollingDate", today);
+      setIsAlreadyRolled(true);
+      setHasRolledToday(true);
 
-      //ambil data rotasi setelah berhasil generate
-      const rotasiRes = await fetch(
-        `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // Refresh data booking
+      await fetchOrders(); // penting biar tabel ke-refresh
 
-      if (!rotasiRes.ok) throw new Error("Gagal mengambil data rotasi");
-
-      const rotasiJson = await rotasiRes.json();
-      setData(rotasiJson.data || []);
+      // Bisa juga refresh jumlah driver atau rotation data kalau diperlukan
+      await fetchAvailableDriversCount();
     } catch (error) {
-      console.error("Gagal generate rotation:", error);
-      alert("Gagal generate rotation.");
+      console.error("Error saat rolling driver:", error.message);
+      alert("Terjadi kesalahan saat rolling driver.");
     } finally {
       setLoadingRotation(false);
     }
   };
+
+  // const handleRolling = async () => {
+  //   setLoadingRotation(true);
+  //   const token = localStorage.getItem("access_token");
+  //   if (!token) {
+  //     alert("Token tidak ditemukan. Silakan login ulang.");
+  //     setLoadingRotation(false);
+  //     return;
+  //   }
+
+  //   const besok = new Date();
+  //   besok.setDate(besok.getDate() + 1);
+  //   const tanggalBesok = besok.toISOString().split("T")[0];
+
+  //   try {
+  //     //coba generate rotasi
+  //     const res = await fetch(
+  //       "http://localhost:8000/api/driver-rotations/generate",
+  //       {
+  //         method: "POST",
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       }
+  //     );
+
+  //     if (res.status === 400) {
+  //       alert("Rolling driver sudah dilakukan hari ini. Tidak bisa mengulang.");
+  //       return;
+  //     }
+
+  //     if (!res.ok) {
+  //       throw new Error("Gagal generate driver rotation");
+  //     }
+
+  //     //ambil data rotasi setelah berhasil generate
+  //     const rotasiRes = await fetch(
+  //       `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
+  //       { headers: { Authorization: `Bearer ${token}` } }
+  //     );
+
+  //     if (!rotasiRes.ok) throw new Error("Gagal mengambil data rotasi");
+
+  //     const rotasiJson = await rotasiRes.json();
+  //     setData(rotasiJson.data || []);
+  //   } catch (error) {
+  //     console.error("Gagal generate rotation:", error);
+  //     alert("Gagal generate rotation.");
+  //   } finally {
+  //     setLoadingRotation(false);
+  //   }
+  // };
   // const checkRollingStatus = async () => {
   //   const token = localStorage.getItem("access_token");
   //   if (!token) return;
@@ -870,21 +966,308 @@ const PenjadwalanPage = () => {
   //   );
   // }
   if (loading) {
-  return <LoadingFunny />;
-}
+    return <LoadingFunny />;
+  }
 
-//   if (loading) {
-//   return (
-//     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
-//       <div className="shadow-md p-6 rounded-lg text-center">
-//         <p className="text-lg text-gray-800 mb-2">Memuat data...</p>
-//         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-[spin_0.5s_linear_infinite] mx-auto"></div>
-//       </div>
-//     </div>
-//   );
-// }
+  //   if (loading) {
+  //   return (
+  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
+  //       <div className="shadow-md p-6 rounded-lg text-center">
+  //         <p className="text-lg text-gray-800 mb-2">Memuat data...</p>
+  //         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-[spin_0.5s_linear_infinite] mx-auto"></div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
+  // return (
+  //   <div className="flex">
+  //     <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
 
+  //     <div
+  //       className="transition-all duration-300 ease-in-out"
+  //       style={{
+  //         marginLeft: isSidebarOpen ? 290 : 70,
+  //       }}
+  //     ></div>
+  //     <div className="flex-1 p-6">
+  //       {selectedBooking ? (
+  //         <RollingDriverPage
+  //           onKembali={handleKembali}
+  //           booking={selectedBooking}
+  //         />
+  //       ) : (
+  //         <>
+  //           <h1 className="text-[32px] font-semibold mb-6 text-black">
+  //             Daftar Pesanan
+  //           </h1>
+  //           <div className="flex justify-end mb-3">
+  //             <SearchInput
+  //               value={searchTerm}
+  //               onChange={(e) => setSearchTerm(e.target.value)}
+  //               onClear={() => setSearchTerm("")}
+  //               placeholder="Cari"
+  //             />
+  //           </div>
+  //           <div className="flex justify-end mb-3 gap-2">
+  //             <button
+  //               onClick={fetchDriversBesok}
+  //               disabled={loadingDriversBesok}
+  //               className={`bg-green-500 text-white px-2 py-1 rounded-[7px] transition ${
+  //                 loadingDriversBesok
+  //                   ? "opacity-50 cursor-not-allowed"
+  //                   : "hover:bg-green-600 cursor-pointer"
+  //               }`}
+  //             >
+  //               {loadingDriversBesok ? "Memuat..." : "Lihat Driver Besok"}
+  //             </button>
+
+  //             <button
+  //               onClick={handleRolling}
+  //               disabled={loadingRotation || isAlreadyRolled}
+  //               className={`bg-[#8FAFD9] text-white px-2 py-1 rounded-[7px] transition ${
+  //                 loadingRotation || isAlreadyRolled
+  //                   ? "opacity-50 cursor-not-allowed"
+  //                   : "hover:bg-[#7ba2d0] cursor-pointer"
+  //               }`}
+  //             >
+  //               {loadingRotation
+  //                 ? "Memproses..."
+  //                 : isAlreadyRolled
+  //                   ? "Sudah Rolling"
+  //                   : "Rolling Driver"}
+  //             </button>
+  //           </div>
+  //           {!isAlreadyRolled && (
+  //             <p className="text-sm text-gray-500 italic text-right mb-4">
+  //               *Klik <span className="font-semibold">Rolling Driver</span>{" "}
+  //               terlebih dahulu
+  //             </p>
+  //           )}
+
+  //           <div className="overflow-x-auto bg-white rounded-xl shadow">
+  //             <table className="w-full table-auto">
+  //               <thead className="bg-[#3D6CB9] text-white ">
+  //                 <tr>
+  //                   <th className="p-2 text-center font-normal">Pilih</th>
+  //                   <th className="p-2 text-center font-normal">
+  //                     Tanggal dan Waktu Keberangkatan
+  //                   </th>
+  //                   {/* <th className="p-2 text-center font-normal">Pukul</th> */}
+  //                   <th className="p-2 text-center font-normal">Nama</th>
+  //                   {/* <th className="p-2 text-center font-normal">Kontak</th> */}
+  //                   <th className="p-2 text-center font-normal">
+  //                     Pilihan Paket
+  //                   </th>
+  //                   <th className="p-2 text-center font-normal">
+  //                     Custom Driver
+  //                   </th>
+  //                 </tr>
+  //               </thead>
+  //               <tbody>
+  //                 {filteredData.length > 0 ? (
+  //                   filteredData.map((item) => (
+  //                     <tr
+  //                       key={item.booking_id}
+  //                       className="border-t border-[#808080] hover:bg-gray-50 transition-colors"
+  //                     >
+  //                       <td className="p-2 text-center">
+  //                         <input
+  //                           type="checkbox"
+  //                           className={`${
+  //                             selectedBookings.includes(item.booking_id) ||
+  //                             (filteredData.findIndex(
+  //                               (o) => o.booking_id === item.booking_id
+  //                             ) === selectedBookings.length &&
+  //                               selectedBookings.length < availableDriversCount)
+  //                               ? "cursor-pointer"
+  //                               : "cursor-not-allowed"
+  //                           }`}
+  //                           checked={selectedBookings.includes(item.booking_id)}
+  //                           disabled={
+  //                             !selectedBookings.includes(item.booking_id) &&
+  //                             (filteredData.findIndex(
+  //                               (o) => o.booking_id === item.booking_id
+  //                             ) !== selectedBookings.length ||
+  //                               selectedBookings.length >=
+  //                                 availableDriversCount)
+  //                           }
+  //                           onChange={(e) => {
+  //                             if (e.target.checked) {
+  //                               setSelectedBookings([
+  //                                 ...selectedBookings,
+  //                                 item.booking_id,
+  //                               ]);
+  //                             } else {
+  //                               setSelectedBookings(
+  //                                 selectedBookings.filter(
+  //                                   (id) => id !== item.booking_id
+  //                                 )
+  //                               );
+  //                             }
+  //                           }}
+  //                         />
+
+  //                         {/* <input
+  //                           type="checkbox"
+  //                           className={`${
+  //                             selectedBookings.includes(item.booking_id) ||
+  //                             (filteredData.findIndex(
+  //                               (o) => o.booking_id === item.booking_id
+  //                             ) === selectedBookings.length &&
+  //                               selectedBookings.length < availableDriversCount)
+  //                               ? "cursor-pointer"
+  //                               : "cursor-not-allowed"
+  //                           }`}
+  //                           checked={selectedBookings.includes(item.booking_id)}
+  //                           disabled={
+  //                             !selectedBookings.includes(item.booking_id) &&
+  //                             (selectedBookings.length >=
+  //                               availableDriversCount ||
+  //                               filteredData.findIndex(
+  //                                 (o) => o.booking_id === item.booking_id
+  //                               ) !== selectedBookings.length)
+  //                           }
+  //                           onChange={(e) => {
+  //                             if (e.target.checked) {
+  //                               setSelectedBookings([
+  //                                 ...selectedBookings,
+  //                                 item.booking_id,
+  //                               ]);
+  //                             } else {
+  //                               setSelectedBookings(
+  //                                 selectedBookings.filter(
+  //                                   (id) => id !== item.booking_id
+  //                                 )
+  //                               );
+  //                             }
+  //                           }}
+  //                         /> */}
+  //                       </td>
+
+  //                       <td className="p-2 text-center text-gray-750">
+  //                         {item.tour_date && item.start_time
+  //                           ? `${item.tour_date} ${item.start_time}`
+  //                           : "-"}
+  //                       </td>
+
+  //                       {/* <td className="p-2 text-center text-gray-750">
+  //                         {item.start_time}
+  //                       </td> */}
+  //                       <td className="p-2 text-center text-gray-750">
+  //                         {item.customer_name}
+  //                       </td>
+  //                       {/* <td className="p-2 text-center text-gray-750">
+  //                         <button
+  //                           onClick={() =>
+  //                             window.open(
+  //                               `https://wa.me/${item.customer_phone.replace(/^0/, "62")}`,
+  //                               "_blank"
+  //                             )
+  //                           }
+  //                           className="px-3 bg-[#B8D4F9] rounded-[10px] text-[#1C7AC8] hover:bg-[#7ba2d0] cursor-pointer inline-block"
+  //                         >
+  //                           WhatsApp
+  //                         </button>
+  //                       </td> */}
+  //                       <td className="p-2 text-center text-gray-750">
+  //                         Paket {item.package_id}
+  //                       </td>
+  //                       <td className="p-2 text-center text-gray-750">
+  //                         <button
+  //                           onClick={() => handleAturJadwal(item.booking_id)}
+  //                           className={`px-2 rounded-[10px] text-white transition ${
+  //                             !selectedBookings.includes(item.booking_id) &&
+  //                             selectedBookings.length >= availableDriversCount
+  //                               ? "bg-gray-300 cursor-not-allowed"
+  //                               : "bg-[#8FAFD9] hover:bg-[#7ba2d0] cursor-pointer"
+  //                           }`}
+  //                           checked={selectedBookings.includes(item.booking_id)}
+  //                           disabled={
+  //                             !selectedBookings.includes(item.booking_id) &&
+  //                             selectedBookings.length >= availableDriversCount
+  //                           }
+  //                         >
+  //                           Custom Driver
+  //                         </button>
+  //                       </td>
+  //                     </tr>
+  //                   ))
+  //                 ) : (
+  //                   <tr>
+  //                     <td colSpan="6" className="p-4 text-center text-gray-500">
+  //                       Data tidak ditemukan.
+  //                     </td>
+  //                   </tr>
+  //                 )}
+  //               </tbody>
+  //             </table>
+  //           </div>
+  //           {selectedBookings.length > 0 && (
+  //             <button
+  //               onClick={handleCetakTiket}
+  //               className={`px-2 py-1 rounded-[7px] mb-5 mt-3 transition text-white
+  //     ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-600 cursor-pointer"}
+  //   `}
+  //               disabled={isLoading}
+  //             >
+  //               {isLoading
+  //                 ? "Memproses..."
+  //                 : `Cetak Tiket (${selectedBookings.length})`}
+  //             </button>
+  //           )}
+  //         </>
+  //       )}
+  //     </div>
+  //     {showDriversBesok && (
+  //       <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
+  //         <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md max-h-[80vh] overflow-auto">
+  //           <div className="relative">
+  //             <button
+  //               onClick={() => setShowDriversBesok(false)}
+  //               className="absolute top-[-10px] right-[-4px] text-gray-500 hover:text-red-600 text-2xl font-bold cursor-pointer"
+  //               aria-label="Tutup"
+  //             >
+  //               &times;
+  //             </button>
+
+  //             <h2 className="text-xl font-semibold mb-4 text-center">
+  //               Daftar Driver Besok
+  //             </h2>
+
+  //             {driversBesok.length === 0 ? (
+  //               <p className="text-center text-gray-600">
+  //                 Silakan rolling driver terlebih dahulu.
+  //               </p>
+  //             ) : (
+  //               <ul className="list-disc pl-5 space-y-2 mt-5">
+  //                 {driversBesok.map((item) => (
+  //                   <li key={item.id} className="mb-2">
+  //                     <div>
+  //                       <span className="font-medium">
+  //                         {item.driver?.name ?? "Nama tidak tersedia"}
+  //                       </span>
+  //                     </div>
+  //                     <div className="text-sm text-gray-700">
+  //                       Dijadwalkan:{" "}
+  //                       <span className="font-semibold">
+  //                         {item.assigned === 1 ? "Sudah" : "Belum"}
+  //                       </span>{" "}
+  //                       | Alasan Skip:{" "}
+  //                       <span className="italic font-semibold">
+  //                         {item.skip_reason ?? "-"}
+  //                       </span>
+  //                     </div>
+  //                   </li>
+  //                 ))}
+  //               </ul>
+  //             )}
+  //           </div>
+  //         </div>
+  //       </div>
+  //     )}
+  //   </div>
+  // );
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -895,6 +1278,7 @@ const PenjadwalanPage = () => {
           marginLeft: isSidebarOpen ? 290 : 70,
         }}
       ></div>
+
       <div className="flex-1 p-6">
         {selectedBooking ? (
           <RollingDriverPage
@@ -906,6 +1290,7 @@ const PenjadwalanPage = () => {
             <h1 className="text-[32px] font-semibold mb-6 text-black">
               Daftar Pesanan
             </h1>
+
             <div className="flex justify-end mb-3">
               <SearchInput
                 value={searchTerm}
@@ -914,7 +1299,8 @@ const PenjadwalanPage = () => {
                 placeholder="Cari"
               />
             </div>
-            <div className="flex justify-end mb-3 gap-2">
+
+            {/* <div className="flex justify-end mb-3 gap-2">
               <button
                 onClick={fetchDriversBesok}
                 disabled={loadingDriversBesok}
@@ -944,17 +1330,97 @@ const PenjadwalanPage = () => {
               </button>
             </div>
 
+            {!isAlreadyRolled && (
+              <p className="text-sm text-gray-500 italic text-right mb-4">
+                *Klik <span className="font-semibold">Rolling Driver</span>{" "}
+                terlebih dahulu
+              </p>
+            )}
+            {selectedBookings.length > 0 && (
+              <div className="flex justify-start mb-3">
+                <button
+                  onClick={handleCetakTiket}
+                  className={`px-3 py-2 rounded-[7px] text-sm transition text-white 
+        ${
+          isLoading
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-green-500 hover:bg-green-600 cursor-pointer"
+        }`}
+                  disabled={isLoading}
+                >
+                  {isLoading
+                    ? "Memproses..."
+                    : `Cetak Tiket (${selectedBookings.length})`}
+                </button>
+              </div>
+            )} */}
+            <div className="flex justify-between mb-3">
+              {selectedBookings.length > 0 ? (
+                <button
+                  onClick={handleCetakTiket}
+                  className={`px-2 py-1 rounded-[7px] transition text-white 
+        ${
+          isLoading
+            ? "bg-gray-400 cursor-not-allowed"
+            : "bg-green-500 hover:bg-green-600 cursor-pointer"
+        }`}
+                  disabled={isLoading}
+                >
+                  {isLoading
+                    ? "Memproses..."
+                    : `Cetak Tiket (${selectedBookings.length})`}
+                </button>
+              ) : (
+                <div />
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  onClick={fetchDriversBesok}
+                  disabled={loadingDriversBesok}
+                  className={`bg-green-500 text-white px-2 py-1 rounded-[7px] transition ${
+                    loadingDriversBesok
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-green-600 cursor-pointer"
+                  }`}
+                >
+                  {loadingDriversBesok ? "Memuat..." : "Lihat Driver Besok"}
+                </button>
+
+                <button
+                  onClick={handleRolling}
+                  disabled={loadingRotation || isAlreadyRolled}
+                  className={`bg-[#8FAFD9] text-white px-2 py-1 rounded-[7px] transition ${
+                    loadingRotation || isAlreadyRolled
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-[#7ba2d0] cursor-pointer"
+                  }`}
+                >
+                  {loadingRotation
+                    ? "Memproses..."
+                    : isAlreadyRolled
+                      ? "Sudah Rolling"
+                      : "Rolling Driver"}
+                </button>
+              </div>
+            </div>
+
+            {!isAlreadyRolled && (
+              <p className="text-sm text-gray-500 italic text-right mb-4">
+                *Klik <span className="font-semibold">Rolling Driver</span>{" "}
+                terlebih dahulu
+              </p>
+            )}
+
             <div className="overflow-x-auto bg-white rounded-xl shadow">
               <table className="w-full table-auto">
-                <thead className="bg-[#3D6CB9] text-white ">
+                <thead className="bg-[#3D6CB9] text-white">
                   <tr>
                     <th className="p-2 text-center font-normal">Pilih</th>
                     <th className="p-2 text-center font-normal">
                       Tanggal dan Waktu Keberangkatan
                     </th>
-                    {/* <th className="p-2 text-center font-normal">Pukul</th> */}
                     <th className="p-2 text-center font-normal">Nama</th>
-                    {/* <th className="p-2 text-center font-normal">Kontak</th> */}
                     <th className="p-2 text-center font-normal">
                       Pilihan Paket
                     </th>
@@ -1006,69 +1472,15 @@ const PenjadwalanPage = () => {
                               }
                             }}
                           />
-
-                          {/* <input
-                            type="checkbox"
-                            className={`${
-                              selectedBookings.includes(item.booking_id) ||
-                              (filteredData.findIndex(
-                                (o) => o.booking_id === item.booking_id
-                              ) === selectedBookings.length &&
-                                selectedBookings.length < availableDriversCount)
-                                ? "cursor-pointer"
-                                : "cursor-not-allowed"
-                            }`}
-                            checked={selectedBookings.includes(item.booking_id)}
-                            disabled={
-                              !selectedBookings.includes(item.booking_id) &&
-                              (selectedBookings.length >=
-                                availableDriversCount ||
-                                filteredData.findIndex(
-                                  (o) => o.booking_id === item.booking_id
-                                ) !== selectedBookings.length)
-                            }
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedBookings([
-                                  ...selectedBookings,
-                                  item.booking_id,
-                                ]);
-                              } else {
-                                setSelectedBookings(
-                                  selectedBookings.filter(
-                                    (id) => id !== item.booking_id
-                                  )
-                                );
-                              }
-                            }}
-                          /> */}
                         </td>
-
                         <td className="p-2 text-center text-gray-750">
                           {item.tour_date && item.start_time
                             ? `${item.tour_date} ${item.start_time}`
                             : "-"}
                         </td>
-
-                        {/* <td className="p-2 text-center text-gray-750">
-                          {item.start_time}
-                        </td> */}
                         <td className="p-2 text-center text-gray-750">
                           {item.customer_name}
                         </td>
-                        {/* <td className="p-2 text-center text-gray-750">
-                          <button
-                            onClick={() =>
-                              window.open(
-                                `https://wa.me/${item.customer_phone.replace(/^0/, "62")}`,
-                                "_blank"
-                              )
-                            }
-                            className="px-3 bg-[#B8D4F9] rounded-[10px] text-[#1C7AC8] hover:bg-[#7ba2d0] cursor-pointer inline-block"
-                          >
-                            WhatsApp
-                          </button>
-                        </td> */}
                         <td className="p-2 text-center text-gray-750">
                           Paket {item.package_id}
                         </td>
@@ -1081,7 +1493,6 @@ const PenjadwalanPage = () => {
                                 ? "bg-gray-300 cursor-not-allowed"
                                 : "bg-[#8FAFD9] hover:bg-[#7ba2d0] cursor-pointer"
                             }`}
-                            checked={selectedBookings.includes(item.booking_id)}
                             disabled={
                               !selectedBookings.includes(item.booking_id) &&
                               selectedBookings.length >= availableDriversCount
@@ -1102,98 +1513,87 @@ const PenjadwalanPage = () => {
                 </tbody>
               </table>
             </div>
-            {selectedBookings.length > 0 && (
-              <button
-                onClick={handleCetakTiket}
-                className="bg-green-500 text-white px-2 py-1 rounded-[7px] hover:bg-green-600 mb-5 mt-3 cursor-pointer transition"
-              >
-                Cetak Tiket ({selectedBookings.length})
-              </button>
-            )}
           </>
         )}
       </div>
+
       {showDriversBesok && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
           <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md max-h-[80vh] overflow-auto">
-            <h2 className="text-xl font-semibold mb-4 text-center">
-              Daftar Driver Besok
-            </h2>
-
-            {driversBesok.length === 0 ? (
-              <p className="text-center text-gray-600">
-                Silakan rolling driver terlebih dahulu.
-              </p>
-            ) : (
-              <ul className="list-disc pl-5 space-y-2">
-                {driversBesok.map((item) => (
-                  <li key={item.id} className="mb-2">
-                    <div>
-                      <span className="font-medium">
-                        {item.driver?.name ?? "Nama tidak tersedia"}
-                      </span>
-                    </div>
-                    <div className="text-sm text-gray-700">
-                      Dijadwalkan:{" "}
-                      <span className="font-semibold">
-                        {item.assigned === 1 ? "Sudah" : "Belum"}
-                      </span>{" "}
-                      | Skip Reason:{" "}
-                      <span className="italic">{item.skip_reason ?? "-"}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <div className="flex justify-center mt-5">
+            <div className="relative">
               <button
                 onClick={() => setShowDriversBesok(false)}
-                className="bg-red-500 hover:bg-red-600 text-white px-2 rounded-[15px] cursor-pointer"
+                className="absolute top-[-10px] right-[-4px] text-gray-500 hover:text-red-600 text-2xl font-bold cursor-pointer"
+                aria-label="Tutup"
               >
-                Tutup
+                &times;
               </button>
+
+              <h2 className="text-xl font-semibold mb-4 text-center">
+                Daftar Driver Besok
+              </h2>
+
+              {driversBesok.length === 0 ? (
+                <p className="text-center text-gray-600">
+                  Silakan rolling driver terlebih dahulu.
+                </p>
+              ) : (
+                <ul className="list-disc pl-5 space-y-2 mt-5">
+                  {driversBesok.map((item) => (
+                    <li key={item.id} className="mb-2">
+                      <div>
+                        <span className="font-medium">
+                          {item.driver?.name ?? "Nama tidak tersedia"}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-700">
+                        Dijadwalkan:{" "}
+                        <span className="font-semibold">
+                          {item.assigned === 1 ? "Sudah" : "Belum"}
+                        </span>{" "}
+                        | Alasan Skip:{" "}
+                        <span className="italic font-semibold">
+                          {item.skip_reason ?? "-"}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </div>
       )}
-
-      {/* {showDriversBesok && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
-          <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md max-h-[80vh] overflow-auto">
-            <h2 className="text-xl font-semibold mb-4 text-center">
-              Daftar Driver Besok
-            </h2>
-
-            {driversBesok.length === 0 ? (
-              <p className="text-center text-gray-600">
-                Tidak ada data driver untuk besok.
-              </p>
-            ) : (
-              <ul className="list-disc pl-5 space-y-2">
-                {driversBesok.map((driver) => (
-                  <li key={driver.id}>
-                    <span className="font-medium">{driver.driver_id}</span> –
-                    Status:{" "}
-                    <span className="italic text-gray-700">
-                      {driver.status}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            <div className="flex justify-center mt-5">
-              <button
-                onClick={() => setShowDriversBesok(false)}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
-              >
-                Tutup
-              </button>
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl p-6 shadow-lg w-[90%] max-w-md text-center animate-fade-in">
+            <div className="flex justify-center mb-4">
+              <div className="bg-green-100 text-green-600 rounded-full p-3">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
             </div>
+            <h2 className="text-xl font-semibold mb-2">
+              Berhasil!
+            </h2>
+            <p className="text-gray-600">
+              Tunggu sebentar, kamu akan diarahkan...
+            </p>
           </div>
         </div>
-      )} */}
+      )}
     </div>
   );
 };
