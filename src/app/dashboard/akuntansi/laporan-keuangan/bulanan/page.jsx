@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Sidebar from "/components/Sidebar.jsx";
-// import UserMenu from "/components/Pengguna.jsx"; // Pastikan komponen ini ada
 import withAuth from "/src/app/lib/withAuth";
 import {
     FileText,
@@ -34,7 +33,6 @@ const formatDateFull = (dateString) => {
     if (!dateString) return "-";
     const d = new Date(dateString);
     if (isNaN(d.getTime())) {
-        console.warn("Format tanggal tidak valid diterima di formatDateFull:", dateString);
         return dateString; 
     }
     return d.toLocaleDateString('id-ID', {
@@ -51,28 +49,21 @@ const BulananPage = ({ children }) => {
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const router = useRouter();
 
-    // Fungsi untuk memuat data dari Backend berdasarkan bulan dan tahun yang dipilih
     const loadDataFromBackend = useCallback(async () => {
-        console.log(`Memuat data untuk bulan: ${selectedMonth}, tahun: ${selectedYear}`);
         setIsLoading(true);
         try {
             const response = await fetch(
                 `${API_BASE_URL}/reports/bulan?month=${selectedMonth}&year=${selectedYear}`
             );
-            console.log("Respons fetch diterima, status:", response.status);
 
-            const rawData = await response.json(); // Ambil JSON-nya langsung dulu
-            console.log("Raw data dari backend:", rawData);
+            const rawData = await response.json(); 
 
-            // Cek apakah response dari backend menyatakan gagal
             if (rawData.success === false || !Array.isArray(rawData.data)) {
-                console.warn(`Data laporan bulanan tidak ditemukan untuk ${selectedMonth}-${selectedYear}`);
-                setDataBulanan([]); // Kosongin data kalau gagal atau data bukan array
+                setDataBulanan([]); 
                 return;
-              }
+            }
 
             const fetchedData = rawData.data;
-            console.log("Fetched data (setelah dicek array/object):", fetchedData);
 
             const formattedData = fetchedData.map(item => ({
                 reportId: item.report_id,
@@ -84,22 +75,17 @@ const BulananPage = ({ children }) => {
                 cleanOperations: parseFloat(item.clean_operations || 0),
                 jeepAmount: parseInt(item.jeep_amount || 0),
             }));
-            console.log("Formatted data (dataBulanan):", formattedData);
             setDataBulanan(formattedData);
         } catch (error) {
-            console.error("Gagal memuat laporan bulanan dari backend:", error);
-            setDataBulanan([]); // Kosongkan data jika ada error
-            alert("Terjadi kesalahan saat memuat data laporan bulanan. Cek konsol untuk detail.");
+            setDataBulanan([]); 
         } finally {
             setIsLoading(false);
-            console.log("loadDataFromBackend selesai.");
         }
     }, [selectedMonth, selectedYear]);
 
-    // Efek samping untuk memuat data saat filter bulan/tahun berubah
     useEffect(() => {
         loadDataFromBackend();
-    }, [loadDataFromBackend]); // Dipanggil ketika loadDataFromBackend (dan dependensinya selectedMonth/Year) berubah
+    }, [loadDataFromBackend]); 
 
     const totalNetCashBulanan = useMemo(() => {
         return dataBulanan.reduce((sum, item) => sum + (item.netCash || 0), 0);
@@ -114,21 +100,15 @@ const BulananPage = ({ children }) => {
             const response = await fetch(`${API_BASE_URL}/reports/generate`, {
                 method: 'POST',
                 headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                 // Jika backend membutuhkan bulan/tahun untuk generate, uncomment dan sesuaikan:
-                // body: JSON.stringify({ month: new Date().getMonth() + 1, year: new Date().getFullYear() }),
             });
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error(`Gagal generate laporan: ${response.status}, body: ${errorText}`);
                 throw new Error(`Gagal memicu generate laporan: ${response.statusText || 'Unknown Error'}`);
             }
             alert("Proses pembuatan laporan berhasil dipicu di backend. Memuat data terbaru untuk bulan/tahun saat ini...");
-            // Setelah generate, muat ulang data untuk bulan/tahun yang sedang aktif di filter
             await loadDataFromBackend(); 
         } catch (error) {
-            console.error("Error saat memicu generate laporan bulanan:", error);
-            alert(`Gagal memicu generate laporan bulanan: ${error.message}`);
-            setIsLoading(false); // Pastikan isLoading false jika ada error
+            setIsLoading(false); 
         }
     };
 
@@ -157,7 +137,6 @@ const BulananPage = ({ children }) => {
             XLSX.utils.book_append_sheet(wb, ws, "Laporan Bulanan");
             XLSX.writeFile(wb, getExportFileName("xlsx"));
         } catch (error) {
-            console.error("Export Excel error:", error);
             alert("Gagal export Excel!");
         }
     };
@@ -192,7 +171,6 @@ const BulananPage = ({ children }) => {
             });
             doc.save(getExportFileName("pdf"));
         } catch (error) {
-            console.error("Export PDF error:", error);
             alert("Gagal export PDF!");
         }
     };
@@ -265,7 +243,6 @@ const BulananPage = ({ children }) => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {/* Pesan "Data Tidak Ditemukan" akan muncul jika dataBulanan kosong setelah fetch */}
                                         {dataBulanan.length === 0 ? (
                                             <tr>
                                                 <td colSpan={tableHeaders.length} className="text-center p-4 text-gray-500 font-medium">

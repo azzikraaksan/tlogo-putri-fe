@@ -573,8 +573,30 @@ const AnggotaPage = () => {
                         <td className="p-2 text-center text-gray-700">
                           {item?.role || "-"}
                         </td>
-                        <td className="p-2 text-center text-gray-700">
+                        {/* <td className="p-2 text-center text-gray-700">
                           {item?.status || "-"}
+                        </td> */}
+                        <td className="p-2 text-center">
+                          <span
+                            className={`inline-flex items-center gap-2 px-2 py-1 text-[14px] font-semibold rounded-full ${
+                              item.status === "Aktif"
+                                ? "bg-green-100 text-green-600"
+                                : item.status === "Tidak Aktif"
+                                  ? "bg-red-100 text-red-600"
+                                  : "text-gray-700"
+                            }`}
+                          >
+                            <span
+                              className={`w-2 h-2 rounded-full ${
+                                item.status === "Aktif"
+                                  ? "bg-green-600"
+                                  : item.status === "Tidak Aktif"
+                                    ? "bg-red-600"
+                                    : "bg-gray-400"
+                              }`}
+                            ></span>
+                            {item?.status || "-"} 
+                          </span>
                         </td>
                         <td className="p-2 text-center">
                           <button
