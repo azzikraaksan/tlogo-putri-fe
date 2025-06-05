@@ -1116,63 +1116,23 @@ import SlipGaji from "/components/SlipGaji";
 function DaftarGaji() {
   const [data, setData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [positionFilter, setPositionFilter] = useState("Driver");
+  const [positionFilter, setPositionFilter] = useState("Semua");
   const [statusFilter, setStatusFilter] = useState("Semua");
   const [currentPage, setCurrentPage] = useState(1);
   const [modeCatat, setModeCatat] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
-  const itemsPerPage = 5;
+  const itemsPerPage = 10;
   const [allPreviews, setAllPreviews] = useState([]); // untuk semua entri
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
+    ""
+    //new Date().toISOString().split("T")[0]
   );
+
   const [dataGaji, setDataGaji] = useState([]);
   const [showSlipModal, setShowSlipModal] = useState(false);
 
   const router = useRouter();
-
-  //const fetchSalaryPreview = async () => {
-  //  try {
-  //    const response = await fetch("http://localhost:8000/api/salary/previews");
-  //    if (!response.ok)
-  //      throw new Error(`HTTP error! status: ${response.status}`);
-
-  //    const data = await response.json();
-
-  //    console.log("Data dari backend:", data); // <-- ini untuk cek data apa yang didapat
-
-  //    const previews = data.previews.map((item) => ({
-  //      id: item.id,
-  //      user_id: item.user_id, // sesuai dengan API
-  //      nama: item.nama,
-  //      posisi: item.role, // pakai 'role' dari API
-  //      role: item.role, // simpan juga role jika diperlukan
-  //      status: item.status,
-  //      //tanggal: item.created_at ?? new Date().toISOString(),
-  //      tanggal: item.payment_date,
-  //    }));
-
-  //    setAllPreviews(previews);
-
-  //    // Filter agar unik per user per hari
-  //    const unique = new Map();
-  //    previews.forEach((item) => {
-  //      const dateKey = new Date(item.tanggal).toISOString().slice(0, 10);
-  //      const key = `${item.user_id}_${dateKey}`;
-  //      if (!unique.has(key)) {
-  //        unique.set(key, item);
-  //      }
-  //    });
-
-  //    setData([...unique.values()]);
-  //  } catch (error) {
-  //    console.error(
-  //      "Error saat mengambil salary preview:",
-  //      error?.message || error
-  //    );
-  //  }
-  //};
 
   const fetchSalaryDataGabungan = async () => {
     try {
@@ -1199,20 +1159,6 @@ function DaftarGaji() {
         tanggal: item.payment_date,
         status: item.status,
       }));
-
-      //const merged = previews.map((preview) => {
-      //  const isMatched = Array.isArray(allJson) && allJson.some(
-      //    (s) =>
-      //      s.driver_id === preview.user_id &&
-      //      s.role.toLowerCase() === preview.role.toLowerCase() &&
-      //      s.date === preview.payment_date
-      //  );
-
-      //  return {
-      //    ...preview,
-      //    status: isMatched ? "Berhasil" : "Belum",
-      //  };
-      //});
 
       const formatDate = (dateStr) =>
         new Date(dateStr).toISOString().slice(0, 10);
@@ -1270,90 +1216,6 @@ function DaftarGaji() {
       console.error("Gagal fetch salary/all:", error);
     }
   };
-
-  //useEffect(() => {
-  //  const init = async () => {
-  //    const updated = localStorage.getItem("statusUpdated"); // ✅ ambil di sini
-  //    console.log("📦 Ambil dari localStorage:", updated);
-
-  //    //await fetchSalaryDataGabungan();
-
-  //    //  //  if (updated) {
-  //    //  //    //const [user_id, role] = updated.split("-");
-  //    //  //    //console.log("📌 updateStatus akan dipanggil dengan:", user_id, role);
-  //    //  //    //updateStatus(Number(user_id), role);
-  //    //  //    localStorage.removeItem("statusUpdated");
-  //    //  //  }
-  //    //  //};
-
-  //    //  //if (updated) {
-  //    //  //        const [user_id, role] = updated.split("-");
-  //    //  //    console.log("📌 updateStatus akan dipanggil dengan:", user_id, role);
-  //    //  //    //updateStatus(Number(user_id), role);
-  //    //  //    //await fetchSalaryDataGabungan();  // refresh data dari backend
-  //    //  //    //localStorage.removeItem("statusUpdated");
-  //    //  //    await updateStatus(Number(user_id), role);
-  //    //  //    await fetchSalaryDataGabungan();  // refresh data setelah update
-  //    //  //    localStorage.removeItem("statusUpdated");
-  //    //  //  } else {
-  //    //  //    await fetchSalaryDataGabungan();  // load data pertama kali
-  //    //  //  }
-  //    //  //};
-  //    if (updated) {
-  //      // Kalau sudah update, langsung fetch dari salary/all
-  //      await fetchSalaryAllData(); // fungsi fetch untuk ambil data dari /salary/all
-  //      localStorage.removeItem("statusUpdated");
-  //    } else {
-  //      // Kalau belum ada update, fetch data previews seperti biasa (atau gabungan)
-  //      await fetchSalaryDataGabungan();
-  //    }
-  //  };
-
-  //  init();
-  //}, []);
-
-  //useEffect(() => {
-  //  fetchSalaryDataGabungan();
-
-  //  fetchSalaryAllData();
-  //}, []);
-
-  //  useEffect(() => {
-  //  const init = async () => {
-  //    const updated = localStorage.getItem("statusUpdated");
-  //    console.log("📦 Ambil dari localStorage:", updated);
-
-  //    if (updated && updated.includes("-")) {
-  //      const [user_id, role] = updated.split("-");
-  //      await updateStatus(Number(user_id), role); // update di state lokal
-  //      await fetchSalaryDataGabungan(); // sinkron ulang dari backend
-  //      localStorage.removeItem("statusUpdated");
-  //    } else {
-  //      await fetchSalaryDataGabungan();
-  //    }
-  //  };
-
-  //  init();
-  //}, []);
-
-  //useEffect(() => {
-  //  const init = async () => {
-  //    if (typeof window !== "undefined") {
-  //      const updated = localStorage.getItem("statusUpdated");
-
-  //      await fetchSalaryAllData(); // Fetch tetap dijalankan
-
-  //      if (updated && updated.includes("-")) {
-  //        const [user_id, role] = updated.split("-");
-  //        updateStatus(Number(user_id), role); // Update lokal state
-  //        localStorage.removeItem("statusUpdated");
-  //      } else {
-  //        await fetchSalaryDataGabungan();
-  //      }
-  //    }
-  //  };
-  //  init();
-  //}, []);
 
   useEffect(() => {
     const init = async () => {
@@ -1453,14 +1315,21 @@ function DaftarGaji() {
   }, []);
 
   const filteredData = (data || [])
-    .filter(
-      (item) =>
-        item.posisi === positionFilter && // posisi, bukan role
+    .filter((item) => {
+      const matchesSearch =
+        item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.posisi.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.tanggal?.toLowerCase().includes(searchQuery.toLowerCase());
+
+      return (
+        (positionFilter === "Semua" || item.posisi === positionFilter) &&
         (statusFilter === "Semua" ||
           item.status.toLowerCase() === statusFilter.toLowerCase()) &&
-        item.nama.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        item.tanggal?.slice(0, 10) === selectedDate
-    )
+        matchesSearch &&
+        (!selectedDate || item.tanggal?.slice(0, 10) === selectedDate)
+      );
+    })
     .sort((a, b) => {
       if (a.status === b.status) {
         return parseInt(a.id) - parseInt(b.id);
@@ -1567,6 +1436,7 @@ function DaftarGaji() {
                 }}
                 className="text-black text-sm border border-gray-700 rounded px-2 py-1"
               >
+                <option value="Semua">Semua</option>
                 <option value="Driver">Driver</option>
                 <option value="Owner">Owner</option>
                 <option value="Front Office">Front Office</option>
@@ -1601,6 +1471,16 @@ function DaftarGaji() {
                 }}
                 className="mt-1 block w-40 rounded-md border border-gray-300 bg-white py-2 px-3 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
               />
+              <button
+                onClick={() => {
+                  setSelectedDate("");
+                  setPositionFilter("Semua");
+                  setStatusFilter("Semua");
+                }}
+                className="text-sm text-blue-600"
+              >
+                Reset Semua Filter
+              </button>
             </div>
 
             <div className="flex justify-end mb-4">
@@ -1620,7 +1500,6 @@ function DaftarGaji() {
                 <table className="w-full table-auto text-center">
                   <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
                     <tr>
-                      {/*<th className="p-3">ID Karyawan</th>*/}
                       <th className="p-3">Nama Karyawan</th>
                       <th className="p-3">Posisi</th>
                       <th className="p-3">Tanggal</th>
@@ -1632,7 +1511,6 @@ function DaftarGaji() {
                     {paginatedData.length > 0 ? (
                       paginatedData.map((item) => (
                         <tr key={item.id} className="border-b last:border-b-0">
-                          {/*<td className="p-3">{item.user_id}</td>*/}
                           <td className="p-3">{item.nama}</td>
                           <td className="p-3">{item.posisi}</td>
                           <td className="p-3">{item.tanggal}</td>
@@ -1700,7 +1578,7 @@ function DaftarGaji() {
                     ) : (
                       <tr>
                         <td colSpan="7" className="p-4 text-gray-500">
-                          Data tidak ditemukan.
+                          Data penggajian tidak ditemukan.
                         </td>
                       </tr>
                     )}
@@ -1710,25 +1588,52 @@ function DaftarGaji() {
             </div>
 
             {/* Pagination */}
-            <div className="mt-4 flex justify-center items-center gap-3">
+            <div className="flex justify-center items-center gap-1 mt-4">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1 border rounded disabled:opacity-50"
+                className="px-2 py-1 rounded disabled:opacity-30 hover:bg-gray-200"
               >
-                Prev
+                &lt;
               </button>
-              <span>
-                Halaman {currentPage} dari {totalPages || 1}
-              </span>
+
+              {[...Array(totalPages)].map((_, i) => {
+                const page = i + 1;
+                const shouldShow =
+                  page === 1 ||
+                  page === totalPages ||
+                  Math.abs(page - currentPage) <= 2;
+
+                if (page === 2 && currentPage > 4)
+                  return <span key="start-dots">...</span>;
+                if (page === totalPages - 1 && currentPage < totalPages - 3)
+                  return <span key="end-dots">...</span>;
+
+                return (
+                  shouldShow && (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 rounded ${
+                        currentPage === page
+                          ? "bg-[#3D6CB9] text-white"
+                          : "hover:bg-gray-200"
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  )
+                );
+              })}
+
               <button
                 onClick={() =>
                   setCurrentPage((p) => Math.min(p + 1, totalPages))
                 }
-                disabled={currentPage === totalPages || totalPages === 0}
-                className="px-3 py-1 border rounded disabled:opacity-50"
+                disabled={currentPage === totalPages}
+                className="px-2 py-1 rounded disabled:opacity-30 hover:bg-gray-200"
               >
-                Next
+                &gt;
               </button>
             </div>
           </>
