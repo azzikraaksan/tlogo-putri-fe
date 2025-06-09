@@ -1,4 +1,4 @@
-"use client"; // penting kalau pakai React hooks di Next 13+
+"use client"; 
 
 import { createContext, useContext, useState } from "react";
 

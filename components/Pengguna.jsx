@@ -33,7 +33,7 @@ const UserMenu = () => {
     fetchUserProfile();
   }, []);
 
-  if (!userName && !userRole) { //bisa dibicarakan kembali
+  if (!userName && !userRole) { 
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-red bg-opacity-75">
         <div className="bg-white shadow-md p-6 rounded-lg text-center">

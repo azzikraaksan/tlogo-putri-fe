@@ -101,45 +101,6 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
     }
   }, [pathname]);
 
-  // const handleLogout = () => {
-  //   localStorage.removeItem("access_token");
-  //   localStorage.removeItem("token_exp");
-  //   router.push("/");
-  // };
-
-  // const handleLogout = async () => {
-  //   const token = localStorage.getItem("access_token");
-
-  //   const confirmLogout = window.confirm(
-  //     "Apakah kamu yakin ingin keluar dari halaman ini?"
-  //   );
-  //   if (!confirmLogout) return; // user batal
-
-  //   try {
-  //     const response = await fetch("http://localhost:8000/api/auth/logout", {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       body: JSON.stringify({ token }), // token dikirim di body
-  //     });
-
-  //     if (!response.ok) {
-  //       throw new Error("Logout gagal");
-  //     }
-
-  //     // Bersihkan token
-  //     localStorage.removeItem("access_token");
-  //     localStorage.removeItem("token_exp");
-
-  //     // Redirect ke halaman login
-  //     router.push("/");
-  //   } catch (error) {
-  //     console.error("Gagal logout:", error);
-  //   }
-  // };
-
   const handleLogout = async () => {
     const token = localStorage.getItem("access_token");
     try {
@@ -166,19 +127,9 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
   };
 
   const handleLogoutClick = () => {
-    setShowLogoutConfirm(true); // buka popup konfirmasi
+    setShowLogoutConfirm(true); 
   };
 
-  // if (loading) {
-  //   return (
-  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
-  //       <div className="shadow-md p-6 rounded-lg text-center">
-  //         <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
-  //         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-  //       </div>
-  //     </div>
-  //   );
-  // }
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90">
@@ -191,9 +142,7 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
       </div>
     );
   }
-  // if (loading) {
-  //   return <LoadingFunny className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-90" />;
-  // }
+
   return (
     <>
       {/* Tombol Toggle */}
@@ -228,30 +177,11 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
                 <Link
                   href="/dashboard"
                   title="Dashboard"
-                  // className={`flex items-center pl-4 py-2 rounded-[6px] w-full hover:bg-blue-400 ${
-                  //   pathname === "/dashboard" ? "bg-blue-300" : ""
-                  // }`}
                   className={`
   flex items-center px-2 pl-4 py-2 text-white hover:bg-blue-400 rounded-[6px] cursor-pointer
   ${isSidebarOpen ? "w-full pr-4" : "w-[32px]"}
   ${pathname === "/dashboard" ? "bg-blue-300" : ""}
 `}
-
-                  //                   className={`
-                  //   flex items-center px-2 pl-4 py-2 text-white hover:bg-blue-400 rounded-[6px] cursor-pointer
-                  //   ${
-                  //     pathname === "/dashboard"
-                  //       ? "w-[275px] pr-4 hover:bg-blue-400"
-                  //       : "w-[32px] hover:bg-blue-400"
-                  //   }
-                  // `}
-                  // className={`flex items-center rounded-[6px] py-2 ${
-                  //   pathname === "/dashboard" ? "bg-blue-300" : ""
-                  // } ${
-                  //   isSidebarOpen
-                  //     ? "pl-4 pr-4 w-full hover:bg-blue-400"
-                  //     : "w-[64px] justify-center hover:bg-blue-400"
-                  // }`}
                 >
                   <div className="w-6 flex justify-center items-center -ml-3 mr-3">
                     <Compass size={20} />
@@ -581,14 +511,6 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
               </li>
               <li>
                 <button
-                  // onClick={() => {
-                  //   if (!isSidebarOpen) {
-                  //     setSidebarOpen(true);
-                  //     setIsAkuntansiOpen(true);
-                  //   } else {
-                  //     setIsAkuntansiOpen((prev) => !prev);
-                  //   }
-                  // }}
                   onClick={() => {
                     if (!isSidebarOpen) {
                       setSidebarOpen(true);
@@ -608,7 +530,6 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
                       });
                     }
                   }}
-                  // className="flex items-center justify-between w-full pl-4 py-2 rounded-[6px] hover:bg-blue-400 cursor-pointer"
                   className={`
     flex items-center justify-between pl-4 py-2 rounded-[6px] hover:bg-blue-400 cursor-pointer
     ${
@@ -698,23 +619,6 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
                       </Link>
                     </li>
 
-                    {/* Nested Dropdown: Laporan Keuangan */}
-                    {/* <li>
-                      <button
-                        onClick={() => setIsAkuntansi2Open(!isAkuntansi2Open)}
-                        className="flex items-center justify-between w-full pl-2 py-1 rounded-[6px] hover:bg-blue-400 cursor-pointer"
-                      >
-                        <div className="flex items-center flex-1">
-                          <img
-                            src="/images/laporan-keuangan.png"
-                            alt="laporan-keuangan"
-                            className="w-[20px] h-auto mr-2"
-                          />
-                          Laporan Keuangan
-                        </div>
-                      </button>
-                    </li> */}
-
                     <li>
                       <Link
                         href="/dashboard/akuntansi/presensi"
@@ -738,14 +642,6 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
 
               <li>
                 <button
-                  // onClick={() => {
-                  //   if (!isSidebarOpen) {
-                  //     setSidebarOpen(true);
-                  //     setIsGenerateOpen(true);
-                  //   } else {
-                  //     setIsGenerateOpen((prev) => !prev);
-                  //   }
-                  // }}
                   onClick={() => {
                     if (!isSidebarOpen) {
                       setSidebarOpen(true);
@@ -765,7 +661,6 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
                       });
                     }
                   }}
-                  // className="flex items-center justify-between w-full pl-4 py-2 rounded-[6px] hover:bg-blue-400 cursor-pointer"
                   className={`
     flex items-center justify-between pl-4 py-2 rounded-[6px] hover:bg-blue-400 cursor-pointer
     ${
@@ -879,91 +774,11 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
                   </Link>
                 </div>
               </li>
-              {/* <li>
-                <button
-                  onClick={() => {
-                    if (!isSidebarOpen) {
-                      setSidebarOpen(true);
-                      setIsPenggajianOpen(true);
-                    } else {
-                      setIsPenggajianOpen((prev) => !prev);
-                    }
-                  }}
-                  className={`
-    flex items-center justify-between pl-4 py-2 rounded-[6px] hover:bg-blue-400 cursor-pointer
-    ${
-      isSidebarOpen
-        ? "w-full pl-4 hover:bg-blue-400"
-        : "w-[32px] hover:bg-blue-400"
-    }
-  `}
-                  title="Operasional"
-                >
-                  <div className="flex items-center flex-1">
-                    <div className="w-6 flex justify-center items-center -ml-3 mr-3">
-                      <Wallet size={20} />
-                    </div>
-                    <span className={`${isSidebarOpen ? "inline" : "hidden"}`}>
-                      Penggajian
-                    </span>
-                  </div>
-                  {isPenggajianOpen ? (
-                    <ChevronDown size={16} />
-                  ) : (
-                    <ChevronRight size={16} />
-                  )}
-                </button>
-
-                {isSidebarOpen && isPenggajianOpen && (
-                  <ul className="pl-8 mt-2 space-y-2">
-                    <li>
-                      <Link
-                        href="/dashboard/penggajian/penggajian-utama"
-                        className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                          pathname.startsWith(
-                            "/dashboard/penggajian/penggajian-utama"
-                          )
-                            ? "bg-blue-300"
-                            : ""
-                        }`}
-                      >
-                        <img
-                          src="/images/gaji.png"
-                          alt="gaji"
-                          className="w-[20px] h-auto mr-2"
-                        />
-                        Gaji
-                      </Link>
-                    </li>
-                    <li>
-                      <Link
-                        href="/dashboard/penggajian/laporan-gaji"
-                        className={`block py-1 px-2 rounded hover:bg-blue-400 flex items-center ${
-                          pathname.startsWith(
-                            "/dashboard/penggajian/laporan-gaji"
-                          )
-                            ? "bg-blue-300"
-                            : ""
-                        }`}
-                      >
-                        <img
-                          src="/images/laporan-penggajian.png"
-                          alt="laporan-penggajian"
-                          className="w-[20px] h-auto mr-2"
-                        />
-                        Laporan Gaji
-                      </Link>
-                    </li>
-                  </ul>
-                )}
-              </li> */}
             </ul>
           )}
           <div className="mb-4 mt-4">
             <button
               onClick={handleLogoutClick}
-              //           className={`flex items-center px-2 gap-3 py-2 text-white hover:bg-blue-400 rounded-[6px] cursor-pointer
-              // ${isSidebarOpen ? "w-[275px] pr-4 hover:bg-blue-400" : "w-[32px] hover:bg-blue-400"}`}
               className={`
   flex items-center px-2 py-2 gap-3 text-white hover:bg-blue-400 rounded-[6px] cursor-pointer
   ${isSidebarOpen ? "w-full pr-4" : "w-[32px]"}
@@ -974,23 +789,6 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
                 Logout
               </span>
             </button>
-
-            {/* <button
-              onClick={handleLogout}
-              className={`
-    flex items-center px-2 gap-3 py-2 text-white hover:bg-blue-400 rounded-[6px] cursor-pointer
-    ${
-      isSidebarOpen
-        ? "w-[250px] pr-4 hover:bg-blue-400"
-        : "w-[32px] hover:bg-blue-400"
-    }
-  `}
-            >
-              <LogOut size={20} />
-              <span className={`  ${isSidebarOpen ? "inline" : "hidden"}`}>
-                Logout
-              </span>
-            </button> */}
           </div>
         </div>
       </aside>
