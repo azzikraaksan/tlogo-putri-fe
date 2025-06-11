@@ -224,14 +224,16 @@ export default function Page() {
           <h1 className="text-3xl font-bold text-black">Daftar Artikel</h1>
         </div>
 
-        <div className="flex flex-wrap justify-between items-center gap-1">
-          <div className="flex gap-2 bg-[#3D6CB9] p-2 rounded-lg">
+        <div className="flex flex-wrap justify-between items-center gap-1 mb-6">
+          <div className="flex gap-2">
             {tabs.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`px-3 py-2 rounded cursor-pointer ${
-                  activeTab === tab.value ? 'bg-white text-[#3D6CB9]' : 'bg-gray-100 text-black'
+                className={`px-3 py-1 rounded-full border text-sm font-medium transition-all duration-150 ${
+                  activeTab === tab.value
+                    ? "bg-[#3D6CB9] text-white"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                 }`}
               >
                 {tab.label}
