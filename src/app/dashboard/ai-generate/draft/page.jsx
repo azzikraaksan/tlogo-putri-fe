@@ -183,7 +183,64 @@ export default function Page() {
     router.push('/dashboard/ai-generate/draft');
   };
 
-  if (loading) return <div>Memuat data...</div>;
+  if (loading) {
+  return (
+    <div className="flex bg-white font-poppins min-h-screen">
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <div
+        className="transition-all duration-300 ease-in-out w-full"
+        style={{
+          marginLeft: isSidebarOpen ? 290 : 70,
+        }}
+      >
+        <main className="md:px-10 py-6 space-y-6">
+          <h1 className="text-3xl font-bold text-black mb-4">Daftar Artikel</h1>
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex gap-2">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.value}
+                  onClick={() => setActiveTab(tab.value)}
+                  className={`px-3 py-1 rounded-full border text-sm font-medium transition-all duration-150 ${
+                    activeTab === tab.value
+                      ? "bg-[#3D6CB9] text-white"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          </div>
+
+          <div className="overflow-x-auto rounded-md shadow-md max-h-139">
+            <table className="min-w-full text-sm text-left text-gray-600">
+              <thead className="bg-[#3D6CB9] text-white">
+                <tr>
+                  <th className="px-4 py-2 text-center">Tanggal</th>
+                  <th className="px-4 py-2 text-center">Judul</th>
+                  <th className="px-4 py-2 text-center">Pemilik</th>
+                  <th className="px-4 py-2 text-center">Kategori</th>
+                  <th className="px-4 py-2 text-center">Detail AIOSEO</th>
+                  <th className="px-4 py-2 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colSpan="6" className="text-center py-4 text-gray-500">
+                    Memuat data...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
   if (error) return <div>Terjadi kesalahan: {error}</div>;
 
   if (selectedId && !selectedArticle) {
