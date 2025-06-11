@@ -252,7 +252,7 @@ export default function Page() {
           <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
 
-        <div className="overflow-x-auto rounded-md shadow-md max-h-125">
+        <div className="overflow-x-auto rounded-md shadow-md max-h-139">
           <table className="min-w-full text-sm text-left text-gray-600">
             <thead className="bg-[#3D6CB9] text-white">
               <tr>
