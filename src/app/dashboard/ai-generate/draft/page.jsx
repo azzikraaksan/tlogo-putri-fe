@@ -296,7 +296,7 @@ export default function Page() {
                       <td className="px-4 py-2">{item.owner || item.pemilik || '-'}</td>
                       <td className="px-4 py-2 italic">
                         {item.kategori
-                          ?.split(/\n|[-•]/)
+                          ?.split(/,\s*|\n|[-•]/)
                           .map((i) => i.trim().replace(/^\d+\.\s*/, ''))
                           .filter(Boolean)
                           .slice(0, 1)
