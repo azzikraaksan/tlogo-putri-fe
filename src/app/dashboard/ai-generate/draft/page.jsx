@@ -5,8 +5,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import SearchInput from '/components/Search.jsx';
 import EditorArtikel from '/components/EditArtikel.jsx';
 import { FiEdit, FiRotateCcw, FiTrash2 } from 'react-icons/fi';
+import DOMPurify from 'dompurify';
 import Sidebar from "/components/Sidebar";
 import Hashids from 'hashids';
+
+function stripHtmlTags(html) {
+  if (typeof window === 'undefined') return html;
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  return div.textContent || div.innerText || '';
+}
 
 function formatStatus(status) {
   if (!status) return 'Konsep'; // default
@@ -301,9 +309,12 @@ export default function Page() {
                         >
                           {item.judul || '-'}
                         </div>
-                        <div className="text-xs text-gray-500 truncate" title={item.isi_konten}>
-                          {item.isi_konten || '-'}
-                        </div>
+                        <div
+                          className="text-xs text-gray-500 truncate"
+                          title={stripHtmlTags(item.isi_konten)} // Ini tetap untuk atribut title jika diperlukan
+                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.isi_konten || '-') }}
+                        />
+
                       </td>
                       <td className="px-6 py-3 align-middle">
                         <div className="flex flex-row items-center justify-center space-x-3 h-full">
