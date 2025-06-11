@@ -16,6 +16,15 @@ function stripHtmlTags(html) {
   return div.textContent || div.innerText || '';
 }
 
+function truncateText(text, maxLength) {
+  if (!text) return '';
+  const cleanText = stripHtmlTags(text); // Pastikan sudah bersih dari HTML
+  if (cleanText.length <= maxLength) {
+    return cleanText;
+  }
+  return cleanText.substring(0, maxLength) + '...';
+}
+
 function formatStatus(status) {
   if (!status) return 'Konsep'; 
   const s = status.toLowerCase();
@@ -312,7 +321,7 @@ export default function Page() {
                         <div
                           className="text-xs text-gray-500 truncate"
                           title={stripHtmlTags(item.isi_konten)} // Ini tetap untuk atribut title jika diperlukan
-                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.isi_konten || '-') }}
+                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(truncateText(item.isi_konten, 150)) }}
                         />
 
                       </td>
