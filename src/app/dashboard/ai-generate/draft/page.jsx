@@ -16,7 +16,7 @@ function stripHtmlTags(html) {
   return div.textContent || div.innerText || '';
 }
 
-function truncateText(text, maxLength) {
+function truncateText(text, maxLength) { // truncate mastiin bahwa teks ga lebih dr 1 baris
   if (!text) return '';
   const cleanText = stripHtmlTags(text); // Pastikan sudah bersih dari HTML
   if (cleanText.length <= maxLength) {
