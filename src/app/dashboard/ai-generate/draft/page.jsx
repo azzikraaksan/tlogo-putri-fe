@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import SearchInput from '/components/Search.jsx';
 import EditorArtikel from '/components/EditArtikel.jsx';
 import { FiEdit, FiRotateCcw, FiTrash2 } from 'react-icons/fi';
-import DOMPurify from 'dompurify';
+import DOMPurify from 'dompurify'; // memastikan setiap html yg berpotensi berbahaya dihilangkan
 import Sidebar from "/components/Sidebar";
 import Hashids from 'hashids';
 
@@ -17,7 +17,7 @@ function stripHtmlTags(html) {
 }
 
 function formatStatus(status) {
-  if (!status) return 'Konsep'; // default
+  if (!status) return 'Konsep'; 
   const s = status.toLowerCase();
   if (s === 'terbit' || s === 'diterbitkan') return 'Diterbitkan';
   if (s === 'sampah') return 'Sampah';
