@@ -3,7 +3,8 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { CircleArrowLeft } from "lucide-react";
 import Sidebar from "/components/Sidebar"; // Import sidebar
-import SlipGaji from "/components/SlipGaji";
+//import SlipGaji from "/components/SlipGaji";
+import SlipGajiModal from "/components/SlipGaji";
 import Hashids from "hashids";
 
 export default function GajiCatatPage() {
@@ -25,94 +26,95 @@ export default function GajiCatatPage() {
   const [totalGaji, setTotalGaji] = useState(0);
   const [status, setStatus] = useState("");
   const payment_date = searchParams.get("payment_date");
-  
 
-const fetchGajiDetail = async () => {
-  setLoading(true);
-  setError(null);
+  const fetchGajiDetail = async () => {
+    setLoading(true);
+    setError(null);
 
-  try {
-    // 1. Fetch data previews untuk mapping ticketing_id ⇄ payment_date
-    const resPreview = await fetch("http://localhost:8000/api/salary/previews");
-    const previewJson = await resPreview.json();
+    try {
+      // 1. Fetch data previews untuk mapping ticketing_id ⇄ payment_date
+      const resPreview = await fetch(
+        "http://localhost:8000/api/salary/previews"
+      );
+      const previewJson = await resPreview.json();
 
-    // 2. Ambil semua ticketing_id yang milik user & role & tanggal yang sesuai
-    const ticketingIDs = previewJson.previews
-      .filter(
+      // 2. Ambil semua ticketing_id yang milik user & role & tanggal yang sesuai
+      const ticketingIDs = previewJson.previews
+        .filter(
+          (item) =>
+            item.user_id === parseInt(id) &&
+            item.role.toLowerCase() === role.toLowerCase() &&
+            item.payment_date?.slice(0, 10) === payment_date
+        )
+        .map((item) => item.ticketing_id);
+
+      console.log("🎯 Ticketing ID untuk tanggal ini:", ticketingIDs);
+
+      // 3. Fetch detail dari endpoint preview/:id/:role
+      let endpoint = "";
+      if (role.toLowerCase() === "driver") {
+        endpoint = `http://localhost:8000/api/salary/preview/${id}/driver`;
+      } else if (role.toLowerCase() === "owner") {
+        endpoint = `http://localhost:8000/api/salary/preview/${id}/owner`;
+      } else if (role.toLowerCase() === "front office") {
+        `http://localhost:8000/api/salary/preview/${id}/fron office`;
+      } else {
+        throw new Error("Role tidak dikenali");
+      }
+
+      const resDetail = await fetch(endpoint);
+      const json = await resDetail.json();
+      const allData = json.data || [];
+
+      // 4. Filter data detail berdasarkan ticketing_id
+      const filteredData = allData.filter((item) =>
+        ticketingIDs.includes(item.ticketing_id)
+      );
+
+      setData(filteredData);
+
+      // 5. Set nama dari data pertama
+      if (filteredData.length > 0) {
+        setNama(getNamaByRole(filteredData[0], role));
+      }
+
+      // 6. Fetch salary/all untuk cek status gaji
+      const resSalaryAll = await fetch("http://localhost:8000/api/salary/all");
+      const allSalariesJson = await resSalaryAll.json();
+      const allSalaries = allSalariesJson.data || [];
+
+      const existingSalary = allSalaries.find(
         (item) =>
           item.user_id === parseInt(id) &&
           item.role.toLowerCase() === role.toLowerCase() &&
           item.payment_date?.slice(0, 10) === payment_date
-      )
-      .map((item) => item.ticketing_id);
+      );
 
-    console.log("🎯 Ticketing ID untuk tanggal ini:", ticketingIDs);
+      if (existingSalary) {
+        setStatus("Sudah");
+        setTotalGaji(existingSalary.total_salary || 0);
+      } else {
+        setStatus("Belum");
 
-    // 3. Fetch detail dari endpoint preview/:id/:role
-    let endpoint = "";
-    if (role.toLowerCase() === "driver") {
-      endpoint = `http://localhost:8000/api/salary/preview/${id}/driver`;
-    } else if (role.toLowerCase() === "owner") {
-      endpoint = `http://localhost:8000/api/salary/preview/${id}/owner`;
-    } else if (role.toLowerCase() === "front office") {
-      `http://localhost:8000/api/salary/preview/${id}/fron office`;
-    } else {
-      throw new Error("Role tidak dikenali");
+        const total = filteredData.reduce((acc, cur) => {
+          if (role.toLowerCase() === "driver")
+            return acc + (cur.driver_share || 0);
+          if (role.toLowerCase() === "owner")
+            return acc + (cur.owner_share || 0);
+          if (role.toLowerCase() === "front office")
+            return acc + (cur.front_office_share || 0);
+          return acc;
+        }, 0);
+
+        setTotalGaji(total);
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message || "Terjadi kesalahan");
+    } finally {
+      setLoading(false);
     }
-
-    const resDetail = await fetch(endpoint);
-    const json = await resDetail.json();
-    const allData = json.data || [];
-
-    // 4. Filter data detail berdasarkan ticketing_id
-    const filteredData = allData.filter((item) =>
-      ticketingIDs.includes(item.ticketing_id)
-    );
-
-    setData(filteredData);
-
-    // 5. Set nama dari data pertama
-    if (filteredData.length > 0) {
-      setNama(getNamaByRole(filteredData[0], role));
-    }
-
-    // 6. Fetch salary/all untuk cek status gaji
-    const resSalaryAll = await fetch("http://localhost:8000/api/salary/all");
-    const allSalariesJson = await resSalaryAll.json();
-    const allSalaries = allSalariesJson.data || [];
-
-    const existingSalary = allSalaries.find(
-      (item) =>
-        item.user_id === parseInt(id) &&
-        item.role.toLowerCase() === role.toLowerCase() &&
-        item.payment_date?.slice(0, 10) === payment_date
-    );
-
-    if (existingSalary) {
-      setStatus("Sudah");
-      setTotalGaji(existingSalary.total_salary || 0);
-    } else {
-      setStatus("Belum");
-
-      const total = filteredData.reduce((acc, cur) => {
-        if (role.toLowerCase() === "driver") return acc + (cur.driver_share || 0);
-        if (role.toLowerCase() === "owner") return acc + (cur.owner_share || 0);
-        if (role.toLowerCase() === "front office") return acc + (cur.front_office_share || 0);
-        return acc;
-      }, 0);
-
-      setTotalGaji(total);
-    }
-  } catch (err) {
-    console.error(err);
-    setError(err.message || "Terjadi kesalahan");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
-
+  };
 
   const getNamaByRole = (detail, role) => {
     switch (role.toLowerCase()) {
@@ -127,74 +129,13 @@ const fetchGajiDetail = async () => {
     }
   };
 
-  //const fetchTanggalGaji = async () => {
-  //  try {
-  //    const res = await fetch("http://localhost:8000/api/salary/previews");
-  //    if (!res.ok) throw new Error("Gagal mengambil data tanggal gaji");
-
-  //    const json = await res.json();
-
-  //    // Karena key-nya 'previews' di JSON
-  //    const found = json.previews.find((item) => item.id == id);
-  //    if (found) {
-  //      setTanggal(found.payment_date);
-  //    }
-  //  } catch (err) {
-  //    console.error("Error ambil tanggal:", err.message);
-  //  }
-  //};
-
-  //const fetchTanggalGaji = async () => {
-  //  try {
-  //    const res = await fetch("http://localhost:8000/api/salary/previews");
-  //    if (!res.ok) throw new Error("Gagal mengambil data tanggal gaji");
-
-  //    const json = await res.json();
-
-  //    const found = json.previews.find(
-  //      (item) =>
-  //        item.user_id == id && item.role.toLowerCase() === role.toLowerCase()
-  //    );
-
-  //    if (found && found.payment_date) {
-  //      setTanggal(found.payment_date);
-  //    } else {
-  //      console.warn("payment_date tidak ditemukan untuk user ini");
-  //    }
-  //  } catch (err) {
-  //    console.error("Gagal mengambil tanggal:", err.message);
-  //  }
-  //};
-
   useEffect(() => {
     fetchGajiDetail();
     //fetchTanggalGaji();
-      if (payment_date) {
-    setTanggal(payment_date);
-  }
+    if (payment_date) {
+      setTanggal(payment_date);
+    }
   }, [id, role, payment_date]);
-
-//  useEffect(() => {
-//  if (payment_date) {
-//    setTanggal(payment_date);
-//  }
-//}, [payment_date]);
-
-
-  //useEffect(() => {
-  //  const paymentDateParam = searchParams.get("payment_date");
-
-  //  if (paymentDateParam) {
-  //    const parsedDate = new Date(paymentDateParam);
-
-  //    // Pastikan parsedDate tidak invalid
-  //    if (!isNaN(parsedDate)) {
-  //      setTanggal(parsedDate);
-  //    } else {
-  //      console.error("Tanggal tidak valid:", paymentDateParam);
-  //    }
-  //  }
-  //}, [searchParams]);
 
   const formatRupiah = (num) => {
     if (typeof num !== "number") return "Rp 0";
@@ -247,94 +188,58 @@ const fetchGajiDetail = async () => {
       return;
     }
 
-    console.log("✅ Terbayarkan diklik, statusUpdated diset:", `${user_id}-${role}-${payment_date}`);
+    console.log(
+      "✅ Terbayarkan diklik, statusUpdated diset:",
+      `${user_id}-${role}-${payment_date}`
+    );
 
     const normalizedRole = role?.trim().toLowerCase();
 
-    //const payload = {
-    //  salaries: data.map((item) => {
-    //    let user_id, nama, roleName;
+    const validSalaries = data
+      .map((item) => {
+        let user_id, nama, roleName;
 
-    //    if (normalizedRole === "driver") {
-    //      user_id = item.driver_id;
-    //      nama = item.driver_name;
-    //      roleName = item.driver_role || "Driver";
-    //    } else if (normalizedRole === "owner") {
-    //      user_id = item.owner_id;
-    //      nama = item.owner_name;
-    //      roleName = "Owner";
-    //    } else if (normalizedRole === "fron office") {
-    //      user_id = item.front_office_id;
-    //      nama = item.front_office_name;
-    //      roleName = "Fron Office";
-    //    }
+        if (normalizedRole === "driver") {
+          user_id = item.driver_id;
+          nama = item.driver_name;
+          roleName = item.driver_role || "Driver";
+        } else if (normalizedRole === "owner") {
+          user_id = item.owner_id;
+          nama = item.owner_name;
+          roleName = "Owner";
+        } else if (normalizedRole === "fron office") {
+          user_id = item.front_office_id;
+          nama = item.front_office_name;
+          roleName = "Front Office";
+        }
 
-    //    return {
-    //      user_id,
-    //      ticketing_id: item.ticketing_id,
-    //      nama,
-    //      role: roleName,
-    //      no_lambung: item.no_lambung || "", // biasanya hanya driver yang punya
-    //      kas: item.package?.kas || 0,
-    //      operasional: item.package?.operasional || 0,
-    //      salarie:
-    //        normalizedRole === "driver"
-    //          ? item.driver_share || 0
-    //          : normalizedRole === "owner"
-    //            ? item.owner_share || 0
-    //            : item.front_office_share || 0,
-    //      total_salary: item.net || 0,
-    //      payment_date: tanggal,
-    //    };
-    //  }),
-    //};
+        return {
+          user_id,
+          ticketing_id: item.ticketing_id,
+          nama,
+          role: roleName,
+          no_lambung: item.no_lambung || "",
+          kas: item.package?.kas || 0,
+          operasional: item.package?.operasional || 0,
+          salarie:
+            normalizedRole === "driver"
+              ? item.driver_share || 0
+              : normalizedRole === "owner"
+                ? item.owner_share || 0
+                : item.front_office_share || 0,
+          total_salary: item.net || 0,
+          payment_date: tanggal,
+        };
+      })
+      .filter(
+        (item) =>
+          item.user_id &&
+          item.ticketing_id &&
+          item.payment_date &&
+          item.total_salary !== 0 // ⬅️ Bisa dihapus jika tidak wajib
+      );
 
-const validSalaries = data
-  .map((item) => {
-    let user_id, nama, roleName;
-
-    if (normalizedRole === "driver") {
-      user_id = item.driver_id;
-      nama = item.driver_name;
-      roleName = item.driver_role || "Driver";
-    } else if (normalizedRole === "owner") {
-      user_id = item.owner_id;
-      nama = item.owner_name;
-      roleName = "Owner";
-    } else if (normalizedRole === "fron office") {
-      user_id = item.front_office_id;
-      nama = item.front_office_name;
-      roleName = "Front Office";
-    }
-
-    return {
-      user_id,
-      ticketing_id: item.ticketing_id,
-      nama,
-      role: roleName,
-      no_lambung: item.no_lambung || "",
-      kas: item.package?.kas || 0,
-      operasional: item.package?.operasional || 0,
-      salarie:
-        normalizedRole === "driver"
-          ? item.driver_share || 0
-          : normalizedRole === "owner"
-          ? item.owner_share || 0
-          : item.front_office_share || 0,
-      total_salary: item.net || 0,
-      payment_date: tanggal,
-    };
-  })
-  .filter(
-    (item) =>
-      item.user_id &&
-      item.ticketing_id &&
-      item.payment_date &&
-      item.total_salary !== 0 // ⬅️ Bisa dihapus jika tidak wajib
-  );
-
-const payload = { salaries: validSalaries };
-
+    const payload = { salaries: validSalaries };
 
     const endpoint = `http://localhost:8000/api/salary/store/${user_id}/${role.toLowerCase()}`;
     console.log("Mengirim data ke endpoint:", endpoint);
@@ -350,30 +255,14 @@ const payload = { salaries: validSalaries };
       });
 
       if (response.ok) {
-  const responseData = await response.json();
-  console.log("Berhasil mengubah status:", responseData);
-  setStatus("Sudah");
+        const responseData = await response.json();
+        console.log("Berhasil mengubah status:", responseData);
+        setStatus("Sudah");
 
-  const statusKey = `${user_id}-${role.toLowerCase()}-${payment_date}`;
-localStorage.setItem("statusUpdated", statusKey);
-window.dispatchEvent(new Event("storage")); // ✅ Paksa trigger ke tab lain tanpa reload
-console.log("✅ Disimpan ke localStorage:", statusKey);
-
-
-      //if (response.ok) {
-      //  const responseData = await response.json();
-      //  console.log("Berhasil mengubah status:", responseData);
-      //  setStatus("Sudah");
-      //  const statusKey = `${user_id}-${role.toLowerCase()}-${payment_date}`;
-      //  localStorage.setItem("statusUpdated", statusKey);
-      //  console.log("✅ Disimpan ke localStorage:", statusKey);
-        //router.push(`/dashboard/penggajian/penggajian-utama?updated=${statusKey}`);
-        //router.push("/dashboard/penggajian/penggajian-utama");
-        //setTimeout(() => {
-        //  router.push(
-        //    `/dashboard/penggajian/penggajian-utama?updated=${user_id}-${role.toLowerCase()}`
-        //  );
-        //}, 200); // 200ms sudah cukup
+        const statusKey = `${user_id}-${role.toLowerCase()}-${payment_date}`;
+        localStorage.setItem("statusUpdated", statusKey);
+        window.dispatchEvent(new Event("storage")); // ✅ Paksa trigger ke tab lain tanpa reload
+        console.log("✅ Disimpan ke localStorage:", statusKey);
       } else {
         const errorText = await response.text();
         console.error("Gagal mengubah status. Status:", response.status);
@@ -507,17 +396,21 @@ console.log("✅ Disimpan ke localStorage:", statusKey);
 
       case "owner":
         return (
-          <div className="border border-gray-300 rounded-md p-4">
-            <h2 className="text-lg font-semibold mb-4">Pendapatan Owner</h2>
-            {data.map((item, i) => (
-              <div key={i} className="flex justify-between">
-                <span>{`Paket ${item.package?.slug.split("-")[1]}`}</span>
-                <span>{`Rp ${item.owner_share?.toLocaleString("id-ID")}`}</span>
+          <div className="border border-gray-300 rounded-md overflow-hidden">
+            <div className="bg-blue-600 text-white px-4 py-2 font-semibold">
+              Gaji Owner
+            </div>
+            <div className="p-4 text-sm space-y-2">
+              {data.map((item, i) => (
+                <div key={i} className="flex justify-between">
+                  <span>{`Paket ${item.package?.slug.split("-")[1]}`}</span>
+                  <span>{`Rp ${item.owner_share?.toLocaleString("id-ID")}`}</span>
+                </div>
+              ))}
+              <div className="mt-4 font-bold flex justify-between border-t pt-2">
+                <span>Total Jumlah Gaji:</span>
+                <span>{formatRupiah(totalGaji)}</span>
               </div>
-            ))}
-            <div className="mt-4 font-bold flex justify-between border-t pt-2">
-              <span>Total Pendapatan:</span>
-              <span>{formatRupiah(totalGaji)}</span>
             </div>
           </div>
         );
@@ -584,46 +477,6 @@ console.log("✅ Disimpan ke localStorage:", statusKey);
 
           {renderGajiByRole()}
           <div className="flex justify-end mt-4 gap-4">
-            {/*{status.toLowerCase() === "belum" && (
-              //<button
-              //  onClick={handleTerbayarkan}
-              //  disabled={loading}
-              //  className={`px-4 py-2 rounded text-white ${
-              //    loading
-              //      ? "bg-gray-400 cursor-not-allowed"
-              //      : "bg-green-600 hover:bg-green-700"
-              //  }`}
-              //>
-              //  {loading ? "Memproses..." : "Terbayarkan"}
-              //</button>
-              //<button
-              //  onClick={handleTerbayarkan}
-              //  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              //>
-              //  Terbayarkan
-              //</button>
-              <button
-                className="bg-green-600 text-white px-4 py-2 rounded"
-                onClick={handleTerbayarkan}
-              >
-                Terbayarkan
-              </button>
-            )}*/}
-            {/*{status !== "Sudah" && (
-              <button
-                onClick={handleTerbayarkan}
-                disabled={loading}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-              >
-                {loading ? "Memproses..." : "Terbayarkan"}
-              </button>
-            )}
-            <button
-              onClick={handleCetak}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Cetak
-            </button>*/}
             {isBelum && (
               <button
                 onClick={handleTerbayarkan}
@@ -633,15 +486,29 @@ console.log("✅ Disimpan ke localStorage:", statusKey);
               </button>
             )}
             <button
+              onClick={() => !isBelum && setShowSlipModal(true)}
+              disabled={isBelum}
+              title={
+                isBelum ? "Harap klik tombol 'Terbayarkan' terlebih dahulu" : ""
+              }
+              className={`px-4 py-2 rounded transition-all duration-200 ${
+                isBelum
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
+            >
+              Cetak
+            </button>
+            {/*<button
               onClick={() => setShowSlipModal(true)}
               className="bg-blue-600 text-white px-4 py-2 rounded"
             >
               Cetak
-            </button>
+            </button>*/}
           </div>
 
           {showSlipModal && (
-            <SlipGaji
+            <SlipGajiModal
               onClose={() => setShowSlipModal(false)}
               nama={nama}
               tanggal={tanggal}
@@ -651,26 +518,15 @@ console.log("✅ Disimpan ke localStorage:", statusKey);
             />
           )}
 
-          {/*
-          {showSlipModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg w-[90%] max-w-3xl shadow-lg p-6 relative print:w-full print:max-w-full print:p-0 print:shadow-none print:rounded-none print:bg-white">
-                <button
-                  onClick={() => setShowSlipModal(false)}
-                  className="absolute top-2 right-2 text-gray-500 hover:text-red-600 print:hidden"
-                >
-                  ✕
-                </button>
-
-                <SlipGaji
-                  id={id}
-                  nama={nama}
-                  role={role}
-                  status={status}
-                  tanggal={tanggal}
-                />
-              </div>
-            </div>
+          {/*{showSlipModal && (
+            <SlipGaji
+              onClose={() => setShowSlipModal(false)}
+              nama={nama}
+              tanggal={tanggal}
+              role={role}
+              totalGaji={totalGaji}
+              data={data}
+            />
           )}*/}
         </div>
       </div>
