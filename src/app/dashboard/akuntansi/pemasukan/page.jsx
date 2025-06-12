@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import Sidebar from "/components/Sidebar.jsx"; // Pastikan path ini benar
-import withAuth from "/src/app/lib/withAuth"; // Pastikan path ini benar
+import Sidebar from "/components/Sidebar.jsx"; 
+import withAuth from "/src/app/lib/withAuth"; 
 import {
     CalendarDays,
     FileText,
@@ -33,14 +33,11 @@ const formatRupiah = (number) => {
 
 const formatDateToDisplay = (dateString) => {
     if (!dateString) return "-";
-    // Coba parsing dengan asumsi dateString bisa jadi Date object atau string yang valid
     const date = dateString instanceof Date ? dateString : new Date(dateString);
     
     if (isNaN(date.getTime())) {
-        // Jika parsing awal gagal, coba parsing format YYYY-MM-DD dari string
         const parts = typeof dateString === 'string' ? dateString.split(' ')[0].split('-') : [];
         if (parts.length === 3) {
-            // Gunakan UTC untuk menghindari masalah timezone saat membuat Date object dari string YYYY-MM-DD
             const newDateFromParts = new Date(Date.UTC(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10)));
             if (!isNaN(newDateFromParts.getTime())) {
                 const day = newDateFromParts.getUTCDate().toString().padStart(2, "0");
@@ -49,9 +46,8 @@ const formatDateToDisplay = (dateString) => {
                 return `${day}-${month}-${year}`;
             }
         }
-        return typeof dateString === 'string' ? dateString : "-"; // Fallback
+        return typeof dateString === 'string' ? dateString : "-"; 
     }
-    // Jika parsing awal berhasil, gunakan getDate, getMonth, getFullYear (lokal)
     const day = date.getDate().toString().padStart(2, "0");
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear();
@@ -77,21 +73,18 @@ const PemasukanPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
-    // Default filter adalah hari ini
-    const [selectedDateForFilter, setSelectedDateForFilter] = useState(new Date());
+    const [selectedDateForFilter, setSelectedDateForFilter] = useState(null);
     const [tempDateForPicker, setTempDateForPicker] = useState(new Date());
     
-    const calendarRef = useRef(null); // Untuk wrapper tombol dan dropdown datepicker
-    const datePickerDropdownRef = useRef(null); // Untuk dropdown datepicker itu sendiri
+    const calendarRef = useRef(null); 
+    const datePickerDropdownRef = useRef(null); 
 
-    // LOGIKA UNTUK AUTO-UPDATE "HARI INI"
     const autoUpdateTargetDateStringRef = useRef(formatToLocalDateString(new Date()));
     const currentFilterDateStringRef = useRef(formatToLocalDateString(new Date()));
 
     useEffect(() => {
         currentFilterDateStringRef.current = selectedDateForFilter ? formatToLocalDateString(selectedDateForFilter) : null;
     }, [selectedDateForFilter]);
-    // --- AKHIR LOGIKA AUTO-UPDATE ---
 
     const fetchAndFilterIncomeData = useCallback(async () => {
         setIsLoading(true);
@@ -153,7 +146,7 @@ const PemasukanPage = () => {
             }
         } catch (error) {
             if (!error.message.toLowerCase().includes("data tidak ditemukan")) {
-                 alert(`Terjadi kesalahan: ${error.message}.`);
+                //  alert(`Terjadi kesalahan: ${error.message}.`);
             }
             setDataPemasukan([]);
             setFilteredData([]);
@@ -170,9 +163,7 @@ const PemasukanPage = () => {
         if (!tempDateForPicker) return; 
 
         setSelectedDateForFilter(tempDateForPicker);
-        // tempDateForPicker akan otomatis di-update oleh onChange DatePicker
 
-        // LOGIKA UNTUK AUTO-UPDATE "HARI INI"
         const todayString = formatToLocalDateString(new Date());
         const pickedDateString = formatToLocalDateString(tempDateForPicker);
 
@@ -181,21 +172,17 @@ const PemasukanPage = () => {
         } else {
             autoUpdateTargetDateStringRef.current = null; 
         }
-        // --- AKHIR LOGIKA AUTO-UPDATE ---
         setIsDatePickerOpen(false);
     };
 
-    const resetFilter = () => { // Tombol "Atur Ulang" akan menampilkan SEMUA data
+    const resetFilter = () => { 
         setSelectedDateForFilter(null);
         setTempDateForPicker(null); 
         
-        // LOGIKA UNTUK AUTO-UPDATE "HARI INI"
         autoUpdateTargetDateStringRef.current = null; 
-        // --- AKHIR LOGIKA AUTO-UPDATE ---
         setIsDatePickerOpen(false);
     };
 
-    // LOGIKA UNTUK AUTO-UPDATE "HARI INI"
     useEffect(() => {
         const intervalId = setInterval(() => {
             const now = new Date();
@@ -212,14 +199,14 @@ const PemasukanPage = () => {
                     autoUpdateTargetDateStringRef.current = newTodayString; 
                 }
             }
-        }, 60000); // Cek setiap 1 menit
+        }, 60000); 
 
         return () => clearInterval(intervalId); 
-    }, []); // Array dependensi kosong
-    // --- AKHIR LOGIKA AUTO-UPDATE ---
+    }, []); 
+    
 
 
-    const calculateTotalKas = () => { // Sudah benar menggunakan filteredData
+    const calculateTotalKas = () => {
         const total = filteredData.reduce((sum, item) => sum + (typeof item.cash === 'number' && !isNaN(item.cash) ? item.cash : 0), 0);
         return formatRupiah(total);
     };
@@ -317,7 +304,6 @@ const PemasukanPage = () => {
     };
 
     useEffect(() => {
-        // Menggunakan calendarRef pada div pembungkus untuk handleClickOutside
         const handleClickOutside = (event) => {
             if (isDatePickerOpen && calendarRef.current && !calendarRef.current.contains(event.target)) {
                 setIsDatePickerOpen(false);
@@ -325,8 +311,7 @@ const PemasukanPage = () => {
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [isDatePickerOpen]); // Dependensi ditambahkan agar logika selalu up-to-date dengan state isDatePickerOpen
-
+    }, [isDatePickerOpen]); 
     const tableDisplayHeaders = ["Tanggal Pemesanan", "Pemasukan", "Pengeluaran", "Kas"];
     const [isSidebarOpen, setSidebarOpen] = useState(true);
 
@@ -348,7 +333,7 @@ const PemasukanPage = () => {
                                 {!selectedDateForFilter ? (
                                     <button
                                         onClick={() => {
-                                            setTempDateForPicker(new Date()); // Set temp picker ke hari ini jika filter kosong
+                                            setTempDateForPicker(new Date()); 
                                             setIsDatePickerOpen(!isDatePickerOpen);
                                         }}
                                         className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
@@ -357,7 +342,7 @@ const PemasukanPage = () => {
                                     </button>
                                 ) : (
                                     <button
-                                        onClick={resetFilter} // Tombol "Atur Ulang" memanggil resetFilter (menampilkan semua data)
+                                        onClick={resetFilter}
                                         className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
                                     >
                                         <RotateCcw size={20} /> <span>Atur Ulang</span>
@@ -378,7 +363,6 @@ const PemasukanPage = () => {
                                         <div className="mt-4 flex justify-between">
                                             <button
                                                 onClick={() => {
-                                                    // setTempDateForPicker(selectedDateForFilter || new Date()); // Reset temp ke tanggal filter aktif
                                                     setIsDatePickerOpen(false);
                                                 }}
                                                 className="px-4 py-2 bg-red-200 text-black rounded hover:bg-red-500 hover:text-white"

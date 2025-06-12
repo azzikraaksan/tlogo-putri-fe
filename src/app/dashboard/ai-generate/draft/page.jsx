@@ -5,11 +5,28 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import SearchInput from '/components/Search.jsx';
 import EditorArtikel from '/components/EditArtikel.jsx';
 import { FiEdit, FiRotateCcw, FiTrash2 } from 'react-icons/fi';
+import DOMPurify from 'dompurify'; // memastikan setiap html yg berpotensi berbahaya dihilangkan
 import Sidebar from "/components/Sidebar";
 import Hashids from 'hashids';
 
+function stripHtmlTags(html) {
+  if (typeof window === 'undefined') return html;
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  return div.textContent || div.innerText || '';
+}
+
+function truncateText(text, maxLength) { // truncate mastiin bahwa teks ga lebih dr 1 baris
+  if (!text) return '';
+  const cleanText = stripHtmlTags(text); // Pastikan sudah bersih dari HTML
+  if (cleanText.length <= maxLength) {
+    return cleanText;
+  }
+  return cleanText.substring(0, maxLength) + '...';
+}
+
 function formatStatus(status) {
-  if (!status) return 'Konsep'; // default
+  if (!status) return 'Konsep'; 
   const s = status.toLowerCase();
   if (s === 'terbit' || s === 'diterbitkan') return 'Diterbitkan';
   if (s === 'sampah') return 'Sampah';
@@ -166,7 +183,64 @@ export default function Page() {
     router.push('/dashboard/ai-generate/draft');
   };
 
-  if (loading) return <div>Memuat data...</div>;
+  if (loading) {
+  return (
+    <div className="flex bg-white font-poppins min-h-screen">
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+      <div
+        className="transition-all duration-300 ease-in-out w-full"
+        style={{
+          marginLeft: isSidebarOpen ? 290 : 70,
+        }}
+      >
+        <main className="md:px-10 py-6 space-y-6">
+          <h1 className="text-3xl font-bold text-black mb-4">Daftar Artikel</h1>
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex gap-2">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.value}
+                  onClick={() => setActiveTab(tab.value)}
+                  className={`px-3 py-1 rounded-full border text-sm font-medium transition-all duration-150 ${
+                    activeTab === tab.value
+                      ? "bg-[#3D6CB9] text-white"
+                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+            <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          </div>
+
+          <div className="overflow-x-auto rounded-md shadow-md max-h-139">
+            <table className="min-w-full text-sm text-left text-gray-600">
+              <thead className="bg-[#3D6CB9] text-white">
+                <tr>
+                  <th className="px-4 py-2 text-center">Tanggal</th>
+                  <th className="px-4 py-2 text-center">Judul</th>
+                  <th className="px-4 py-2 text-center">Pemilik</th>
+                  <th className="px-4 py-2 text-center">Kategori</th>
+                  <th className="px-4 py-2 text-center">Detail AIOSEO</th>
+                  <th className="px-4 py-2 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colSpan="6" className="text-center py-4 text-gray-500">
+                    Memuat data...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
   if (error) return <div>Terjadi kesalahan: {error}</div>;
 
   if (selectedId && !selectedArticle) {
@@ -224,14 +298,16 @@ export default function Page() {
           <h1 className="text-3xl font-bold text-black">Daftar Artikel</h1>
         </div>
 
-        <div className="flex flex-wrap justify-between items-center gap-1">
-          <div className="flex gap-2 bg-[#3D6CB9] p-2 rounded-lg">
+        <div className="flex flex-wrap justify-between items-center gap-1 mb-6">
+          <div className="flex gap-2">
             {tabs.map((tab) => (
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`px-3 py-2 rounded cursor-pointer ${
-                  activeTab === tab.value ? 'bg-white text-[#3D6CB9]' : 'bg-gray-100 text-black'
+                className={`px-3 py-1 rounded-full border text-sm font-medium transition-all duration-150 ${
+                  activeTab === tab.value
+                    ? "bg-[#3D6CB9] text-white"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
                 }`}
               >
                 {tab.label}
@@ -242,16 +318,16 @@ export default function Page() {
           <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
 
-        <div className="overflow-x-auto rounded-md shadow-md max-h-125">
+        <div className="overflow-x-auto rounded-md shadow-md max-h-139">
           <table className="min-w-full text-sm text-left text-gray-600">
             <thead className="bg-[#3D6CB9] text-white">
               <tr>
-                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Tanggal</th>
-                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Judul</th>
-                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Pemilik</th>
-                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Kategori</th>
-                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Detail AIOSEO</th>
-                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10">Aksi</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10 text-center">Tanggal</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10 text-center">Judul</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10 text-center">Pemilik</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10 text-center">Kategori</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10 text-center">Detail AIOSEO</th>
+                <th className="px-4 py-2 sticky top-0 bg-[#3D6CB9] z-10 text-center">Aksi</th>
               </tr>
             </thead>
             <tbody>
@@ -286,7 +362,7 @@ export default function Page() {
                       <td className="px-4 py-2">{item.owner || item.pemilik || '-'}</td>
                       <td className="px-4 py-2 italic">
                         {item.kategori
-                          ?.split(/\n|[-•]/)
+                          ?.split(/,\s*|\n|[-•]/)
                           .map((i) => i.trim().replace(/^\d+\.\s*/, ''))
                           .filter(Boolean)
                           .slice(0, 1)
@@ -299,9 +375,12 @@ export default function Page() {
                         >
                           {item.judul || '-'}
                         </div>
-                        <div className="text-xs text-gray-500 truncate" title={item.isi_konten}>
-                          {item.isi_konten || '-'}
-                        </div>
+                        <div
+                          className="text-xs text-gray-500 truncate"
+                          title={stripHtmlTags(item.isi_konten)} // Ini tetap untuk atribut title jika diperlukan
+                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(truncateText(item.isi_konten, 150)) }}
+                        />
+
                       </td>
                       <td className="px-6 py-3 align-middle">
                         <div className="flex flex-row items-center justify-center space-x-3 h-full">
@@ -348,3 +427,23 @@ export default function Page() {
     </div>
   );
 }
+
+
+// app/dashboard/ai-generate/draft/page.jsx
+// Ini adalah Server Component. Tidak perlu 'use client'.
+
+// import React, { Suspense } from 'react';
+// // Import komponen Client yang baru kita buat
+// import DashboardDraftClient from './DashboardDraftClient';
+
+// export default function DraftPage() {
+//   return (
+//     // Membungkus DashboardDraftClient dengan Suspense.
+//     // Ini akan mengatasi error useSearchParams() saat build,
+//     // karena Next.js akan menunda rendering DashboardDraftClient (yang pakai useSearchParams)
+//     // sampai di sisi klien (browser)
+//     <Suspense fallback={<div>Memuat daftar artikel...</div>}>
+//       <DashboardDraftClient />
+//     </Suspense>
+//   );
+// }
