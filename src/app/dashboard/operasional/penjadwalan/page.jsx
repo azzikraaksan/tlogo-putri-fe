@@ -356,16 +356,13 @@ const PenjadwalanPage = () => {
       const filteredOrders = ordersData.filter((order) => {
         const statusLower = order.booking_status?.toLowerCase();
 
-        // filter status selain cancel dan expire
         const isValidStatus =
           statusLower !== "cancel" && statusLower !== "expire";
 
-        // filter yang belum ada tiket
         const isNotAlreadyTicketed = !ticketingBookingIds.includes(
           order.booking_id
         );
 
-        // filter tanggal booking hari ini sampai besok
         const tourDateTime = new Date(`${order.tour_date}T${order.start_time}`);
         const isInDateRange =
           tourDateTime >= startOfToday && tourDateTime <= endOfTomorrow;

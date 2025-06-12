@@ -508,7 +508,7 @@ const PenjadwalanPage = () => {
             tahun: jeep.tahun_kendaraan,
             status: driver?.status || "Tidak diketahui",
             foto: jeep.foto_jeep,
-            kontak: "WhatsApp",
+            kontak: driver?.telepon,
             // nanti diubah sesuai hasil presensi
             konfirmasi: driver?.konfirmasi || "Bisa",
             departure: "Pilih Driver",
@@ -749,7 +749,7 @@ const PenjadwalanPage = () => {
                         }
                         className="px-3 rounded-[10px] text-white bg-green-500 hover:bg-green-600 cursor-pointer inline-block"
                       >
-                        WhatsApp
+                        WhatsApp 
                       </button>
                     </td>
                     {/* <td className="p-2 text-center text-gray-750">
