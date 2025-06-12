@@ -429,9 +429,6 @@
 // }
 
 
-// app/dashboard/ai-generate/draft/page.jsx
-// Ini adalah Server Component. Tidak perlu 'use client'.
-
 import React, { Suspense } from 'react';
 import DashboardDraftClient from './DashboardDraftClient';
 
