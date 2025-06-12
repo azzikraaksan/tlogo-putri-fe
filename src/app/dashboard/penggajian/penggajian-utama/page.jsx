@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Sidebar from "/components/Sidebar";
 import SearchInput from "/components/Search";
-import GajiCatat from "/components/GajiCatat";
+//import GajiCatat from "/components/GajiCatat";
 import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
 import SlipGaji from "/components/SlipGaji";
@@ -345,6 +345,28 @@ function DaftarGaji() {
     );
   };
 
+  const handleGenerateGaji = async () => {
+    try {
+      const res = await fetch(
+        "http://localhost:8000/api/salary/previews/generate",
+        {
+          method: "POST",
+        }
+      );
+
+      if (!res.ok) throw new Error("Gagal generate data gaji");
+
+      const result = await res.json();
+      console.log("✅ Generate sukses:", result);
+
+      // Trigger reload data dari API setelah generate
+      setReloadTrigger((prev) => prev + 1);
+    } catch (err) {
+      console.error("❌ Gagal generate data gaji:", err);
+      alert("Gagal generate data gaji");
+    }
+  };
+
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -424,7 +446,14 @@ function DaftarGaji() {
               </button>
             </div>
 
-            <div className="flex justify-end mb-4">
+            <div className="flex justify-between items-center mb-4">
+              <button
+                onClick={handleGenerateGaji}
+                className="bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition"
+              >
+                Generate Data Gaji
+              </button>
+
               <SearchInput
                 value={searchQuery}
                 onChange={(e) => {
