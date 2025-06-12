@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams, useParams } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { CircleArrowLeft } from "lucide-react";
 import Sidebar from "/components/Sidebar"; // Import sidebar
 //import SlipGaji from "/components/SlipGaji";
@@ -10,7 +10,7 @@ import Hashids from "hashids";
 export default function GajiCatatPage() {
   const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
   const router = useRouter();
-  const searchParams = useSearchParams();
+  //const searchParams = useSearchParams();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   const [tanggal, setTanggal] = useState("");
@@ -25,7 +25,8 @@ export default function GajiCatatPage() {
   const [data, setData] = useState([]);
   const [totalGaji, setTotalGaji] = useState(0);
   const [status, setStatus] = useState("");
-  const payment_date = searchParams.get("payment_date");
+  const [payment_date, setPaymentDate] = useState("");
+  //const payment_date = searchParams.get("payment_date");
 
   const fetchGajiDetail = async () => {
     setLoading(true);
@@ -48,7 +49,7 @@ export default function GajiCatatPage() {
         )
         .map((item) => item.ticketing_id);
 
-      console.log("🎯 Ticketing ID untuk tanggal ini:", ticketingIDs);
+      //console.log("🎯 Ticketing ID untuk tanggal ini:", ticketingIDs);
 
       // 3. Fetch detail dari endpoint preview/:id/:role
       let endpoint = "";
@@ -129,13 +130,30 @@ export default function GajiCatatPage() {
     }
   };
 
+  //useEffect(() => {
+  //  fetchGajiDetail();
+  //  //fetchTanggalGaji();
+  //  if (payment_date) {
+  //    setTanggal(payment_date);
+  //  }
+  //}, [id, role, payment_date]);
+
   useEffect(() => {
+  if (typeof window !== "undefined") {
+    const url = new URL(window.location.href);
+    const param = url.searchParams.get("payment_date");
+    setPaymentDate(param || "");
+    setTanggal(param || ""); // langsung set tanggal di sini
+  }
+}, []);
+
+
+  useEffect(() => {
+  if (id && role && payment_date) {
     fetchGajiDetail();
-    //fetchTanggalGaji();
-    if (payment_date) {
-      setTanggal(payment_date);
-    }
-  }, [id, role, payment_date]);
+  }
+}, [id, role, payment_date]);
+
 
   const formatRupiah = (num) => {
     if (typeof num !== "number") return "Rp 0";
@@ -188,10 +206,10 @@ export default function GajiCatatPage() {
       return;
     }
 
-    console.log(
-      "✅ Terbayarkan diklik, statusUpdated diset:",
-      `${user_id}-${role}-${payment_date}`
-    );
+    //console.log(
+    //  "✅ Terbayarkan diklik, statusUpdated diset:",
+    //  `${user_id}-${role}-${payment_date}`
+    //);
 
     const normalizedRole = role?.trim().toLowerCase();
 
@@ -242,8 +260,8 @@ export default function GajiCatatPage() {
     const payload = { salaries: validSalaries };
 
     const endpoint = `http://localhost:8000/api/salary/store/${user_id}/${role.toLowerCase()}`;
-    console.log("Mengirim data ke endpoint:", endpoint);
-    console.log("Payload:", payload);
+    //console.log("Mengirim data ke endpoint:", endpoint);
+    //console.log("Payload:", payload);
 
     try {
       const response = await fetch(endpoint, {
@@ -256,13 +274,13 @@ export default function GajiCatatPage() {
 
       if (response.ok) {
         const responseData = await response.json();
-        console.log("Berhasil mengubah status:", responseData);
+        //console.log("Berhasil mengubah status:", responseData);
         setStatus("Sudah");
 
         const statusKey = `${user_id}-${role.toLowerCase()}-${payment_date}`;
         localStorage.setItem("statusUpdated", statusKey);
         window.dispatchEvent(new Event("storage")); // ✅ Paksa trigger ke tab lain tanpa reload
-        console.log("✅ Disimpan ke localStorage:", statusKey);
+        //console.log("✅ Disimpan ke localStorage:", statusKey);
       } else {
         const errorText = await response.text();
         console.error("Gagal mengubah status. Status:", response.status);
