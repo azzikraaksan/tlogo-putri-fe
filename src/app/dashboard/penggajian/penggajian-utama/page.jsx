@@ -22,10 +22,7 @@ function DaftarGaji() {
   const itemsPerPage = 10;
   const [allPreviews, setAllPreviews] = useState([]); // untuk semua entri
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(
-    ""
-    //new Date().toISOString().split("T")[0]
-  );
+  const [selectedDate, setSelectedDate] = useState("");
   const [reloadTrigger, setReloadTrigger] = useState(0);
 
   const [dataGaji, setDataGaji] = useState([]);
@@ -236,35 +233,6 @@ function DaftarGaji() {
     }
   }, []);
 
-  //const filteredData = (data || [])
-  //  .filter((item) => {
-  //    const matchesSearch =
-  //      item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //      item.posisi.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //      item.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  //      item.tanggal?.toLowerCase().includes(searchQuery.toLowerCase());
-
-  //    return (
-  //      (positionFilter === "Semua" || item.posisi === positionFilter) &&
-  //      (statusFilter === "Semua" ||
-  //        item.status.toLowerCase() === statusFilter.toLowerCase()) &&
-  //      matchesSearch &&
-  //      (!selectedDate || item.tanggal?.slice(0, 10) === selectedDate)
-  //    );
-  //  })
-  //  .sort((a, b) => {
-  //    if (a.status === b.status) {
-  //      return parseInt(a.id) - parseInt(b.id);
-  //    }
-  //    return a.status.toLowerCase() === "belum" ? -1 : 1;
-  //  });
-
-  //const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-  //const paginatedData = filteredData.slice(
-  //  (currentPage - 1) * itemsPerPage,
-  //  currentPage * itemsPerPage
-  //);
-
   const filteredData = useMemo(() => {
     return (data || [])
       .filter((item) => {
@@ -305,32 +273,6 @@ function DaftarGaji() {
     setDataGaji(data);
   };
 
-  //const handleCatat = (user_id, role) => {
-  //  localStorage.setItem("statusUpdated", `${user_id}-${role}`);
-
-  //  router.push(
-  //    `/dashboard/penggajian/penggajian-utama/catat/${user_id}/${role}`
-  //  );
-  //};
-
-  //const handleCatat = (user_id, role, payment_date) => {
-  //  console.log("Diterima payment_date:", payment_date); // debug
-
-  //  localStorage.setItem("statusUpdated", `${user_id}-${role}`);
-  //  let encodedDate = "";
-  //  if (payment_date && !isNaN(new Date(payment_date))) {
-  //    encodedDate = encodeURIComponent(
-  //      new Date(payment_date).toISOString().slice(0, 10)
-  //    );
-  //  } else {
-  //    console.warn("Tanggal tidak valid, default ke kosong.");
-  //  }
-
-  //  router.push(
-  //    `/dashboard/penggajian/penggajian-utama/catat/${user_id}/${role}?payment_date=${encodedDate}`
-  //  );
-  //};
-
   const handleCatat = (user_id, role, payment_date) => {
     console.log("Diterima payment_date:", payment_date); // debug
 
@@ -342,25 +284,10 @@ function DaftarGaji() {
     } else {
       console.warn("Tanggal tidak valid, default ke kosong.");
     }
-
-    //const encodedUserId = hashids.encode(user_id); // misal: 6 → jR
-    //const encodedRole = hashids.encodeHex(
-    //  Buffer.from(role, "utf-8").toString("hex")
-    //);
-
-    //router.push(
-    //  `/dashboard/penggajian/penggajian-utama/catat/${encodedUserId}/${encodedRole}?payment_date=${encodedDate}`
-    //);
     router.push(
       `/dashboard/penggajian/penggajian-utama/catat/${user_id}/${role}?payment_date=${encodedDate}`
     );
   };
-
-  //const handleLihat = (user_id, role) => {
-  //  router.push(
-  //    `/dashboard/penggajian/penggajian-utama/catat/${user_id}/${role.toLowerCase()}`
-  //  );
-  //};
 
   const handleLihat = (user_id, role, payment_date) => {
     console.log("Lihat detail:", user_id, role, payment_date);
@@ -390,38 +317,6 @@ function DaftarGaji() {
     setModeCatat(false);
     setSelectedRole(null);
   };
-
-  //const updateStatus = (user_id, role) => {
-  //  setAllPreviews((prevPreviews) =>
-  //    prevPreviews.map((item) => {
-  //      console.log("🔍 Mencocokkan preview:", item.user_id, item.role);
-  //      if (
-  //        item.user_id === user_id &&
-  //        item.role.toLowerCase() === role.toLowerCase()
-  //      ) {
-  //        console.log("✅ Status diubah jadi Sudah untuk", item.user_id);
-  //        return { ...item, status: "Sudah" };
-  //      }
-  //      return item;
-  //    })
-  //  );
-
-  //  setData((prevData) =>
-  //    prevData.map((item) => {
-  //      if (
-  //        item.user_id === user_id &&
-  //        item.role.toLowerCase() === role.toLowerCase()
-  //      ) {
-  //        return { ...item, status: "Sudah" };
-  //      }
-  //      return item;
-  //    })
-  //  );
-
-  //  // ✅ Tambahkan bagian ini:
-  //  console.log("📦 Menyimpan ke localStorage:", `${user_id}-${role}`);
-  //  localStorage.setItem("statusUpdated", `${user_id}-${role}`);
-  //};
 
   const updateStatus = (user_id, role, payment_date) => {
     setAllPreviews((prev) =>
@@ -582,10 +477,6 @@ function DaftarGaji() {
                           <td className="p-3 flex justify-center gap-2">
                             {item.status.toLowerCase() === "belum" ? (
                               <button
-                                //onClick={() =>
-                                //  handleCatat(item.user_id, item.role)
-                                //}
-
                                 onClick={() => {
                                   handleCatat(
                                     item.user_id,
@@ -610,7 +501,6 @@ function DaftarGaji() {
                                   className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-800 text-sm"
                                 >
                                   Lihat
-                                  {/*<Eye size={20} />*/}
                                 </button>
 
                                 {showSlipModal && (
