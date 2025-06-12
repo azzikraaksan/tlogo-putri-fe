@@ -1,24 +1,3 @@
-// // 'use client';
-
-// // import { useSearchParams } from 'next/navigation';
-
-// // export default function DraftClientComponent() {
-// //   const searchParams = useSearchParams();
-// //   const draftId = searchParams.get('id'); // contoh ambil param 'id'
-
-// //   return (
-// //     <div>
-// //       <p>Draft ID: {draftId}</p>
-// //       {/* Atau render konten lain sesuai kebutuhan */}
-// //     </div>
-// //   );
-// // }
-
-// // app/dashboard/ai-generate/draft/DashboardDraftClient.jsx
-// // Pindahkan SELURUH KODE dari page.jsx Anda yang sekarang ke sini.
-// // Pastikan 'use client' ada di baris pertama.
-// // Ubah nama fungsi 'Page' menjadi 'DashboardDraftClient'.
-
 'use client'; 
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation'; 
@@ -324,7 +303,7 @@ export default function DashboardDraftClient() { // <<< --- INI NAMA FUNGSI YANG
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`px-3 py-1 rounded-full border text-sm font-medium transition-all duration-150 ${
+                className={`px-3 py-1 rounded-full border text-sm font-medium transition-all duration-150 cursor-pointer ${
                   activeTab === tab.value
                     ? "bg-[#3D6CB9] text-white"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
