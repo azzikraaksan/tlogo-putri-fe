@@ -4,10 +4,12 @@ import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { CircleArrowLeft } from "lucide-react";
 import Sidebar from "/components/Sidebar"; // Import sidebar
 import SlipGaji from "/components/SlipGaji";
+import Hashids from "hashids";
 
 export default function GajiCatatPage() {
+  const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
   const router = useRouter();
-  //const searchParams = useSearchParams();
+  const searchParams = useSearchParams();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   const [tanggal, setTanggal] = useState("");
@@ -22,93 +24,95 @@ export default function GajiCatatPage() {
   const [data, setData] = useState([]);
   const [totalGaji, setTotalGaji] = useState(0);
   const [status, setStatus] = useState("");
+  const payment_date = searchParams.get("payment_date");
+  
 
-  const fetchGajiDetail = async () => {
-    setLoading(true);
-    setError(null);
+const fetchGajiDetail = async () => {
+  setLoading(true);
+  setError(null);
 
-    try {
-      const resSalaryAll = await fetch("http://localhost:8000/api/salary/all");
-      const allSalariesJson = await resSalaryAll.json();
-      const allSalaries = allSalariesJson.data || [];
+  try {
+    // 1. Fetch data previews untuk mapping ticketing_id ⇄ payment_date
+    const resPreview = await fetch("http://localhost:8000/api/salary/previews");
+    const previewJson = await resPreview.json();
 
-      // Cek apakah user ini sudah digaji berdasarkan id dan role
-      const existingSalary = allSalaries.find(
+    // 2. Ambil semua ticketing_id yang milik user & role & tanggal yang sesuai
+    const ticketingIDs = previewJson.previews
+      .filter(
         (item) =>
           item.user_id === parseInt(id) &&
-          item.role.toLowerCase() === role.toLowerCase()
-      );
+          item.role.toLowerCase() === role.toLowerCase() &&
+          item.payment_date?.slice(0, 10) === payment_date
+      )
+      .map((item) => item.ticketing_id);
 
-      // Jika sudah digaji, langsung tampilkan datanya
-      //if (existingSalary) {
-      //  setData([existingSalary]);
-      //  setNama(existingSalary.nama);
-      //  setStatus("Berhasil");
-      //  //setTotalGaji(existingSalary.total_salary || 0);
-      //  return;
-      //}
+    console.log("🎯 Ticketing ID untuk tanggal ini:", ticketingIDs);
 
-      let endpoint = "";
-      if (role.toLowerCase() === "driver") {
-        endpoint = `http://localhost:8000/api/salary/preview/${id}/driver`;
-      } else if (role.toLowerCase() === "owner") {
-        endpoint = `http://localhost:8000/api/salary/preview/${id}/owner`;
-      } else if (role.toLowerCase() === "fron office") {
-        endpoint = `http://localhost:8000/api/salary/preview/${id}/fron office`; // typo sebelumnya: "fron office"
-      } else {
-        throw new Error("Role tidak dikenali");
-      }
-
-      const res = await fetch(endpoint);
-      if (!res.ok) throw new Error("Gagal mengambil data gaji");
-
-      const json = await res.json();
-      const detail = json.data?.[0]; // Ambil objek pertama
-
-      if (detail) {
-        // Set nama dan status berdasarkan role
-        setNama(getNamaByRole(detail, role));
-        //setStatus(detail.status);
-      }
-
-      setData(json.data || []);
-      // Jika sudah pernah dicatat, tampilkan status & total dari salary/all
-      if (existingSalary) {
-        setStatus("Berhasil");
-        setTotalGaji(existingSalary.total_salary || 0);
-      } else {
-        // Jika belum dicatat, pakai dari preview (biar simulasi)
-        if (role.toLowerCase() === "driver") {
-          setTotalGaji(json.total_driver_share || 0);
-        } else if (role.toLowerCase() === "owner") {
-          setTotalGaji(json.total_owner_share || 0);
-        } else if (role.toLowerCase() === "fron office") {
-          setTotalGaji(json.total_fo_share || 0);
-        }
-        setStatus("Belum");
-      }
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Terjadi kesalahan");
-    } finally {
-      setLoading(false);
+    // 3. Fetch detail dari endpoint preview/:id/:role
+    let endpoint = "";
+    if (role.toLowerCase() === "driver") {
+      endpoint = `http://localhost:8000/api/salary/preview/${id}/driver`;
+    } else if (role.toLowerCase() === "owner") {
+      endpoint = `http://localhost:8000/api/salary/preview/${id}/owner`;
+    } else if (role.toLowerCase() === "front office") {
+      `http://localhost:8000/api/salary/preview/${id}/fron office`;
+    } else {
+      throw new Error("Role tidak dikenali");
     }
-  };
 
-  //    // ✅ Pindahkan ini ke dalam blok try setelah json didefinisikan
-  //    if (role.toLowerCase() === "driver") {
-  //      setTotalGaji(json.total_driver_share || 0);
-  //    } else if (role.toLowerCase() === "owner") {
-  //      setTotalGaji(json.total_owner_share || 0);
-  //    } else if (role.toLowerCase() === "fron office") {
-  //      setTotalGaji(json.total_fo_share || 0); // gaji tetap
-  //    }
-  //  } catch (err) {
-  //    setError(err.message || "Terjadi kesalahan");
-  //  } finally {
-  //    setLoading(false);
-  //  }
-  //};
+    const resDetail = await fetch(endpoint);
+    const json = await resDetail.json();
+    const allData = json.data || [];
+
+    // 4. Filter data detail berdasarkan ticketing_id
+    const filteredData = allData.filter((item) =>
+      ticketingIDs.includes(item.ticketing_id)
+    );
+
+    setData(filteredData);
+
+    // 5. Set nama dari data pertama
+    if (filteredData.length > 0) {
+      setNama(getNamaByRole(filteredData[0], role));
+    }
+
+    // 6. Fetch salary/all untuk cek status gaji
+    const resSalaryAll = await fetch("http://localhost:8000/api/salary/all");
+    const allSalariesJson = await resSalaryAll.json();
+    const allSalaries = allSalariesJson.data || [];
+
+    const existingSalary = allSalaries.find(
+      (item) =>
+        item.user_id === parseInt(id) &&
+        item.role.toLowerCase() === role.toLowerCase() &&
+        item.payment_date?.slice(0, 10) === payment_date
+    );
+
+    if (existingSalary) {
+      setStatus("Sudah");
+      setTotalGaji(existingSalary.total_salary || 0);
+    } else {
+      setStatus("Belum");
+
+      const total = filteredData.reduce((acc, cur) => {
+        if (role.toLowerCase() === "driver") return acc + (cur.driver_share || 0);
+        if (role.toLowerCase() === "owner") return acc + (cur.owner_share || 0);
+        if (role.toLowerCase() === "front office") return acc + (cur.front_office_share || 0);
+        return acc;
+      }, 0);
+
+      setTotalGaji(total);
+    }
+  } catch (err) {
+    console.error(err);
+    setError(err.message || "Terjadi kesalahan");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
 
   const getNamaByRole = (detail, role) => {
     switch (role.toLowerCase()) {
@@ -123,27 +127,74 @@ export default function GajiCatatPage() {
     }
   };
 
-  const fetchTanggalGaji = async () => {
-    try {
-      const res = await fetch("http://localhost:8000/api/salary/previews");
-      if (!res.ok) throw new Error("Gagal mengambil data tanggal gaji");
+  //const fetchTanggalGaji = async () => {
+  //  try {
+  //    const res = await fetch("http://localhost:8000/api/salary/previews");
+  //    if (!res.ok) throw new Error("Gagal mengambil data tanggal gaji");
 
-      const json = await res.json();
+  //    const json = await res.json();
 
-      // Karena key-nya 'previews' di JSON
-      const found = json.previews.find((item) => item.id == id);
-      if (found) {
-        setTanggal(found.payment_date);
-      }
-    } catch (err) {
-      console.error("Error ambil tanggal:", err.message);
-    }
-  };
+  //    // Karena key-nya 'previews' di JSON
+  //    const found = json.previews.find((item) => item.id == id);
+  //    if (found) {
+  //      setTanggal(found.payment_date);
+  //    }
+  //  } catch (err) {
+  //    console.error("Error ambil tanggal:", err.message);
+  //  }
+  //};
+
+  //const fetchTanggalGaji = async () => {
+  //  try {
+  //    const res = await fetch("http://localhost:8000/api/salary/previews");
+  //    if (!res.ok) throw new Error("Gagal mengambil data tanggal gaji");
+
+  //    const json = await res.json();
+
+  //    const found = json.previews.find(
+  //      (item) =>
+  //        item.user_id == id && item.role.toLowerCase() === role.toLowerCase()
+  //    );
+
+  //    if (found && found.payment_date) {
+  //      setTanggal(found.payment_date);
+  //    } else {
+  //      console.warn("payment_date tidak ditemukan untuk user ini");
+  //    }
+  //  } catch (err) {
+  //    console.error("Gagal mengambil tanggal:", err.message);
+  //  }
+  //};
 
   useEffect(() => {
     fetchGajiDetail();
-    fetchTanggalGaji();
-  }, [id, role]);
+    //fetchTanggalGaji();
+      if (payment_date) {
+    setTanggal(payment_date);
+  }
+  }, [id, role, payment_date]);
+
+//  useEffect(() => {
+//  if (payment_date) {
+//    setTanggal(payment_date);
+//  }
+//}, [payment_date]);
+
+
+  //useEffect(() => {
+  //  const paymentDateParam = searchParams.get("payment_date");
+
+  //  if (paymentDateParam) {
+  //    const parsedDate = new Date(paymentDateParam);
+
+  //    // Pastikan parsedDate tidak invalid
+  //    if (!isNaN(parsedDate)) {
+  //      setTanggal(parsedDate);
+  //    } else {
+  //      console.error("Tanggal tidak valid:", paymentDateParam);
+  //    }
+  //  }
+  //}, [searchParams]);
 
   const formatRupiah = (num) => {
     if (typeof num !== "number") return "Rp 0";
@@ -196,45 +247,94 @@ export default function GajiCatatPage() {
       return;
     }
 
+    console.log("✅ Terbayarkan diklik, statusUpdated diset:", `${user_id}-${role}-${payment_date}`);
+
     const normalizedRole = role?.trim().toLowerCase();
 
-    const payload = {
-      salaries: data.map((item) => {
-        let user_id, nama, roleName;
+    //const payload = {
+    //  salaries: data.map((item) => {
+    //    let user_id, nama, roleName;
 
-        if (normalizedRole === "driver") {
-          user_id = item.driver_id;
-          nama = item.driver_name;
-          roleName = item.driver_role || "Driver";
-        } else if (normalizedRole === "owner") {
-          user_id = item.owner_id;
-          nama = item.owner_name;
-          roleName = "Owner";
-        } else if (normalizedRole === "fron office") {
-          user_id = item.front_office_id;
-          nama = item.front_office_name;
-          roleName = "Fron Office";
-        }
+    //    if (normalizedRole === "driver") {
+    //      user_id = item.driver_id;
+    //      nama = item.driver_name;
+    //      roleName = item.driver_role || "Driver";
+    //    } else if (normalizedRole === "owner") {
+    //      user_id = item.owner_id;
+    //      nama = item.owner_name;
+    //      roleName = "Owner";
+    //    } else if (normalizedRole === "fron office") {
+    //      user_id = item.front_office_id;
+    //      nama = item.front_office_name;
+    //      roleName = "Fron Office";
+    //    }
 
-        return {
-          user_id,
-          ticketing_id: item.ticketing_id,
-          nama,
-          role: roleName,
-          no_lambung: item.no_lambung || "", // biasanya hanya driver yang punya
-          kas: item.package?.kas || 0,
-          operasional: item.package?.operasional || 0,
-          salarie:
-            normalizedRole === "driver"
-              ? item.driver_share || 0
-              : normalizedRole === "owner"
-                ? item.owner_share || 0
-                : item.front_office_share || 0,
-          total_salary: item.net || 0,
-          payment_date: tanggal,
-        };
-      }),
+    //    return {
+    //      user_id,
+    //      ticketing_id: item.ticketing_id,
+    //      nama,
+    //      role: roleName,
+    //      no_lambung: item.no_lambung || "", // biasanya hanya driver yang punya
+    //      kas: item.package?.kas || 0,
+    //      operasional: item.package?.operasional || 0,
+    //      salarie:
+    //        normalizedRole === "driver"
+    //          ? item.driver_share || 0
+    //          : normalizedRole === "owner"
+    //            ? item.owner_share || 0
+    //            : item.front_office_share || 0,
+    //      total_salary: item.net || 0,
+    //      payment_date: tanggal,
+    //    };
+    //  }),
+    //};
+
+const validSalaries = data
+  .map((item) => {
+    let user_id, nama, roleName;
+
+    if (normalizedRole === "driver") {
+      user_id = item.driver_id;
+      nama = item.driver_name;
+      roleName = item.driver_role || "Driver";
+    } else if (normalizedRole === "owner") {
+      user_id = item.owner_id;
+      nama = item.owner_name;
+      roleName = "Owner";
+    } else if (normalizedRole === "fron office") {
+      user_id = item.front_office_id;
+      nama = item.front_office_name;
+      roleName = "Front Office";
+    }
+
+    return {
+      user_id,
+      ticketing_id: item.ticketing_id,
+      nama,
+      role: roleName,
+      no_lambung: item.no_lambung || "",
+      kas: item.package?.kas || 0,
+      operasional: item.package?.operasional || 0,
+      salarie:
+        normalizedRole === "driver"
+          ? item.driver_share || 0
+          : normalizedRole === "owner"
+          ? item.owner_share || 0
+          : item.front_office_share || 0,
+      total_salary: item.net || 0,
+      payment_date: tanggal,
     };
+  })
+  .filter(
+    (item) =>
+      item.user_id &&
+      item.ticketing_id &&
+      item.payment_date &&
+      item.total_salary !== 0 // ⬅️ Bisa dihapus jika tidak wajib
+  );
+
+const payload = { salaries: validSalaries };
+
 
     const endpoint = `http://localhost:8000/api/salary/store/${user_id}/${role.toLowerCase()}`;
     console.log("Mengirim data ke endpoint:", endpoint);
@@ -250,20 +350,30 @@ export default function GajiCatatPage() {
       });
 
       if (response.ok) {
-        const responseData = await response.json();
-        console.log("Berhasil mengubah status:", responseData);
-        setStatus("Berhasil");
-         const statusKey = `${user_id}-${role.toLowerCase()}`;
-        localStorage.setItem(
-          "statusUpdated", statusKey
-        );
-        console.log("✅ Disimpan ke localStorage:", statusKey);
-        //router.push("/dashboard/penggajian/penggajian-utama");
-         setTimeout(() => {
-    //router.push("/dashboard/penggajian/penggajian-utama");
-    router.push(`/dashboard/penggajian/penggajian-utama?updated=${user_id}-${role.toLowerCase()}`);
+  const responseData = await response.json();
+  console.log("Berhasil mengubah status:", responseData);
+  setStatus("Sudah");
 
-  }, 200); // 200ms sudah cukup
+  const statusKey = `${user_id}-${role.toLowerCase()}-${payment_date}`;
+localStorage.setItem("statusUpdated", statusKey);
+window.dispatchEvent(new Event("storage")); // ✅ Paksa trigger ke tab lain tanpa reload
+console.log("✅ Disimpan ke localStorage:", statusKey);
+
+
+      //if (response.ok) {
+      //  const responseData = await response.json();
+      //  console.log("Berhasil mengubah status:", responseData);
+      //  setStatus("Sudah");
+      //  const statusKey = `${user_id}-${role.toLowerCase()}-${payment_date}`;
+      //  localStorage.setItem("statusUpdated", statusKey);
+      //  console.log("✅ Disimpan ke localStorage:", statusKey);
+        //router.push(`/dashboard/penggajian/penggajian-utama?updated=${statusKey}`);
+        //router.push("/dashboard/penggajian/penggajian-utama");
+        //setTimeout(() => {
+        //  router.push(
+        //    `/dashboard/penggajian/penggajian-utama?updated=${user_id}-${role.toLowerCase()}`
+        //  );
+        //}, 200); // 200ms sudah cukup
       } else {
         const errorText = await response.text();
         console.error("Gagal mengubah status. Status:", response.status);
@@ -499,7 +609,7 @@ export default function GajiCatatPage() {
                 Terbayarkan
               </button>
             )}*/}
-            {/*{status !== "Berhasil" && (
+            {/*{status !== "Sudah" && (
               <button
                 onClick={handleTerbayarkan}
                 disabled={loading}
