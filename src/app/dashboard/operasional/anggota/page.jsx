@@ -411,7 +411,7 @@ const AnggotaPage = () => {
 
       if (res.ok) {
         setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
-        alert("User berhasil dihapus!");
+        // alert("User berhasil dihapus!");
       } else {
         console.error("Gagal hapus user");
         alert("Gagal hapus user.");
@@ -544,9 +544,9 @@ const AnggotaPage = () => {
             {/* <div className="overflow-x-auto">
               <table className="w-full table-auto">
                 <thead className="text-gray-500"> */}
-            <div className="overflow-x-auto bg-white rounded-xl shadow">
+            <div className="overflow-x-auto bg-white rounded-xl shadow max-h-[470px] overflow-y-auto">
               <table className="w-full table-auto">
-                <thead className="bg-[#3D6CB9] text-white ">
+                <thead className="bg-[#3D6CB9] text-white sticky top-0">
                   <tr>
                     <th className="p-2 text-center font-normal">Nama</th>
                     <th className="p-2 text-center font-normal">Email</th>

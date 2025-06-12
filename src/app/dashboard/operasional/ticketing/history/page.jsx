@@ -84,8 +84,11 @@ const ArsipPage = () => {
             placeholder="Cari"
           />
         </div>
-        <div className="overflow-x-auto bg-white rounded-xl shadow">
-          <table className="w-full table-auto">
+        {/* <div className="overflow-x-auto bg-white rounded-xl shadow">
+          <table className="w-full table-auto"> */}
+          <div className="bg-white rounded-xl shadow overflow-x-auto">
+              <div className="max-h-[470px] overflow-y-auto">
+                <table className="w-full table-auto">
             <thead className="bg-[#3D6CB9] text-white">
               <tr>
                 <th className="p-2 text-center font-normal">
@@ -130,6 +133,7 @@ const ArsipPage = () => {
           </table>
         </div>
       </div>
+    </div>
     </div>
   );
 };

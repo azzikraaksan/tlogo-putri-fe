@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Hashids from "hashids";
+import NProgress from "nprogress";
 
 const TicketingPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,119 +64,218 @@ const TicketingPage = () => {
     checkRollingStatus();
   }, []);
 
+  // const fetchTicketings = async () => {
+  //   try {
+  //     setLoading(true);
+
+  //     const jeepRes = await fetch("http://localhost:8000/api/jeeps/all");
+  //     const jeepJson = await jeepRes.json();
+  //     const jeeps = jeepJson.data || [];
+
+  //     const response = await fetch("http://localhost:8000/api/ticketings/all");
+  //     const ticketingData = await response.json();
+  //     console.log("✅ Data ticketing:", ticketingData);
+
+  //     const token = localStorage.getItem("access_token");
+  //     const besok = new Date();
+  //     besok.setDate(besok.getDate() + 1);
+  //     const tanggalBesok = besok.toISOString().split("T")[0];
+
+  //     const rotationRes = await fetch(
+  //       `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
+  //       {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+  //     const rotationData = await rotationRes.json();
+  //     setRotations(rotationData);
+
+  //     for (const rotasi of rotationData) {
+  //       if (rotasi.skip_reason) {
+  //         const tiketTerkait = ticketingData.filter(
+  //           (t) => t.driver_id === rotasi.driver_id
+  //         );
+
+  //         for (const tiket of tiketTerkait) {
+  //           try {
+  //             const res = await fetch(
+  //               `http://localhost:8000/api/ticketings/delete/${tiket.id}`,
+  //               {
+  //                 method: "DELETE",
+  //                 headers: {
+  //                   "Content-Type": "application/json",
+  //                 },
+  //               }
+  //             );
+  //             if (res.ok) {
+  //               console.log(
+  //                 `🗑️ Tiket ${tiket.id} dihapus karena skip_reason untuk driver_id ${rotasi.driver_id}`
+  //               );
+  //             }
+  //           } catch (error) {
+  //             console.error("❌ Error saat menghapus tiket:", error);
+  //           }
+  //         }
+  //       }
+  //     }
+
+  //     // filter tiket berdasarkan tanggal tour
+  //     const today = new Date();
+  //     today.setHours(0, 0, 0, 0);
+  //     const dayAfterTomorrow = new Date();
+  //     dayAfterTomorrow.setDate(today.getDate() + 2);
+  //     dayAfterTomorrow.setHours(0, 0, 0, 0);
+
+  //     const filteredByDateTicketings = ticketingData.filter((item) => {
+  //       if (!item.booking?.tour_date) return false;
+  //       const tourDate = new Date(item.booking.tour_date);
+  //       return tourDate >= today && tourDate < dayAfterTomorrow;
+  //     });
+
+  //     const validTicketings = filteredByDateTicketings.filter((item) => {
+  //       const driverRotation = rotationData.find(
+  //         (r) => r.driver_id === item.driver_id
+  //       );
+  //       return !(driverRotation && driverRotation.skip_reason);
+  //     });
+
+  //     // merge jeeps dan assigned ke dalam item ticketing
+  //     const merged = validTicketings.map((item) => {
+  //       const driverRotation = rotationData.find(
+  //         (r) => r.driver_id === item.driver_id
+  //       );
+  //       const jeep = jeeps.find(
+  //         (j) => j.jeep_id === (driverRotation?.jeep_id || item.jeep_id)
+  //       );
+  //       return {
+  //         ...item,
+  //         assigned: driverRotation ? driverRotation.assigned : 0,
+  //         jeeps: jeep || null,
+  //       };
+  //     });
+
+  //     // const merged = validTicketings.map((item) => {
+  //     //   const driverRotation = rotationData.find(
+  //     //     (r) => r.driver_id === item.driver_id
+  //     //   );
+  //     //   const jeep = jeeps.find((j) => j.id === item.jeep_id); // merge manual jeep
+
+  //     //   return {
+  //     //     ...item,
+  //     //     assigned: driverRotation ? driverRotation.assigned : 0,
+  //     //     jeeps: jeep || null, // biar bisa pakai item.jeeps?.no_lambung
+  //     //   };
+  //     // });
+
+  //     setData(merged);
+  //   } catch (error) {
+  //     console.error("❌ Error fetch ticketing/rotasi:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const fetchTicketings = async () => {
-    try {
-      setLoading(true);
+  try {
+    NProgress.start();
 
-      const jeepRes = await fetch("http://localhost:8000/api/jeeps/all");
-      const jeepJson = await jeepRes.json();
-      const jeeps = jeepJson.data || [];
+    const jeepRes = await fetch("http://localhost:8000/api/jeeps/all");
+    const jeepJson = await jeepRes.json();
+    const jeeps = jeepJson.data || [];
 
-      const response = await fetch("http://localhost:8000/api/ticketings/all");
-      const ticketingData = await response.json();
-      console.log("✅ Data ticketing:", ticketingData);
+    const response = await fetch("http://localhost:8000/api/ticketings/all");
+    const ticketingData = await response.json();
+    console.log("✅ Data ticketing:", ticketingData);
 
-      const token = localStorage.getItem("access_token");
-      const besok = new Date();
-      besok.setDate(besok.getDate() + 1);
-      const tanggalBesok = besok.toISOString().split("T")[0];
+    const token = localStorage.getItem("access_token");
+    const besok = new Date();
+    besok.setDate(besok.getDate() + 1);
+    const tanggalBesok = besok.toISOString().split("T")[0];
 
-      const rotationRes = await fetch(
-        `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const rotationData = await rotationRes.json();
-      setRotations(rotationData);
+    const rotationRes = await fetch(
+      `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    const rotationData = await rotationRes.json();
+    setRotations(rotationData);
 
-      for (const rotasi of rotationData) {
-        if (rotasi.skip_reason) {
-          const tiketTerkait = ticketingData.filter(
-            (t) => t.driver_id === rotasi.driver_id
-          );
+    for (const rotasi of rotationData) {
+      if (rotasi.skip_reason) {
+        const tiketTerkait = ticketingData.filter(
+          (t) => t.driver_id === rotasi.driver_id
+        );
 
-          for (const tiket of tiketTerkait) {
-            try {
-              const res = await fetch(
-                `http://localhost:8000/api/ticketings/delete/${tiket.id}`,
-                {
-                  method: "DELETE",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                }
-              );
-              if (res.ok) {
-                console.log(
-                  `🗑️ Tiket ${tiket.id} dihapus karena skip_reason untuk driver_id ${rotasi.driver_id}`
-                );
+        for (const tiket of tiketTerkait) {
+          try {
+            const res = await fetch(
+              `http://localhost:8000/api/ticketings/delete/${tiket.id}`,
+              {
+                method: "DELETE",
+                headers: {
+                  "Content-Type": "application/json",
+                },
               }
-            } catch (error) {
-              console.error("❌ Error saat menghapus tiket:", error);
+            );
+            if (res.ok) {
+              console.log(
+                `🗑️ Tiket ${tiket.id} dihapus karena skip_reason untuk driver_id ${rotasi.driver_id}`
+              );
             }
+          } catch (error) {
+            console.error("❌ Error saat menghapus tiket:", error);
           }
         }
       }
-
-      // filter tiket berdasarkan tanggal tour
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const dayAfterTomorrow = new Date();
-      dayAfterTomorrow.setDate(today.getDate() + 2);
-      dayAfterTomorrow.setHours(0, 0, 0, 0);
-
-      const filteredByDateTicketings = ticketingData.filter((item) => {
-        if (!item.booking?.tour_date) return false;
-        const tourDate = new Date(item.booking.tour_date);
-        return tourDate >= today && tourDate < dayAfterTomorrow;
-      });
-
-      const validTicketings = filteredByDateTicketings.filter((item) => {
-        const driverRotation = rotationData.find(
-          (r) => r.driver_id === item.driver_id
-        );
-        return !(driverRotation && driverRotation.skip_reason);
-      });
-
-      // merge jeeps dan assigned ke dalam item ticketing
-      const merged = validTicketings.map((item) => {
-        const driverRotation = rotationData.find(
-          (r) => r.driver_id === item.driver_id
-        );
-        const jeep = jeeps.find(
-          (j) => j.jeep_id === (driverRotation?.jeep_id || item.jeep_id)
-        );
-        return {
-          ...item,
-          assigned: driverRotation ? driverRotation.assigned : 0,
-          jeeps: jeep || null,
-        };
-      });
-
-      // const merged = validTicketings.map((item) => {
-      //   const driverRotation = rotationData.find(
-      //     (r) => r.driver_id === item.driver_id
-      //   );
-      //   const jeep = jeeps.find((j) => j.id === item.jeep_id); // merge manual jeep
-
-      //   return {
-      //     ...item,
-      //     assigned: driverRotation ? driverRotation.assigned : 0,
-      //     jeeps: jeep || null, // biar bisa pakai item.jeeps?.no_lambung
-      //   };
-      // });
-
-      setData(merged);
-    } catch (error) {
-      console.error("❌ Error fetch ticketing/rotasi:", error);
-    } finally {
-      setLoading(false);
     }
-  };
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dayAfterTomorrow = new Date();
+    dayAfterTomorrow.setDate(today.getDate() + 2);
+    dayAfterTomorrow.setHours(0, 0, 0, 0);
+
+    const filteredByDateTicketings = ticketingData.filter((item) => {
+      if (!item.booking?.tour_date) return false;
+      const tourDate = new Date(item.booking.tour_date);
+      return tourDate >= today && tourDate < dayAfterTomorrow;
+    });
+
+    const validTicketings = filteredByDateTicketings.filter((item) => {
+      const driverRotation = rotationData.find(
+        (r) => r.driver_id === item.driver_id
+      );
+      return !(driverRotation && driverRotation.skip_reason);
+    });
+
+    const merged = validTicketings.map((item) => {
+      const driverRotation = rotationData.find(
+        (r) => r.driver_id === item.driver_id
+      );
+      const jeep = jeeps.find(
+        (j) => j.jeep_id === (driverRotation?.jeep_id || item.jeep_id)
+      );
+      return {
+        ...item,
+        assigned: driverRotation ? driverRotation.assigned : 0,
+        jeeps: jeep || null,
+      };
+    });
+
+    setData(merged);
+  } catch (error) {
+    console.error("❌ Error fetch ticketing/rotasi:", error);
+  } finally {
+    NProgress.done();
+  }
+};
 
   const handleSendWA = (item, rotationData, pdfUrl) => {
     if (!pdfUrl) {
@@ -429,7 +529,7 @@ const TicketingPage = () => {
 
       if (!skipResponse.ok) throw new Error("Gagal membatalkan penugasan");
 
-      alert("Driver berhasil dibatalkan!");
+      // alert("Driver berhasil dibatalkan!");
       await checkRollingStatus();
       await fetchTicketings();
     } catch (error) {
@@ -598,9 +698,9 @@ const TicketingPage = () => {
           </div>
         </div> */}
 
-        <div className="overflow-x-auto bg-white rounded-xl shadow">
+        <div className="overflow-x-auto bg-white rounded-xl shadow max-h-[800px] overflow-y-auto">
           <table className="w-full table-auto">
-            <thead className="bg-[#3D6CB9] text-white">
+            <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
               <tr>
                 <th className="p-2 text-center font-normal">
                   Tanggal Keberangkatan
@@ -625,7 +725,7 @@ const TicketingPage = () => {
                   >
                     <td className="p-2 text-center">
                       {item.booking?.tour_date && item.booking?.start_time
-                        ? `${item.booking?.tour_date} ${item.booking?.start_time}`
+                        ? `${item.booking?.tour_date} - ${item.booking?.start_time}`
                         : "-"}
                     </td>
                     <td className="p-2 text-center text-gray-750">

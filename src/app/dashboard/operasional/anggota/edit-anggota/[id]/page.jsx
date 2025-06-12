@@ -274,7 +274,7 @@ const EditAnggota = () => {
 
       const result = await res.json();
       if (res.ok) {
-        alert("Data berhasil diperbarui!");
+        // alert("Data berhasil diperbarui!");
         router.back();
         // router.push(`/dashboard/operasional/anggota/detail-anggota/${params.id}`);
       } else {

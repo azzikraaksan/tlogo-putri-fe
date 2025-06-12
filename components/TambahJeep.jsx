@@ -225,7 +225,7 @@ export default function AddJeepForm({ onKembali }) {
         </div>
         <form
           onSubmit={handleSubmit}
-          className="w-[650px] mx-auto mt-8 p-6 bg-white shadow-md rounded-xl space-y-4 "
+          className="w-[650px] mt-3 mx-auto p-6 bg-white shadow-md rounded-xl space-y-4 "
         >
           <div>
             <label className="block text-sm font-medium mb-1">
@@ -235,7 +235,7 @@ export default function AddJeepForm({ onKembali }) {
               name="owner_id"
               value={form.owner_id}
               onChange={handleChange}
-              className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+              className="p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
               required
             >
               <option value="">-- Pilih Owner --</option>
@@ -254,7 +254,7 @@ export default function AddJeepForm({ onKembali }) {
               name="driver_id"
               value={form.driver_id}
               onChange={handleChange}
-              className="mt-2 p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+              className="p-2 block w-full border border-gray-300 rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
               disabled={loading || drivers.length === 0}
             >
               <option value="">-- Pilih Driver --</option>
@@ -273,7 +273,7 @@ export default function AddJeepForm({ onKembali }) {
             value={form.no_lambung}
             placeholder="Nomor Lambung"
             onChange={handleChange}
-            className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+            className="p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
           />
           <label className="block text-sm font-medium mb-1">
             Masukan No Plat :
@@ -283,7 +283,7 @@ export default function AddJeepForm({ onKembali }) {
             value={form.plat_jeep}
             placeholder="Plat Jeep"
             onChange={handleChange}
-            className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+            className="p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
           />
 
           {/* <label className="block text-sm font-medium mb-1">
@@ -294,7 +294,7 @@ export default function AddJeepForm({ onKembali }) {
             value={form.foto_jeep}
             placeholder="Nama File Foto (contoh: jeep1.jpg)"
             onChange={handleChange}
-            className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+            className="p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
           /> */}
 
           <label className="block text-sm font-medium mb-1">
@@ -305,7 +305,7 @@ export default function AddJeepForm({ onKembali }) {
             value={form.merek}
             placeholder="Merek"
             onChange={handleChange}
-            className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+            className="p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
           />
 
           <label className="block text-sm font-medium mb-1">
@@ -316,7 +316,7 @@ export default function AddJeepForm({ onKembali }) {
             value={form.tipe}
             placeholder="Tipe"
             onChange={handleChange}
-            className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+            className="p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
           />
           <label className="block text-sm font-medium mb-1">
             Masukan Tahun Kendaraan :
@@ -326,7 +326,7 @@ export default function AddJeepForm({ onKembali }) {
             value={form.tahun_kendaraan}
             placeholder="Tahun Kendaraan"
             onChange={handleChange}
-            className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+            className="p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
           />
           {/* <label className="block text-sm font-bold text-gray-700">
             Foto Jeep (opsional)
@@ -336,7 +336,7 @@ export default function AddJeepForm({ onKembali }) {
             name="foto_jeep"
             accept=".jpeg, .jpg, .png"
             onChange={handleFileChange}
-            className="mt-2 p-2 pr-10 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+            className="p-2 pr-10 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
             style={{ paddingRight: "2.5rem" }} // kasih space kanan buat icon
           />
           <Upload

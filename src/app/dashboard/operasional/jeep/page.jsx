@@ -106,7 +106,7 @@ const JeepPage = () => {
         setJeepData((prevJeep) =>
           prevJeep.filter((jeep) => jeep.jeep_id !== id)
         );
-        alert("Jeep berhasil dihapus!");
+        // alert("Jeep berhasil dihapus!");
       } else {
         console.error("Gagal hapus jeep");
         alert("Gagal hapus jeep.");
@@ -170,9 +170,9 @@ const JeepPage = () => {
               />
             </div>
 
-            <div className="overflow-x-auto bg-white rounded-xl shadow">
+            <div className="overflow-x-auto bg-white rounded-xl shadow max-h-[470px] overflow-y-auto">
               <table className="w-full table-auto">
-                <thead className="bg-[#3D6CB9] text-white ">
+                <thead className="bg-[#3D6CB9] text-white sticky top-0">
                   <tr>
                     <th className="p-2 text-center font-normal">No. Lambung</th>
                     <th className="p-2 text-center font-normal">Nama Driver</th>

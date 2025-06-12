@@ -13,6 +13,7 @@ body {
 
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+@import 'nprogress/nprogress.css';
 
 @tailwind base;
 @tailwind components;
@@ -31,3 +32,17 @@ body {
 .animate-fade-in {
   animation: fade-in 0.3s ease-out;
 }
+
+/* nprogress custom */
+#nprogress {
+  pointer-events: none;
+}
+
+#nprogress .bar {
+  background: red;
+  height: 5px !important;
+}
+#nprogress .peg {
+  box-shadow: 0 0 10px #ff6b6b, 0 0 5px #ff6b6b;
+}
+

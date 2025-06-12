@@ -670,56 +670,6 @@ const PenjadwalanPage = () => {
     setSelectedBookings([...selectedBookings, bookingId]);
   };
 
-  // const handleRolling = async () => {
-  //   setLoadingRotation(true);
-  //   try {
-  //     const token = localStorage.getItem("access_token");
-  //     if (!token)
-  //       throw new Error("Token tidak ditemukan. Silakan login ulang.");
-
-  //     const res = await fetch(
-  //       "http://localhost:8000/api/driver-rotations/generate",
-  //       {
-  //         method: "POST",
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-  //     setHasRolledToday(true);
-
-  //     const data = await res.json();
-
-  //     if (res.ok) {
-  //       // sukses generate
-  //       alert("Rolling driver berhasil ✅");
-  //       const today = new Date().toISOString().split("T")[0];
-  //       localStorage.setItem("lastRollingDate", today);
-  //       setHasRolledToday(true);
-
-  //       await fetchOrders(); // update booking
-  //       await fetchAvailableDriversCount(); // update jumlah driver
-  //       await fetchDriversBesok(); // ✅ tampilkan hasil driver besok
-  //     } else {
-  //       // gagal generate, tapi cek pesan khusus
-  //       if (data.message === "Rotasi untuk besok sudah dibuat.") {
-  //         alert("Rotasi untuk besok sudah dibuat sebelumnya.");
-  //         const today = new Date().toISOString().split("T")[0];
-  //         localStorage.setItem("lastRollingDate", today);
-  //         setHasRolledToday(true);
-  //       } else {
-  //         alert(
-  //           "Gagal generate rotasi driver: " + (data.message || "Unknown error")
-  //         );
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error("Rolling driver gagal:", error.message);
-  //     alert("Terjadi kesalahan saat rolling driver: " + error.message);
-  //   } finally {
-  //     setLoadingRotation(false);
-  //   }
-  // };
   const handleRolling = async () => {
     setLoadingRotation(true);
     try {
@@ -759,131 +709,6 @@ const PenjadwalanPage = () => {
     }
   };
 
-  // const handleRolling = async () => {
-  //   setLoadingRotation(true);
-  //   const token = localStorage.getItem("access_token");
-  //   if (!token) {
-  //     alert("Token tidak ditemukan. Silakan login ulang.");
-  //     setLoadingRotation(false);
-  //     return;
-  //   }
-
-  //   const besok = new Date();
-  //   besok.setDate(besok.getDate() + 1);
-  //   const tanggalBesok = besok.toISOString().split("T")[0];
-
-  //   try {
-  //     //coba generate rotasi
-  //     const res = await fetch(
-  //       "http://localhost:8000/api/driver-rotations/generate",
-  //       {
-  //         method: "POST",
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       }
-  //     );
-
-  //     if (res.status === 400) {
-  //       alert("Rolling driver sudah dilakukan hari ini. Tidak bisa mengulang.");
-  //       return;
-  //     }
-
-  //     if (!res.ok) {
-  //       throw new Error("Gagal generate driver rotation");
-  //     }
-
-  //     //ambil data rotasi setelah berhasil generate
-  //     const rotasiRes = await fetch(
-  //       `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
-  //       { headers: { Authorization: `Bearer ${token}` } }
-  //     );
-
-  //     if (!rotasiRes.ok) throw new Error("Gagal mengambil data rotasi");
-
-  //     const rotasiJson = await rotasiRes.json();
-  //     setData(rotasiJson.data || []);
-  //   } catch (error) {
-  //     console.error("Gagal generate rotation:", error);
-  //     alert("Gagal generate rotation.");
-  //   } finally {
-  //     setLoadingRotation(false);
-  //   }
-  // };
-  // const checkRollingStatus = async () => {
-  //   const token = localStorage.getItem("access_token");
-  //   if (!token) return;
-
-  //   const besok = new Date();
-  //   besok.setDate(besok.getDate() + 1);
-  //   const tanggalBesok = besok.toISOString().split("T")[0];
-
-  //   try {
-  //     const res = await fetch(
-  //       `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
-  //       { headers: { Authorization: `Bearer ${token}` } }
-  //     );
-
-  //     if (!res.ok) throw new Error("Gagal cek status rolling");
-
-  //     const json = await res.json();
-  //     console.log("DATA ROTASI BESOK:", json);
-  //     if (json.length > 0) {
-  //       setIsAlreadyRolled(true);
-  //     }
-  //   } catch (err) {
-  //     console.error("Error cek rolling:", err);
-  //   }
-  // };
-
-  // const checkRollingStatus = async () => {
-  //   const token = localStorage.getItem("access_token");
-  //   if (!token) return;
-
-  //   const besok = new Date();
-  //   besok.setDate(besok.getDate() + 1);
-  //   const tanggalBesok = besok.toISOString().split("T")[0];
-
-  //   try {
-  //     // 1. Ambil data driver-rotations
-  //     const resRotations = await fetch(
-  //       `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
-  //       { headers: { Authorization: `Bearer ${token}` } }
-  //     );
-  //     if (!resRotations.ok) throw new Error("Gagal fetch driver-rotations");
-  //     const rotationsData = await resRotations.json();
-
-  //     // 2. Ambil data ticketing
-  //     const resTicketings = await fetch(
-  //       `http://localhost:8000/api/ticketings/all`,
-  //       {
-  //         headers: { Authorization: `Bearer ${token}` },
-  //       }
-  //     );
-  //     if (!resTicketings.ok) throw new Error("Gagal fetch ticketings");
-  //     const ticketingsData = await resTicketings.json();
-
-  //     // 3. Ambil semua driver_id yang sudah pernah dipakai
-  //     const usedDriverIds = new Set(ticketingsData.map((t) => t.driver_id));
-
-  //     // 4. Filter driver yang valid
-  //     const filteredRotations = rotationsData.filter((r) => {
-  //       const driverId = r.driver?.id || r.driver_id;
-  //       const alreadyUsed = usedDriverIds.has(driverId);
-  //       const isAssigned = r.assigned !== 0;
-
-  //       // Hanya lolos kalau belum dipakai, atau sudah dipakai tapi assigned ≠ 0
-  //       return !alreadyUsed || (alreadyUsed && isAssigned);
-  //     });
-
-  //     console.log("✅ Filtered rotations yang valid:", filteredRotations);
-  //     // 5. Simpan hasil yang sudah difilter (atau atur ke state jika perlu)
-  //     setIsAlreadyRolled(filteredRotations.length > 0);
-  //     setRotations(filteredRotations); // kalau kamu pakai state rotations
-  //   } catch (err) {
-  //     console.error("Error cek rolling:", err);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
   const checkRollingStatus = async () => {
     const token = localStorage.getItem("access_token");
     if (!token) return;
@@ -901,16 +726,13 @@ const PenjadwalanPage = () => {
       if (!resRotations.ok) throw new Error("Gagal fetch driver-rotations");
       const rotationsData = await resRotations.json();
 
-      // ✅ Filter driver yang:
-      // belum assigned DAN tidak memiliki skip_reason
       const unassignedRotations = rotationsData.filter(
         (r) => r.assigned === 0 && (!r.skip_reason || r.skip_reason === "")
       );
 
       console.log("✅ Driver yang bisa dipilih:", unassignedRotations);
 
-      // Set state jika perlu
-      setIsAlreadyRolled(rotationsData.length > 0); // Atur ini sesuai logika kamu
+      setIsAlreadyRolled(rotationsData.length > 0); 
       setRotations(unassignedRotations);
     } catch (err) {
       console.error("Error cek rolling:", err);
@@ -950,10 +772,6 @@ const PenjadwalanPage = () => {
   };
 
   // if (loading) {
-  //   return <div className="loading">Loading...</div>;
-  // }
-
-  // if (loading) {
   //   return (
   //     <div className="flex items-center justify-center h-screen bg-white">
   //       <div className="flex flex-col items-center gap-4">
@@ -980,294 +798,6 @@ const PenjadwalanPage = () => {
   //   );
   // }
 
-  // return (
-  //   <div className="flex">
-  //     <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
-
-  //     <div
-  //       className="transition-all duration-300 ease-in-out"
-  //       style={{
-  //         marginLeft: isSidebarOpen ? 290 : 70,
-  //       }}
-  //     ></div>
-  //     <div className="flex-1 p-6">
-  //       {selectedBooking ? (
-  //         <RollingDriverPage
-  //           onKembali={handleKembali}
-  //           booking={selectedBooking}
-  //         />
-  //       ) : (
-  //         <>
-  //           <h1 className="text-[32px] font-semibold mb-6 text-black">
-  //             Daftar Pesanan
-  //           </h1>
-  //           <div className="flex justify-end mb-3">
-  //             <SearchInput
-  //               value={searchTerm}
-  //               onChange={(e) => setSearchTerm(e.target.value)}
-  //               onClear={() => setSearchTerm("")}
-  //               placeholder="Cari"
-  //             />
-  //           </div>
-  //           <div className="flex justify-end mb-3 gap-2">
-  //             <button
-  //               onClick={fetchDriversBesok}
-  //               disabled={loadingDriversBesok}
-  //               className={`bg-green-500 text-white px-2 py-1 rounded-[7px] transition ${
-  //                 loadingDriversBesok
-  //                   ? "opacity-50 cursor-not-allowed"
-  //                   : "hover:bg-green-600 cursor-pointer"
-  //               }`}
-  //             >
-  //               {loadingDriversBesok ? "Memuat..." : "Lihat Driver Besok"}
-  //             </button>
-
-  //             <button
-  //               onClick={handleRolling}
-  //               disabled={loadingRotation || isAlreadyRolled}
-  //               className={`bg-[#8FAFD9] text-white px-2 py-1 rounded-[7px] transition ${
-  //                 loadingRotation || isAlreadyRolled
-  //                   ? "opacity-50 cursor-not-allowed"
-  //                   : "hover:bg-[#7ba2d0] cursor-pointer"
-  //               }`}
-  //             >
-  //               {loadingRotation
-  //                 ? "Memproses..."
-  //                 : isAlreadyRolled
-  //                   ? "Sudah Rolling"
-  //                   : "Rolling Driver"}
-  //             </button>
-  //           </div>
-  //           {!isAlreadyRolled && (
-  //             <p className="text-sm text-gray-500 italic text-right mb-4">
-  //               *Klik <span className="font-semibold">Rolling Driver</span>{" "}
-  //               terlebih dahulu
-  //             </p>
-  //           )}
-
-  //           <div className="overflow-x-auto bg-white rounded-xl shadow">
-  //             <table className="w-full table-auto">
-  //               <thead className="bg-[#3D6CB9] text-white ">
-  //                 <tr>
-  //                   <th className="p-2 text-center font-normal">Pilih</th>
-  //                   <th className="p-2 text-center font-normal">
-  //                     Tanggal dan Waktu Keberangkatan
-  //                   </th>
-  //                   {/* <th className="p-2 text-center font-normal">Pukul</th> */}
-  //                   <th className="p-2 text-center font-normal">Nama</th>
-  //                   {/* <th className="p-2 text-center font-normal">Kontak</th> */}
-  //                   <th className="p-2 text-center font-normal">
-  //                     Pilihan Paket
-  //                   </th>
-  //                   <th className="p-2 text-center font-normal">
-  //                     Custom Driver
-  //                   </th>
-  //                 </tr>
-  //               </thead>
-  //               <tbody>
-  //                 {filteredData.length > 0 ? (
-  //                   filteredData.map((item) => (
-  //                     <tr
-  //                       key={item.booking_id}
-  //                       className="border-t border-[#808080] hover:bg-gray-50 transition-colors"
-  //                     >
-  //                       <td className="p-2 text-center">
-  //                         <input
-  //                           type="checkbox"
-  //                           className={`${
-  //                             selectedBookings.includes(item.booking_id) ||
-  //                             (filteredData.findIndex(
-  //                               (o) => o.booking_id === item.booking_id
-  //                             ) === selectedBookings.length &&
-  //                               selectedBookings.length < availableDriversCount)
-  //                               ? "cursor-pointer"
-  //                               : "cursor-not-allowed"
-  //                           }`}
-  //                           checked={selectedBookings.includes(item.booking_id)}
-  //                           disabled={
-  //                             !selectedBookings.includes(item.booking_id) &&
-  //                             (filteredData.findIndex(
-  //                               (o) => o.booking_id === item.booking_id
-  //                             ) !== selectedBookings.length ||
-  //                               selectedBookings.length >=
-  //                                 availableDriversCount)
-  //                           }
-  //                           onChange={(e) => {
-  //                             if (e.target.checked) {
-  //                               setSelectedBookings([
-  //                                 ...selectedBookings,
-  //                                 item.booking_id,
-  //                               ]);
-  //                             } else {
-  //                               setSelectedBookings(
-  //                                 selectedBookings.filter(
-  //                                   (id) => id !== item.booking_id
-  //                                 )
-  //                               );
-  //                             }
-  //                           }}
-  //                         />
-
-  //                         {/* <input
-  //                           type="checkbox"
-  //                           className={`${
-  //                             selectedBookings.includes(item.booking_id) ||
-  //                             (filteredData.findIndex(
-  //                               (o) => o.booking_id === item.booking_id
-  //                             ) === selectedBookings.length &&
-  //                               selectedBookings.length < availableDriversCount)
-  //                               ? "cursor-pointer"
-  //                               : "cursor-not-allowed"
-  //                           }`}
-  //                           checked={selectedBookings.includes(item.booking_id)}
-  //                           disabled={
-  //                             !selectedBookings.includes(item.booking_id) &&
-  //                             (selectedBookings.length >=
-  //                               availableDriversCount ||
-  //                               filteredData.findIndex(
-  //                                 (o) => o.booking_id === item.booking_id
-  //                               ) !== selectedBookings.length)
-  //                           }
-  //                           onChange={(e) => {
-  //                             if (e.target.checked) {
-  //                               setSelectedBookings([
-  //                                 ...selectedBookings,
-  //                                 item.booking_id,
-  //                               ]);
-  //                             } else {
-  //                               setSelectedBookings(
-  //                                 selectedBookings.filter(
-  //                                   (id) => id !== item.booking_id
-  //                                 )
-  //                               );
-  //                             }
-  //                           }}
-  //                         /> */}
-  //                       </td>
-
-  //                       <td className="p-2 text-center text-gray-750">
-  //                         {item.tour_date && item.start_time
-  //                           ? `${item.tour_date} ${item.start_time}`
-  //                           : "-"}
-  //                       </td>
-
-  //                       {/* <td className="p-2 text-center text-gray-750">
-  //                         {item.start_time}
-  //                       </td> */}
-  //                       <td className="p-2 text-center text-gray-750">
-  //                         {item.customer_name}
-  //                       </td>
-  //                       {/* <td className="p-2 text-center text-gray-750">
-  //                         <button
-  //                           onClick={() =>
-  //                             window.open(
-  //                               `https://wa.me/${item.customer_phone.replace(/^0/, "62")}`,
-  //                               "_blank"
-  //                             )
-  //                           }
-  //                           className="px-3 bg-[#B8D4F9] rounded-[10px] text-[#1C7AC8] hover:bg-[#7ba2d0] cursor-pointer inline-block"
-  //                         >
-  //                           WhatsApp
-  //                         </button>
-  //                       </td> */}
-  //                       <td className="p-2 text-center text-gray-750">
-  //                         Paket {item.package_id}
-  //                       </td>
-  //                       <td className="p-2 text-center text-gray-750">
-  //                         <button
-  //                           onClick={() => handleAturJadwal(item.booking_id)}
-  //                           className={`px-2 rounded-[10px] text-white transition ${
-  //                             !selectedBookings.includes(item.booking_id) &&
-  //                             selectedBookings.length >= availableDriversCount
-  //                               ? "bg-gray-300 cursor-not-allowed"
-  //                               : "bg-[#8FAFD9] hover:bg-[#7ba2d0] cursor-pointer"
-  //                           }`}
-  //                           checked={selectedBookings.includes(item.booking_id)}
-  //                           disabled={
-  //                             !selectedBookings.includes(item.booking_id) &&
-  //                             selectedBookings.length >= availableDriversCount
-  //                           }
-  //                         >
-  //                           Custom Driver
-  //                         </button>
-  //                       </td>
-  //                     </tr>
-  //                   ))
-  //                 ) : (
-  //                   <tr>
-  //                     <td colSpan="6" className="p-4 text-center text-gray-500">
-  //                       Data tidak ditemukan.
-  //                     </td>
-  //                   </tr>
-  //                 )}
-  //               </tbody>
-  //             </table>
-  //           </div>
-  //           {selectedBookings.length > 0 && (
-  //             <button
-  //               onClick={handleCetakTiket}
-  //               className={`px-2 py-1 rounded-[7px] mb-5 mt-3 transition text-white
-  //     ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-600 cursor-pointer"}
-  //   `}
-  //               disabled={isLoading}
-  //             >
-  //               {isLoading
-  //                 ? "Memproses..."
-  //                 : `Cetak Tiket (${selectedBookings.length})`}
-  //             </button>
-  //           )}
-  //         </>
-  //       )}
-  //     </div>
-  //     {showDriversBesok && (
-  //       <div className="fixed inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm z-50">
-  //         <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md max-h-[80vh] overflow-auto">
-  //           <div className="relative">
-  //             <button
-  //               onClick={() => setShowDriversBesok(false)}
-  //               className="absolute top-[-10px] right-[-4px] text-gray-500 hover:text-red-600 text-2xl font-bold cursor-pointer"
-  //               aria-label="Tutup"
-  //             >
-  //               &times;
-  //             </button>
-
-  //             <h2 className="text-xl font-semibold mb-4 text-center">
-  //               Daftar Driver Besok
-  //             </h2>
-
-  //             {driversBesok.length === 0 ? (
-  //               <p className="text-center text-gray-600">
-  //                 Silakan rolling driver terlebih dahulu.
-  //               </p>
-  //             ) : (
-  //               <ul className="list-disc pl-5 space-y-2 mt-5">
-  //                 {driversBesok.map((item) => (
-  //                   <li key={item.id} className="mb-2">
-  //                     <div>
-  //                       <span className="font-medium">
-  //                         {item.driver?.name ?? "Nama tidak tersedia"}
-  //                       </span>
-  //                     </div>
-  //                     <div className="text-sm text-gray-700">
-  //                       Dijadwalkan:{" "}
-  //                       <span className="font-semibold">
-  //                         {item.assigned === 1 ? "Sudah" : "Belum"}
-  //                       </span>{" "}
-  //                       | Alasan Skip:{" "}
-  //                       <span className="italic font-semibold">
-  //                         {item.skip_reason ?? "-"}
-  //                       </span>
-  //                     </div>
-  //                   </li>
-  //                 ))}
-  //               </ul>
-  //             )}
-  //           </div>
-  //         </div>
-  //       </div>
-  //     )}
-  //   </div>
-  // );
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -1300,60 +830,6 @@ const PenjadwalanPage = () => {
               />
             </div>
 
-            {/* <div className="flex justify-end mb-3 gap-2">
-              <button
-                onClick={fetchDriversBesok}
-                disabled={loadingDriversBesok}
-                className={`bg-green-500 text-white px-2 py-1 rounded-[7px] transition ${
-                  loadingDriversBesok
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-green-600 cursor-pointer"
-                }`}
-              >
-                {loadingDriversBesok ? "Memuat..." : "Lihat Driver Besok"}
-              </button>
-
-              <button
-                onClick={handleRolling}
-                disabled={loadingRotation || isAlreadyRolled}
-                className={`bg-[#8FAFD9] text-white px-2 py-1 rounded-[7px] transition ${
-                  loadingRotation || isAlreadyRolled
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-[#7ba2d0] cursor-pointer"
-                }`}
-              >
-                {loadingRotation
-                  ? "Memproses..."
-                  : isAlreadyRolled
-                    ? "Sudah Rolling"
-                    : "Rolling Driver"}
-              </button>
-            </div>
-
-            {!isAlreadyRolled && (
-              <p className="text-sm text-gray-500 italic text-right mb-4">
-                *Klik <span className="font-semibold">Rolling Driver</span>{" "}
-                terlebih dahulu
-              </p>
-            )}
-            {selectedBookings.length > 0 && (
-              <div className="flex justify-start mb-3">
-                <button
-                  onClick={handleCetakTiket}
-                  className={`px-3 py-2 rounded-[7px] text-sm transition text-white 
-        ${
-          isLoading
-            ? "bg-gray-400 cursor-not-allowed"
-            : "bg-green-500 hover:bg-green-600 cursor-pointer"
-        }`}
-                  disabled={isLoading}
-                >
-                  {isLoading
-                    ? "Memproses..."
-                    : `Cetak Tiket (${selectedBookings.length})`}
-                </button>
-              </div>
-            )} */}
             <div className="flex justify-between mb-3">
               {selectedBookings.length > 0 ? (
                 <button
@@ -1411,107 +887,115 @@ const PenjadwalanPage = () => {
                 terlebih dahulu
               </p>
             )}
-
-            <div className="overflow-x-auto bg-white rounded-xl shadow">
-              <table className="w-full table-auto">
-                <thead className="bg-[#3D6CB9] text-white">
-                  <tr>
-                    <th className="p-2 text-center font-normal">Pilih</th>
-                    <th className="p-2 text-center font-normal">
-                      Tanggal dan Waktu Keberangkatan
-                    </th>
-                    <th className="p-2 text-center font-normal">Nama</th>
-                    <th className="p-2 text-center font-normal">
-                      Pilihan Paket
-                    </th>
-                    <th className="p-2 text-center font-normal">
-                      Custom Driver
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredData.length > 0 ? (
-                    filteredData.map((item) => (
-                      <tr
-                        key={item.booking_id}
-                        className="border-t border-[#808080] hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="p-2 text-center">
-                          <input
-                            type="checkbox"
-                            className={`${
-                              selectedBookings.includes(item.booking_id) ||
-                              (filteredData.findIndex(
-                                (o) => o.booking_id === item.booking_id
-                              ) === selectedBookings.length &&
-                                selectedBookings.length < availableDriversCount)
-                                ? "cursor-pointer"
-                                : "cursor-not-allowed"
-                            }`}
-                            checked={selectedBookings.includes(item.booking_id)}
-                            disabled={
-                              !selectedBookings.includes(item.booking_id) &&
-                              (filteredData.findIndex(
-                                (o) => o.booking_id === item.booking_id
-                              ) !== selectedBookings.length ||
-                                selectedBookings.length >=
-                                  availableDriversCount)
-                            }
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedBookings([
-                                  ...selectedBookings,
-                                  item.booking_id,
-                                ]);
-                              } else {
-                                setSelectedBookings(
-                                  selectedBookings.filter(
-                                    (id) => id !== item.booking_id
-                                  )
-                                );
+            <div className="bg-white rounded-xl shadow overflow-x-auto">
+              <div className="max-h-[470px] overflow-y-auto">
+                <table className="w-full table-auto">
+                  {/* <thead className="bg-[#3D6CB9] text-white"> */}
+                  <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
+                    <tr>
+                      <th className="p-2 text-center font-normal">Pilih</th>
+                      <th className="p-2 text-center font-normal">
+                        Tanggal dan Waktu Keberangkatan
+                      </th>
+                      <th className="p-2 text-center font-normal">Nama</th>
+                      <th className="p-2 text-center font-normal">
+                        Pilihan Paket
+                      </th>
+                      <th className="p-2 text-center font-normal">
+                        Custom Driver
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredData.length > 0 ? (
+                      filteredData.map((item) => (
+                        <tr
+                          key={item.booking_id}
+                          className="border-t border-[#808080] hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="p-2 text-center">
+                            <input
+                              type="checkbox"
+                              className={`${
+                                selectedBookings.includes(item.booking_id) ||
+                                (filteredData.findIndex(
+                                  (o) => o.booking_id === item.booking_id
+                                ) === selectedBookings.length &&
+                                  selectedBookings.length <
+                                    availableDriversCount)
+                                  ? "cursor-pointer"
+                                  : "cursor-not-allowed"
+                              }`}
+                              checked={selectedBookings.includes(
+                                item.booking_id
+                              )}
+                              disabled={
+                                !selectedBookings.includes(item.booking_id) &&
+                                (filteredData.findIndex(
+                                  (o) => o.booking_id === item.booking_id
+                                ) !== selectedBookings.length ||
+                                  selectedBookings.length >=
+                                    availableDriversCount)
                               }
-                            }}
-                          />
-                        </td>
-                        <td className="p-2 text-center text-gray-750">
-                          {item.tour_date && item.start_time
-                            ? `${item.tour_date} ${item.start_time}`
-                            : "-"}
-                        </td>
-                        <td className="p-2 text-center text-gray-750">
-                          {item.customer_name}
-                        </td>
-                        <td className="p-2 text-center text-gray-750">
-                          Paket {item.package_id}
-                        </td>
-                        <td className="p-2 text-center text-gray-750">
-                          <button
-                            onClick={() => handleAturJadwal(item.booking_id)}
-                            className={`px-2 rounded-[10px] text-white transition ${
-                              !selectedBookings.includes(item.booking_id) &&
-                              selectedBookings.length >= availableDriversCount
-                                ? "bg-gray-300 cursor-not-allowed"
-                                : "bg-[#8FAFD9] hover:bg-[#7ba2d0] cursor-pointer"
-                            }`}
-                            disabled={
-                              !selectedBookings.includes(item.booking_id) &&
-                              selectedBookings.length >= availableDriversCount
-                            }
-                          >
-                            Custom Driver
-                          </button>
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedBookings([
+                                    ...selectedBookings,
+                                    item.booking_id,
+                                  ]);
+                                } else {
+                                  setSelectedBookings(
+                                    selectedBookings.filter(
+                                      (id) => id !== item.booking_id
+                                    )
+                                  );
+                                }
+                              }}
+                            />
+                          </td>
+                          <td className="p-2 text-center text-gray-750">
+                            {item.tour_date && item.start_time
+                              ? `${item.tour_date} - ${item.start_time}`
+                              : "-"}
+                          </td>
+                          <td className="p-2 text-center text-gray-750">
+                            {item.customer_name}
+                          </td>
+                          <td className="p-2 text-center text-gray-750">
+                            Paket {item.package_id}
+                          </td>
+                          <td className="p-2 text-center text-gray-750">
+                            <button
+                              onClick={() => handleAturJadwal(item.booking_id)}
+                              className={`px-2 rounded-[10px] text-white transition ${
+                                !selectedBookings.includes(item.booking_id) &&
+                                selectedBookings.length >= availableDriversCount
+                                  ? "bg-gray-300 cursor-not-allowed"
+                                  : "bg-[#8FAFD9] hover:bg-[#7ba2d0] cursor-pointer"
+                              }`}
+                              disabled={
+                                !selectedBookings.includes(item.booking_id) &&
+                                selectedBookings.length >= availableDriversCount
+                              }
+                            >
+                              Custom Driver
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="6"
+                          className="p-4 text-center text-gray-500"
+                        >
+                          Data tidak ditemukan.
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="6" className="p-4 text-center text-gray-500">
-                        Data tidak ditemukan.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </>
         )}
@@ -1585,9 +1069,7 @@ const PenjadwalanPage = () => {
                 </svg>
               </div>
             </div>
-            <h2 className="text-xl font-semibold mb-2">
-              Berhasil!
-            </h2>
+            <h2 className="text-xl font-semibold mb-2">Berhasil!</h2>
             <p className="text-gray-600">
               Tunggu sebentar, kamu akan diarahkan...
             </p>
