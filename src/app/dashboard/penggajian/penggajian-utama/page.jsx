@@ -6,7 +6,6 @@ import SearchInput from "/components/Search";
 import GajiCatat from "/components/GajiCatat";
 import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
-import { Eye, Printer } from "lucide-react";
 import SlipGaji from "/components/SlipGaji";
 import Hashids from "hashids";
 
@@ -40,11 +39,11 @@ function DaftarGaji() {
       const previewJson = await previewRes.json();
       const allJsonRaw = await allRes.json();
 
-      console.log("Data salary/all:", allJsonRaw); // Cek dulu struktur
+      //console.log("Data salary/all:", allJsonRaw); // Cek dulu struktur
 
       // Misal data yang benar ada di properti `all`
       const allJson = allJsonRaw.all || allJsonRaw;
-      console.log("Data salary/all:", allJsonRaw);
+      //console.log("Data salary/all:", allJsonRaw);
 
       const previews = previewJson.previews.map((item) => ({
         id: item.id,
@@ -97,7 +96,7 @@ function DaftarGaji() {
     try {
       const res = await fetch("http://localhost:8000/api/salary/all");
       const json = await res.json();
-      console.log("Data salary/all diterima:", json);
+      //console.log("Data salary/all diterima:", json);
 
       const rawData = json.data || json;
 
@@ -115,10 +114,10 @@ function DaftarGaji() {
 
   useEffect(() => {
     const init = async () => {
-      console.log("⏳ INIT useEffect jalan");
+      //console.log("⏳ INIT useEffect jalan");
 
       const updated = localStorage.getItem("statusUpdated");
-      console.log("📦 statusUpdated dari localStorage:", updated);
+      //console.log("📦 statusUpdated dari localStorage:", updated);
 
       // Ambil data dari API
       const [previewRes, allRes] = await Promise.all([
@@ -215,7 +214,7 @@ function DaftarGaji() {
     const handleStorageChange = () => {
       const updated = localStorage.getItem("statusUpdated");
       if (updated) {
-        console.log("📦 Triggered via storage event:", updated);
+        //console.log("📦 Triggered via storage event:", updated);
         setReloadTrigger((prev) => prev + 1); // ⬅️ ini akan memicu ulang useEffect utama
       }
     };
@@ -274,7 +273,7 @@ function DaftarGaji() {
   };
 
   const handleCatat = (user_id, role, payment_date) => {
-    console.log("Diterima payment_date:", payment_date); // debug
+    //console.log("Diterima payment_date:", payment_date); // debug
 
     let encodedDate = "";
     if (payment_date && !isNaN(new Date(payment_date))) {
@@ -290,7 +289,7 @@ function DaftarGaji() {
   };
 
   const handleLihat = (user_id, role, payment_date) => {
-    console.log("Lihat detail:", user_id, role, payment_date);
+    //console.log("Lihat detail:", user_id, role, payment_date);
 
     let encodedDate = "";
     if (payment_date && !isNaN(new Date(payment_date))) {
