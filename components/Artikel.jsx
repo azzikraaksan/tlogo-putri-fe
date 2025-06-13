@@ -33,7 +33,7 @@ function formatStatus(status) {
   return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 }
 
-export default function Artikel() { // <<< --- INI NAMA FUNGSI YANG BERUBAH
+export default function Artikel() { 
   const [activeTab, setActiveTab] = useState('semua');
   const [searchTerm, setSearchTerm] = useState('');
   const [data, setData] = useState([]);
