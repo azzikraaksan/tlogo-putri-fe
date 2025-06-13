@@ -21,34 +21,29 @@ function Page() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   
 
-  const itemsPerPage = 4;
+  const itemsPerPage = 10;
   const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
   const years = Array.from({ length: 11 }, (_, i) => 2020 + i);
 
-  useEffect(() => {
-  const fetchData = async () => {
-    try {
-      const users = [
-        { id: 2, role: "driver" },
-        { id: 3, role: "owner" },
-        // Tambahkan user lainnya jika ada
-      ];
+ useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        if (!token) throw new Error("Token tidak ditemukan");
 
-      const results = await Promise.allSettled(
-        users.map(async ({ id, role }) => {
-          const url = `http://localhost:8000/api/salary/total/${id}/${role}`;
-          const res = await fetch(url);
-          if (!res.ok) throw new Error(`Fetch gagal: ${url}`);
-          const data = await res.json();
-          return data;
-        })
-      );
+        const res = await fetch("http://localhost:8000/api/salary/all", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      const allData = results
-        .filter(result => result.status === "fulfilled")
-        .map(result => result.value)
-        .map(item => {
-          const tanggal = item.tanggal || "-";
+        if (!res.ok) throw new Error("Gagal fetch data salary");
+
+        const result = await res.json();
+        const salaries = result.data || [];
+
+        const allData = salaries.map((item) => {
+          const tanggal = item.payment_date || "-";
           const dateObj = new Date(tanggal);
           const bulan = months[dateObj.getMonth()];
           const tahun = dateObj.getFullYear();
@@ -63,14 +58,14 @@ function Page() {
           };
         });
 
-      setAllData(allData);
-    } catch (err) {
-      console.error("Gagal mengambil data:", err.message);
-    }
-  };
+        setAllData(allData);
+      } catch (err) {
+        console.error("Gagal mengambil data:", err.message);
+      }
+    };
 
-  fetchData();
-}, []);
+    fetchData();
+  }, []);
 
   const filteredData = allData.filter(item => {
     const cocokNama = (item.nama || "").toLowerCase().includes(searchTerm.toLowerCase());
