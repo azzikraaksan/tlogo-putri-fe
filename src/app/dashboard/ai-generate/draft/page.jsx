@@ -430,14 +430,15 @@
 
 
 import React, { Suspense } from 'react';
-import DashboardDraftClient from './DashboardDraftClient';
+import Artikel from '../../../../../components/Artikel';
+// import <Artikel></Artikel> from './DashboardDraftClient';
 
 export default function DraftPage() {
   return (
     // Membungkus DashboardDraftClient dengan Suspense. Ini akan mengatasi error useSearchParams() saat build, 
     // karena Next.js akan menunda rendering DashboardDraftClient (yang pakai useSearchParams) sampai di sisi klien (browser)
     <Suspense fallback={<div>Memuat daftar artikel...</div>}>
-      <DashboardDraftClient />
+      <Artikel />
     </Suspense>
   );
 }

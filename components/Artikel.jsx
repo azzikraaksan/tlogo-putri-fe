@@ -33,7 +33,7 @@ function formatStatus(status) {
   return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 }
 
-export default function DashboardDraftClient() { // <<< --- INI NAMA FUNGSI YANG BERUBAH
+export default function Artikel() { // <<< --- INI NAMA FUNGSI YANG BERUBAH
   const [activeTab, setActiveTab] = useState('semua');
   const [searchTerm, setSearchTerm] = useState('');
   const [data, setData] = useState([]);
@@ -239,7 +239,7 @@ export default function DashboardDraftClient() { // <<< --- INI NAMA FUNGSI YANG
     </div>
   );
 }
-
+  // if (loading) return <div>Memuat data...</div>;
   if (error) return <div>Terjadi kesalahan: {error}</div>;
 
   if (selectedId && !selectedArticle) {
@@ -376,8 +376,9 @@ export default function DashboardDraftClient() { // <<< --- INI NAMA FUNGSI YANG
                         </div>
                         <div
                           className="text-xs text-gray-500 truncate"
-                          title={stripHtmlTags(item.isi_konten)}
-                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(truncateText(item.isi_konten, 150)) }}
+                          title={stripHtmlTags(item.isi_konten)} // Ini untuk tooltip agar bersih dari HTML
+                          // Langsung sanitasi dan potong teks HTML di sini, tanpa stripHtmlTags sebelum truncation
+                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.isi_konten).substring(0, 150) + '...' }}
                         />
 
                       </td>
