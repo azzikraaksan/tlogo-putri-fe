@@ -11,7 +11,6 @@ const DetailAnggota = () => {
   const [userDetails, setUserDetails] = useState(null);
   const router = useRouter();
   const params = useParams();
-  // const id = params?.id;
   const [loading, setLoading] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
@@ -35,15 +34,8 @@ const DetailAnggota = () => {
         const data = await res.json();
         const foundUser = data.find((u) => String(u.id) === String(id));
         if (foundUser) {
-          // console.log(
-          //   "Foto profil url:",
-          //   `http://localhost:8000/storage/profile_images/${foundUser.foto_profil}`
-          // );
           setUserDetails(foundUser);
         } else {
-          // if (foundUser) {
-          //   setUserDetails(foundUser);
-          // } else {
           console.error("User tidak ditemukan");
         }
       } catch (error) {
@@ -60,16 +52,6 @@ const DetailAnggota = () => {
     router.push(`/dashboard/operasional/anggota/edit-anggota/${params.id}`);
   };
 
-  // if (!userDetails) {
-  //   return (
-  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-red bg-opacity-75">
-  //       <div className="bg-white shadow-md p-6 rounded-lg text-center">
-  //         <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
-  //         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-  //       </div>
-  //     </div>
-  //   );
-  // }
   if (loading) {
     return <LoadingFunny />;
   }
@@ -84,12 +66,6 @@ const DetailAnggota = () => {
         }}
       ></div>
       <div className="flex-1 p-6">
-        {/* <button
-          onClick={() => router.back()}
-          className="text-blue-500 underline mb-4"
-        >
-          Kembali ke Daftar Anggota
-        </button> */}
         <div className="flex items-center gap-2">
           <CircleArrowLeft
             onClick={() => router.push("/dashboard/operasional/anggota")}
@@ -97,13 +73,10 @@ const DetailAnggota = () => {
           />
           <h1 className="text-[32px] font-semibold">Detail Anggota</h1>
         </div>
-        {/* <div className="flex items-start gap-10 bg-[#EAEAEA] p-6 rounded-xl shadow-md w-[1080px] mx-auto mt-16"> */}
         <div className="flex items-center bg-[#EAEAEA] p-6 rounded-xl shadow-md w-[900px] mx-auto mt-16 gap-5">
-          {/* <div className="w-[220px] h-[280px] rounded-lg overflow-hidden border border-gray-300"> */}
           <div className="w-[300px] h-[380px] rounded-lg overflow-hidden border border-gray-300">
             {userDetails?.foto_profil ? (
               <img
-                // src={`http://localhost:8000/storage/profile_images/${userDetails.foto_profil}`}
                 src={`http://localhost:8000/storage/${userDetails.foto_profil}`}
                 alt="Foto Profil"
                 className="w-full h-full object-cover"
