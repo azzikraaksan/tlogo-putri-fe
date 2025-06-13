@@ -11,7 +11,7 @@ const ArsipPage = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState([]); // ✅ menyimpan data ticketing
+  const [data, setData] = useState([]); 
   const [searchTerm, setSearchTerm] = useState("");
   useEffect(() => {
     fetchTicketings();
@@ -27,7 +27,7 @@ const ArsipPage = () => {
       const response = await fetch("http://localhost:8000/api/ticketings/all");
       const ticketingData = await response.json();
       console.log("✅ Data ticketing:", ticketingData);
-      setData(ticketingData); // ✅ simpan hasil ke state
+      setData(ticketingData); 
     } catch (error) {
       console.error("❌ Error fetch ticketing/rotasi:", error);
     } finally {
@@ -84,8 +84,6 @@ const ArsipPage = () => {
             placeholder="Cari"
           />
         </div>
-        {/* <div className="overflow-x-auto bg-white rounded-xl shadow">
-          <table className="w-full table-auto"> */}
           <div className="bg-white rounded-xl shadow overflow-x-auto">
               <div className="max-h-[470px] overflow-y-auto">
                 <table className="w-full table-auto">

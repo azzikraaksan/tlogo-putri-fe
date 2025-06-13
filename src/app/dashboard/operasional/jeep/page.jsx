@@ -106,7 +106,6 @@ const JeepPage = () => {
         setJeepData((prevJeep) =>
           prevJeep.filter((jeep) => jeep.jeep_id !== id)
         );
-        // alert("Jeep berhasil dihapus!");
       } else {
         console.error("Gagal hapus jeep");
         alert("Gagal hapus jeep.");
@@ -117,9 +116,6 @@ const JeepPage = () => {
     }
   };
 
-  // const handleAturJeep = (jeep_id) => {
-  // router.push(`/dashboard/operasional/jeep/detail-jeep/${jeep_id}`);
-  // };
   const handleAturJeep = (jeep_id) => {
     const encryptedId = hashids.encode(jeep_id);
     router.push(`/dashboard/operasional/jeep/detail-jeep/${encryptedId}`);
@@ -225,35 +221,7 @@ const JeepPage = () => {
                             {item.status_jeep}
                           </span>
                         </td>
-                        {/* <td className="p-2 text-center">
-                          <span
-                            className={`px-2 py-1 text-[14px] font-semibold rounded-full ${
-                              item.status_jeep === "Tersedia"
-                                ? "bg-green-100 text-green-600"
-                                : item.status_jeep === "On Track"
-                                  ? "bg-red-100 text-red-600"
-                                  : "text-gray-700"
-                            }`}
-                          >
-                            {item.status_jeep}
-                          </span>
-                        </td> */}
 
-                        {/* <td
-                          className={`inline-block px-2 py-1 text-center text-xs font-semibold rounded-full ${
-                            item.status_jeep === "Tersedia"
-                              ? "bg-green-100 text-green-800"
-                              : item.status_jeep === "On Track"
-                                ? "bg-red-100 text-red-800"
-                                : "text-gray-700"
-                          }`}
-                        >
-                          {item.status_jeep}
-                        </td> */}
-
-                        {/* <td className="p-2 text-center text-gray-750">
-                          {item.status_jeep}
-                        </td> */}
                         <td className="p-2 text-center">
                           <button
                             onClick={() => {
