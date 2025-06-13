@@ -64,120 +64,6 @@ const TicketingPage = () => {
     checkRollingStatus();
   }, []);
 
-  // const fetchTicketings = async () => {
-  //   try {
-  //     setLoading(true);
-
-  //     const jeepRes = await fetch("http://localhost:8000/api/jeeps/all");
-  //     const jeepJson = await jeepRes.json();
-  //     const jeeps = jeepJson.data || [];
-
-  //     const response = await fetch("http://localhost:8000/api/ticketings/all");
-  //     const ticketingData = await response.json();
-  //     console.log("✅ Data ticketing:", ticketingData);
-
-  //     const token = localStorage.getItem("access_token");
-  //     const besok = new Date();
-  //     besok.setDate(besok.getDate() + 1);
-  //     const tanggalBesok = besok.toISOString().split("T")[0];
-
-  //     const rotationRes = await fetch(
-  //       `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
-  //       {
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-  //     const rotationData = await rotationRes.json();
-  //     setRotations(rotationData);
-
-  //     for (const rotasi of rotationData) {
-  //       if (rotasi.skip_reason) {
-  //         const tiketTerkait = ticketingData.filter(
-  //           (t) => t.driver_id === rotasi.driver_id
-  //         );
-
-  //         for (const tiket of tiketTerkait) {
-  //           try {
-  //             const res = await fetch(
-  //               `http://localhost:8000/api/ticketings/delete/${tiket.id}`,
-  //               {
-  //                 method: "DELETE",
-  //                 headers: {
-  //                   "Content-Type": "application/json",
-  //                 },
-  //               }
-  //             );
-  //             if (res.ok) {
-  //               console.log(
-  //                 `🗑️ Tiket ${tiket.id} dihapus karena skip_reason untuk driver_id ${rotasi.driver_id}`
-  //               );
-  //             }
-  //           } catch (error) {
-  //             console.error("❌ Error saat menghapus tiket:", error);
-  //           }
-  //         }
-  //       }
-  //     }
-
-  //     // filter tiket berdasarkan tanggal tour
-  //     const today = new Date();
-  //     today.setHours(0, 0, 0, 0);
-  //     const dayAfterTomorrow = new Date();
-  //     dayAfterTomorrow.setDate(today.getDate() + 2);
-  //     dayAfterTomorrow.setHours(0, 0, 0, 0);
-
-  //     const filteredByDateTicketings = ticketingData.filter((item) => {
-  //       if (!item.booking?.tour_date) return false;
-  //       const tourDate = new Date(item.booking.tour_date);
-  //       return tourDate >= today && tourDate < dayAfterTomorrow;
-  //     });
-
-  //     const validTicketings = filteredByDateTicketings.filter((item) => {
-  //       const driverRotation = rotationData.find(
-  //         (r) => r.driver_id === item.driver_id
-  //       );
-  //       return !(driverRotation && driverRotation.skip_reason);
-  //     });
-
-  //     // merge jeeps dan assigned ke dalam item ticketing
-  //     const merged = validTicketings.map((item) => {
-  //       const driverRotation = rotationData.find(
-  //         (r) => r.driver_id === item.driver_id
-  //       );
-  //       const jeep = jeeps.find(
-  //         (j) => j.jeep_id === (driverRotation?.jeep_id || item.jeep_id)
-  //       );
-  //       return {
-  //         ...item,
-  //         assigned: driverRotation ? driverRotation.assigned : 0,
-  //         jeeps: jeep || null,
-  //       };
-  //     });
-
-  //     // const merged = validTicketings.map((item) => {
-  //     //   const driverRotation = rotationData.find(
-  //     //     (r) => r.driver_id === item.driver_id
-  //     //   );
-  //     //   const jeep = jeeps.find((j) => j.id === item.jeep_id); // merge manual jeep
-
-  //     //   return {
-  //     //     ...item,
-  //     //     assigned: driverRotation ? driverRotation.assigned : 0,
-  //     //     jeeps: jeep || null, // biar bisa pakai item.jeeps?.no_lambung
-  //     //   };
-  //     // });
-
-  //     setData(merged);
-  //   } catch (error) {
-  //     console.error("❌ Error fetch ticketing/rotasi:", error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const fetchTicketings = async () => {
   try {
     NProgress.start();
@@ -333,84 +219,10 @@ const TicketingPage = () => {
     window.open(blobUrl);
   };
 
-  // const exportToPDF = () => {
-  //   const doc = new jsPDF();
-  //   autoTable(doc, {
-  //     head: [["Tanggal Keberangkatan", "Nama Pemesan", "No Lambung", "Driver"]],
-  //     body: filteredData.map((item) => [
-  //       `${item.booking?.tour_date} ${item.booking?.start_time}`,
-  //       item.nama_pemesan,
-  //       item.jeep?.no_lambung,
-  //       item.driver?.name,
-  //     ]),
-  //   });
-  //   doc.save("Jadwal Jeep Tlogo Putri.pdf");
-  // };
-
   const handleOpenModal = (item) => {
-    setSelectedBooking(item); // simpan data baris yang dipilih
-    setShowModal(true); // tampilkan modal
+    setSelectedBooking(item); 
+    setShowModal(true); 
   };
-
-  // const handleDepartureClick = async (item) => {
-  //   const token = localStorage.getItem("access_token");
-  //   if (!token) {
-  //     alert("Token tidak ditemukan. Silakan login ulang.");
-  //     return;
-  //   }
-
-  //   try {
-  //     const besok = new Date();
-  //     besok.setDate(besok.getDate() + 1);
-  //     const formattedBesok = besok.toISOString().split("T")[0];
-
-  //     const rotationRes = await fetch(
-  //       `http://localhost:8000/api/driver-rotations?date=${formattedBesok}`,
-  //       {
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-
-  //     if (!rotationRes.ok)
-  //       throw new Error("Gagal mengambil data rotasi driver");
-
-  //     const rotationData = await rotationRes.json();
-  //     const rotation = rotationData.find((r) => r.driver_id === item.driver_id);
-  //     if (!rotation) {
-  //       alert("Rotasi untuk driver ini tidak ditemukan.");
-  //       return;
-  //     }
-
-  //     const rotationId = rotation.id;
-
-  //     const assignResponse = await fetch(
-  //       `http://localhost:8000/api/driver-rotations/${rotationId}/assign`,
-  //       {
-  //         method: "POST",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //         body: JSON.stringify({
-  //           driver_id: item.driver_id,
-  //         }),
-  //       }
-  //     );
-
-  //     if (!assignResponse.ok) throw new Error("Gagal assign driver");
-
-  //     alert("Driver berhasil ditugaskan!");
-  //     setIsScheduled(true); // <-- Ubah state menjadi true
-  //     await checkRollingStatus();
-  //     await fetchTicketings();
-  //   } catch (error) {
-  //     console.error("Error saat assign driver:", error);
-  //     alert("Terjadi kesalahan saat penugasan driver.");
-  //   }
-  // };
 
   const handleDepartureClick = async (item) => {
     const token = localStorage.getItem("access_token");
@@ -420,7 +232,6 @@ const TicketingPage = () => {
     }
 
     try {
-      // Set loading untuk driver ini jadi true
       setLoadingDrivers((prev) => ({ ...prev, [item.driver_id]: true }));
 
       const besok = new Date();
@@ -466,7 +277,6 @@ const TicketingPage = () => {
 
       if (!assignResponse.ok) throw new Error("Gagal assign driver");
 
-      // alert("Driver berhasil ditugaskan!");
       setIsScheduled(true);
       await checkRollingStatus();
       await fetchTicketings();
@@ -474,7 +284,6 @@ const TicketingPage = () => {
       console.error("Error saat assign driver:", error);
       alert("Terjadi kesalahan saat penugasan driver.");
     } finally {
-      // Set loading jadi false setelah selesai
       setLoadingDrivers((prev) => ({ ...prev, [item.driver_id]: false }));
     }
   };
@@ -529,7 +338,6 @@ const TicketingPage = () => {
 
       if (!skipResponse.ok) throw new Error("Gagal membatalkan penugasan");
 
-      // alert("Driver berhasil dibatalkan!");
       await checkRollingStatus();
       await fetchTicketings();
     } catch (error) {
@@ -563,7 +371,7 @@ const TicketingPage = () => {
       const unassignedDrivers = rotationsData.filter((r) => r.assigned === 1);
 
       setIsAlreadyRolled(unassignedDrivers.length > 0);
-      setRotations(unassignedDrivers); // ← tampilkan yang belum ditugaskan
+      setRotations(unassignedDrivers); 
     } catch (err) {
       console.error("❌ Error cek rolling:", err);
     }
@@ -613,31 +421,6 @@ const TicketingPage = () => {
     return <LoadingFunny />;
   }
 
-  // INI KIRIM TAPI TIDAK ENKRIPSI
-  // const handleSendWA = (item, rotationData, pdfUrl) => {
-  //   if (!pdfUrl) {
-  //     alert("Jadwal belum tersedia, silakan unduh jadwal dulu");
-  //     return;
-  //   }
-
-  //   const rotation = rotationData.find((r) => r.driver_id === item.driver_id);
-  //   if (!rotation) {
-  //     alert("Rotasi driver belum tersedia");
-  //     return;
-  //   }
-
-  //   const rotationId = rotation.id;
-  //   const confirmLink = `http://localhost:3000/confirm/${rotationId}`;
-  //   const phone = item.driver?.telepon.replace(/^0/, "62");
-
-  //   const message = encodeURIComponent(
-  //     `Halo, ini link konfirmasi keberangkatan kamu besok:\n${confirmLink}\n\n` +
-  //       `📋 Berikut daftar penjadwalan besok:\n👉 ${pdfUrl}`
-  //   );
-
-  //   window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-  // };
-
   return (
     <div className="flex">
       <Sidebar
@@ -680,23 +463,6 @@ const TicketingPage = () => {
             <FileText size={16} /> Unduh Jadwal
           </button>
         </div>
-
-        {/* <div className="flex flex-col items-end gap-2">
-          <SearchInput
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onClear={() => setSearchTerm("")}
-            placeholder="Cari"
-          />
-          <div className="flex mb-2">
-            <button
-              onClick={exportToPDF}
-              className="flex items-center gap-1 bg-red-500 text-white p-2 rounded-[10px] hover:bg-red-600 cursor-pointer"
-            >
-              <FileText size={16} /> Unduh Jadwal
-            </button>
-          </div>
-        </div> */}
 
         <div className="overflow-x-auto bg-white rounded-xl shadow max-h-[800px] overflow-y-auto">
           <table className="w-full table-auto">

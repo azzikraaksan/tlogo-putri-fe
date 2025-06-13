@@ -36,7 +36,6 @@ const EditAnggota = () => {
       try {
         setLoading(true);
         const res = await fetch("http://localhost:8000/api/users/all", {
-        // const res = await fetch("${process.env.NEXT_PUBLIC_API_URL}/api/users/all", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();

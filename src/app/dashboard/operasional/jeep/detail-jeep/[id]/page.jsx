@@ -11,7 +11,6 @@ const DetailJeep = () => {
   const [jeepDetails, setJeepDetails] = useState(null);
   const router = useRouter();
   const params = useParams();
-  // const id = params?.id;
   const { id } = useParams();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
@@ -27,7 +26,7 @@ const DetailJeep = () => {
       }
 
       const decodedId = decoded[0];
-      setJeepId(decodedId); // simpan jika butuh
+      setJeepId(decodedId); 
 
       const fetchDetailsWithDriver = async () => {
         try {
@@ -69,59 +68,10 @@ const DetailJeep = () => {
     }
   }, [id]);
 
-  // useEffect(() => {
-  //   if (id) {
-  //     const fetchDetailsWithDriver = async () => {
-  //       try {
-  //         const token = localStorage.getItem("access_token");
-
-  //         const [jeepRes, driversRes] = await Promise.all([
-  //           fetch(`http://localhost:8000/api/jeeps/id/${id}`, {
-  //             headers: { Authorization: `Bearer ${token}` },
-  //           }),
-  //           fetch("http://localhost:8000/api/users/by-role?role=Driver", {
-  //             headers: { Authorization: `Bearer ${token}` },
-  //           }),
-  //         ]);
-
-  //         if (!jeepRes.ok || !driversRes.ok) throw new Error("Gagal fetch");
-
-  //         const jeepData = await jeepRes.json();
-  //         const driversData = await driversRes.json();
-
-  //         const driver = driversData?.data?.find(
-  //           (d) => d.id === jeepData.data.driver_id
-  //         );
-
-  //         const combinedData = {
-  //           ...jeepData.data,
-  //           driver_name: driver?.name || "-",
-  //         };
-
-  //         setJeepDetails(combinedData);
-  //       } catch (error) {
-  //         console.error("Gagal mengambil data:", error);
-  //       }
-  //     };
-
-  //     fetchDetailsWithDriver();
-  //   }
-  // }, [id]);
-
   const handleEditClick = () => {
     router.push(`/dashboard/operasional/jeep/edit-jeep/${params.id}`);
   };
 
-  // if (!jeepDetails) {
-  //   return (
-  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-red bg-opacity-75">
-  //       <div className="bg-white shadow-md p-6 rounded-lg text-center">
-  //         <p className="text-lg font-semibold text-gray-800 mb-2">Loading...</p>
-  //         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-  //       </div>
-  //     </div>
-  //   );
-  // }
 if (loading) {
     return <LoadingFunny />;
   }
@@ -143,7 +93,6 @@ if (loading) {
           />
           <h1 className="text-[32px] font-semibold">Detail Jeep</h1>
         </div>
-        {/* <div className="flex items-start bg-[#EAEAEA] p-6 rounded-xl shadow-md w-[1080px] mx-auto mt-16"> */}
           <div className="flex items-start bg-[#EAEAEA] p-6 rounded-xl shadow-md w-[600px] mx-auto mt-16">
           <div className="flex-1 relative">
             <button
@@ -152,13 +101,7 @@ if (loading) {
             >
               Edit Jeep
             </button>
-            {/* <div className="grid grid-cols-[250px_10px_auto] gap-y-6 text-gray-800 ml-70 mt-10 mb-10"> */}
                <div className="grid grid-cols-[200px_10px_auto] gap-y-6 text-gray-800 mt-10 mb-10 ml-20">
-              {/* <div className="font-semibold text-[#1C7AC8]">Jeep ID</div>
-              <div className="text-[#808080]">:</div>
-              <div className="text-[#808080]">
-                {jeepDetails?.jeep_id || "-"}
-              </div> */}
 
               <div className="font-semibold text-[#1C7AC8]">Nama Driver</div>
               <div className="text-[#808080]">:</div>
