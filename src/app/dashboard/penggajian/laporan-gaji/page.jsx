@@ -182,7 +182,7 @@ function Page() {
             </div>
 
           <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Role</label>
+            <label className="text-sm font-medium text-gray-700">Role</label> 
             <select value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)} className="text-sm border border-gray-300 rounded px-3 py-2">
               <option value="">Semua Role</option>
               <option value="Owner">Owner</option>
