@@ -27,7 +27,8 @@ export default function Page() {
     setError(null);
 
     try {
-      const res = await fetch("http://localhost:8000/api/content-generate/generate", {
+      // const res = await fetch("http://localhost:8000/api/content-generate/generate", {
+      const res = await fetch("https://tpapi.siunjaya.id/api/content-generate/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: inputValue }),
