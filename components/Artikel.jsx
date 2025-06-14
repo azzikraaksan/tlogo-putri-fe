@@ -119,7 +119,7 @@ export default function Artikel() {
       };
 
       const res = await fetch(
-        `http://127.0.0.1:8000/api/content-generate/articleupdate/${updatedArticle.id}`,
+        `https://tpapi.siunjaya.id/api/content-generate/articleupdate/${updatedArticle.id}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -145,7 +145,7 @@ export default function Artikel() {
     if (!confirm('Yakin ingin menghapus artikel ini?')) return;
     try {
       const res = await fetch(
-        `http://127.0.0.1:8000/api/content-generate/articledelete/${id}`,
+        `https://tpapi.siunjaya.id/api/content-generate/articledelete/${id}`,
         { method: 'POST' }
       );
       if (!res.ok) throw new Error('Gagal menghapus data');
@@ -163,7 +163,7 @@ export default function Artikel() {
     if (!confirm('Yakin ingin memulihkan artikel ini?')) return;
     try {
       const res = await fetch(
-        `http://127.0.0.1:8000/api/content-generate/articleupdate/${id}`,
+        `https://tpapi.siunjaya.id/api/content-generate/articleupdate/${id}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
