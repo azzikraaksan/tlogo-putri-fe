@@ -201,23 +201,22 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
           </div>
           {/* Tombol Aksi */}
           <div className="flex space-x-4">
-  <button
-    onClick={handleSaveClick}
-    className="px-4 py-2 bg-[#3D6CB9] text-white rounded-md cursor-pointer"
-  >
-    Simpan Perubahan
-  </button>
+              <button
+                onClick={handleSaveClick}
+                className="px-4 py-2 bg-[#3D6CB9] text-white rounded-md cursor-pointer"
+              >
+                Simpan Perubahan
+              </button>
 
-  {article.status?.toLowerCase() !== 'terbit' && (
-    <button
-      onClick={handleUploadClick}
-      className="px-4 py-2 bg-green-600 text-white rounded-md cursor-pointer"
-    >
-      Unggah
-    </button>
-  )}
-</div>
-
+              {article.status?.toLowerCase() !== 'terbit' && (
+                <button
+                  onClick={handleUploadClick}
+                  className="px-4 py-2 bg-green-600 text-white rounded-md cursor-pointer"
+                >
+                  Unggah
+                </button>
+              )}
+            </div>
         </div>
       </main>
     </div>

@@ -62,7 +62,7 @@ export default function Page() {
     setLoading(true);
     setStatusMessage("");
     try {
-      const res = await fetch("http://localhost:8000/api/content-generate/optimize", {
+      const res = await fetch("https://tpapi.siunjaya.id/api/content-generate/optimize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
@@ -96,7 +96,7 @@ export default function Page() {
     setLoading(true);
     setStatusMessage("");
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/content-generate/customoptimize", {
+      const res = await fetch("https://tpapi.siunjaya.id/api/content-generate/customoptimize", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query, content }),
@@ -132,7 +132,7 @@ export default function Page() {
   console.log("Payload yang dikirim:", payload);
 
   try {
-    const res = await fetch("http://localhost:8000/api/content-generate/storecontent", {
+    const res = await fetch("https://tpapi.siunjaya.id/api/content-generate/storecontent", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
