@@ -70,16 +70,16 @@ export default function Artikel() {
 
       switch (activeTab.toLowerCase()) {
         case 'terbit':
-          url = 'http://127.0.0.1:8000/api/content-generate/articleterbit';
+          url = 'https://tpapi.siunjaya.id/api/content-generate/articleterbit';
           break;
         case 'konsep':
-          url = 'http://127.0.0.1:8000/api/content-generate/articlekonsep';
+          url = 'https://tpapi.siunjaya.id/api/content-generate/articlekonsep';
           break;
         case 'sampah':
-          url = 'http://127.0.0.1:8000/api/content-generate/articlesampah';
+          url = 'https://tpapi.siunjaya.id/api/content-generate/articlesampah';
           break;
         default:
-          url = 'http://127.0.0.1:8000/api/content-generate/draft';
+          url = 'https://tpapi.siunjaya.id/api/content-generate/draft';
           break;
       }
 
