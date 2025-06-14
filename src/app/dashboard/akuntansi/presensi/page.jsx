@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Sidebar from "/components/Sidebar.jsx";
 import withAuth from "/src/app/lib/withAuth";
+import PresensiTable from "../../../../../components/akuntansi/PresensiTable";
+import PresensiControls from "../../../../../components/akuntansi/PresensiControls";
 import {
     CalendarDays,
     FileText,
@@ -291,154 +293,52 @@ const PresensiPage = ({ children }) => {
     const [isSidebarOpen, setSidebarOpen] = useState(true);
 
     return (
-        <div className="flex h-screen">
-            <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
-            <div
-                className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
-                style={{
-                    marginLeft: isSidebarOpen ? 290 : 70,
-                }}
-            >
-                <div className="flex-1 p-4 md:p-6 relative">
-                    <h1 className="text-[28px] md:text-[32px] font-semibold text-black mb-6">
-                        Presensi
-                    </h1>
-                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
-                        <div className="flex flex-wrap gap-4 items-center">
-                            <div className="relative" ref={calendarRef}>
-                                {!selectedDateForFilter ? (
-                                    <button
-                                        onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                                        className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black cursor-pointer"
-                                    >
-                                        <CalendarDays size={20} />
-                                        <span>Pilih Tanggal</span>
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={resetFilter}
-                                        className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black cursor-pointer"
-                                    >
-                                        <RotateCcw size={20} />
-                                        <span>Atur Ulang</span>
-                                    </button>
-                                )}
-                                {isDatePickerOpen && (
-                                    <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg p-4 top-12 left-0 md:left-auto" style={{ minWidth: '280px' }}>
-                                        <DatePicker
-                                            selected={tempDateForPicker}
-                                            onChange={(date) => setTempDateForPicker(date)}
-                                            inline
-                                            dateFormat="dd-MM-yyyy"
-                                            showPopperArrow={false}
-                                        />
-                                        <div className="mt-4 flex justify-between">
-                                            <button
-                                                onClick={() => setIsDatePickerOpen(false)}
-                                                className="px-4 py-2 bg-red-200 text-black rounded hover:bg-red-500 hover:text-white cursor-pointer"
-                                            >
-                                                Batal
-                                            </button>
-                                            <button
-                                                onClick={applyDateFilter}
-                                                className="px-4 py-2 bg-[#B8D4F9] text-black rounded hover:bg-[#3D6CB9] hover:text-white cursor-pointer"
-                                            >
-                                                Pilih Tanggal
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            <button
-                                onClick={handleGeneratePresensiReport}
-                                disabled={isLoading}
-                                className={`flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black ${isLoading ? "cursor-not-allowed opacity-70" : "cursor-pointer"
-                                    }`}
-                            >
-                                <Zap size={20} />
-                                <span>Buat Laporan</span>
-                            </button>
-                        </div>
-                        <div className="flex flex-wrap gap-4 items-center">
-                            <button
-                                onClick={handleExportExcel}
-                                disabled={filteredData.length === 0 || isLoading}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${(filteredData.length === 0 || isLoading)
-                                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                        : "bg-green-100 text-black hover:bg-green-200 cursor-pointer"
-                                    }`}
-                            >
-                                <FileSpreadsheet size={20} color={(filteredData.length === 0 || isLoading) ? "gray" : "green"} />
-                                <span>Ekspor Excel</span>
-                            </button>
-                            <button
-                                onClick={handleExportPDF}
-                                disabled={filteredData.length === 0 || isLoading}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${(filteredData.length === 0 || isLoading)
-                                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                                        : "bg-red-100 text-black hover:bg-red-200 cursor-pointer"
-                                    }`}
-                            >
-                                <FileText size={20} color={(filteredData.length === 0 || isLoading) ? "gray" : "red"} />
-                                <span>Ekspor PDF</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {isLoading && !isDatePickerOpen ? (
-                        <div className="text-center p-10 text-lg font-medium text-gray-700">
-                            Memuat data rekap presensi, mohon tunggu...
-                        </div>
-                    ) : (
-                        <div className="overflow-x-auto rounded-lg shadow">
-                            <div className="max-h-[calc(100vh-280px)] overflow-y-auto">
-                                <table className="min-w-full table-auto bg-white text-sm">
-                                    <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
-                                        <tr>
-                                            {tableDisplayHeaders.map((header, index, arr) => (
-                                                <th
-                                                    key={header}
-                                                    className={`p-3 text-center whitespace-nowrap`}
-                                                    style={{
-                                                        borderTopLeftRadius: index === 0 ? "0.5rem" : undefined,
-                                                        borderTopRightRadius: index === arr.length - 1 ? "0.5rem" : undefined,
-                                                    }}
-                                                >
-                                                    {header}
-                                                </th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredData.length === 0 ? (
-                                            <tr>
-                                                <td colSpan={tableDisplayHeaders.length} className="text-center p-4 text-gray-500 font-medium">Data Tidak Ditemukan</td>
-                                            </tr>
-                                        ) : (
-                                            filteredData.map((item, idx) => (
-                                                <tr
-                                                    key={item.id_presensi || `presensi-${idx}`}
-                                                    className="border-b text-center border-gray-200 hover:bg-gray-100 transition duration-150 ease-in-out"
-                                                >
-                                                    <td className="p-3 whitespace-nowrap">{item.nama_lengkap || '-'}</td>
-                                                    <td className="p-3 whitespace-nowrap">{item.no_hp || '-'}</td>
-                                                    <td className="p-3 whitespace-nowrap">{item.role || '-'}</td>
-                                                    <td className="p-3 whitespace-nowrap">{formatDateToDayOnly(item.tanggal_bergabung)}</td>
-                                                    <td className="p-3 whitespace-nowrap">{getMonthName(item.bulan)}</td>
-                                                    <td className="p-3 whitespace-nowrap">{item.tahun || '-'}</td>
-                                                    <td className="p-3 whitespace-nowrap">{item.jumlah_kehadiran == null ? '-' : item.jumlah_kehadiran}</td>
-                                                </tr>
-                                            ))
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    )}
-                    {children}
-                </div>
+      <div className="flex h-screen">
+        <Sidebar
+          isSidebarOpen={isSidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+        />
+        <div
+          className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
+          style={{
+            marginLeft: isSidebarOpen ? 290 : 70,
+            paddingLeft : 20,
+            paddingRight: 20
+          }}
+        >
+            <div className="flex flex-col justify-between mb-12 gap-6 relative">
+              <PresensiControls
+                calendarRef={calendarRef}
+                isDatePickerOpen={isDatePickerOpen}
+                setIsDatePickerOpen={setIsDatePickerOpen}
+                selectedDateForFilter={selectedDateForFilter}
+                tempDateForPicker={tempDateForPicker}
+                setTempDateForPicker={setTempDateForPicker}
+                applyDateFilter={applyDateFilter}
+                resetFilter={resetFilter}
+                handleGeneratePresensiReport={handleGeneratePresensiReport}
+                handleExportExcel={handleExportExcel}
+                handleExportPDF={handleExportPDF}
+                filteredData={filteredData}
+                isLoading={isLoading}
+              />
             </div>
-        </div>
+            {isLoading && !isDatePickerOpen ? (
+              <div className="text-center p-10 text-lg font-medium text-gray-700">
+                Memuat data rekap presensi, mohon tunggu...
+              </div>
+            ) : (
+              <PresensiTable
+                tableDisplayHeaders={tableDisplayHeaders}
+                filteredData={filteredData}
+                formatDateToDayOnly={formatDateToDayOnly}
+                getMonthName={getMonthName}
+              />
+            )}
+            {children}
+          </div>
+
+      </div>
     );
 };
 
