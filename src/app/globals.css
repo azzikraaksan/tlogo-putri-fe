@@ -41,7 +41,9 @@ body {
 #nprogress .bar {
   background: red;
   height: 5px !important;
+  transition: all 0.4s ease;
 }
+
 #nprogress .peg {
   box-shadow: 0 0 10px #ff6b6b, 0 0 5px #ff6b6b;
 }

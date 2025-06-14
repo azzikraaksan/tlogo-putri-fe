@@ -28,6 +28,7 @@ const PenjadwalanPage = () => {
   const bookingHash = params?.bookingId;
   const decoded = hashids.decode(bookingHash);
   const decodedBookingId = decoded?.[0];
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     const fetchBookingDetail = async () => {
@@ -36,7 +37,7 @@ const PenjadwalanPage = () => {
 
       try {
         const res = await fetch(
-          `http://localhost:8000/api/bookings/${decodedBookingId}`,
+          `https://tpapi.siunjaya.id/api/bookings/${decodedBookingId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -66,7 +67,7 @@ const PenjadwalanPage = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:8000/api/jeeps/driver/${driverId}`,
+        `https://tpapi.siunjaya.id/api/jeeps/driver/${driverId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -87,13 +88,12 @@ const PenjadwalanPage = () => {
   const handleDepartureClick = async (item) => {
     const token = localStorage.getItem("access_token");
     if (!token) {
-      alert("Token tidak ditemukan. Silakan login ulang.");
       return;
     }
 
     try {
       await fetchDataAndCreateTicket(item.driver_id);
-      alert("Tiket berhasil dicetak!");
+      // alert("Tiket berhasil dicetak!");
     } catch (error) {
       console.error("Gagal mencetak tiket:", error);
       alert("Terjadi kesalahan saat mencetak tiket.");
@@ -114,10 +114,10 @@ const PenjadwalanPage = () => {
 
     try {
       const [jeepRes, bookingRes] = await Promise.all([
-        fetch(`http://localhost:8000/api/jeeps/driver/${driverId}`, {
+        fetch(`https://tpapi.siunjaya.id/api/jeeps/driver/${driverId}`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch(`http://localhost:8000/api/bookings/${decodedBookingId}`, {
+        fetch(`https://tpapi.siunjaya.id/api/bookings/${decodedBookingId}`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -142,7 +142,7 @@ const PenjadwalanPage = () => {
       };
 
       const ticketRes = await fetch(
-        "http://localhost:8000/api/ticketings/create",
+        "https://tpapi.siunjaya.id/api/ticketings/create",
         {
           method: "POST",
           headers: {
@@ -161,8 +161,13 @@ const PenjadwalanPage = () => {
 
       const ticketResult = await ticketRes.json();
       console.log("Tiket berhasil dicetak:", ticketResult);
-
-      router.push("/dashboard/operasional/ticketing");
+      // router.push("/dashboard/operasional/ticketing");
+      setShowSuccessModal(true);
+      setTimeout(() => {
+          setShowSuccessModal(false);
+          router.push("/dashboard/operasional/ticketing");
+        }, 1500);
+        return;
     } catch (error) {
       console.error("Terjadi kesalahan:", error.message);
     }
@@ -178,7 +183,7 @@ const PenjadwalanPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/jeeps/driver/${driverId}`,
+        `https://tpapi.siunjaya.id/api/jeeps/driver/${driverId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -208,7 +213,7 @@ const PenjadwalanPage = () => {
 
     try {
       const res = await fetch(
-        "http://localhost:8000/api/driver-rotations/generate",
+        "https://tpapi.siunjaya.id/api/driver-rotations/generate",
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -225,7 +230,7 @@ const PenjadwalanPage = () => {
       }
 
       const rotasiRes = await fetch(
-        `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
+        `https://tpapi.siunjaya.id/api/driver-rotations?date=${tanggalBesok}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -252,7 +257,7 @@ const PenjadwalanPage = () => {
     try {
       setLoading(true);
       const resRotations = await fetch(
-        `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
+        `https://tpapi.siunjaya.id/api/driver-rotations?date=${tanggalBesok}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!resRotations.ok) throw new Error("Gagal fetch driver-rotations");
@@ -308,24 +313,6 @@ const PenjadwalanPage = () => {
               placeholder="Cari"
             />
           </div>
-          <div className="flex justify-end mb-6">
-            <button
-              onClick={handleRolling}
-              disabled={loadingRotation || isAlreadyRolled}
-              className={`bg-[#8FAFD9] text-white px-2 py-1 rounded-xl transition
-${
-  loadingRotation || isAlreadyRolled
-    ? "opacity-50 cursor-not-allowed"
-    : "hover:bg-[#7ba2d0] cursor-pointer"
-}`}
-            >
-              {loadingRotation
-                ? "Memproses..."
-                : isAlreadyRolled
-                  ? "Sudah Rolling"
-                  : "Rolling Driver"}
-            </button>
-          </div>
         </div>
           <div className="flex justify-between items-center mb-4 px-2">
             <p className="text-gray-700">
@@ -353,7 +340,7 @@ ${
                       key={item.id}
                       className="border-t border-gray-300 hover:bg-gray-50 transition-colors"
                     >
-                      <td className="p-2 text-center text-gray-700">
+                      <td className="p-2 text-center text-gray-750">
                         {item.driver?.name}
                       </td>
                       <td className="p-2 text-center">
@@ -377,6 +364,34 @@ ${
           </table>
         </div>
       </div>
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl p-6 shadow-lg w-[90%] max-w-md text-center animate-fade-in">
+            <div className="flex justify-center mb-4">
+              <div className="bg-green-100 text-green-600 rounded-full p-3">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Berhasil!</h2>
+            <p className="text-gray-600">
+              Tunggu sebentar, kamu akan diarahkan...
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

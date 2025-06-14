@@ -24,7 +24,7 @@ const ArsipPage = () => {
   const fetchTicketings = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:8000/api/ticketings/all");
+      const response = await fetch("https://tpapi.siunjaya.id/api/ticketings/all");
       const ticketingData = await response.json();
       console.log("✅ Data ticketing:", ticketingData);
       setData(ticketingData); 
@@ -37,6 +37,12 @@ const ArsipPage = () => {
 
   const filteredData = data.filter(
     (item) =>
+      (item.booking?.start_time ?? "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (item.booking?.tour_date ?? "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       (item.code_booking ?? "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
@@ -89,9 +95,11 @@ const ArsipPage = () => {
                 <table className="w-full table-auto">
             <thead className="bg-[#3D6CB9] text-white">
               <tr>
+                <th className="p-2 text-center font-normal">No</th>
                 <th className="p-2 text-center font-normal">
                   Tanggal Keberangkatan
                 </th>
+                <th className="p-2 text-center font-normal">Kode Pemesanan</th>
                 <th className="p-2 text-center font-normal">Nama Pemesan</th>
                 <th className="p-2 text-center font-normal">No. Lambung</th>
                 <th className="p-2 text-center font-normal">Nama Driver</th>
@@ -99,15 +107,19 @@ const ArsipPage = () => {
             </thead>
             <tbody>
               {filteredData.length > 0 ? (
-                filteredData.map((item) => (
+                filteredData.map((item, index) => (
                   <tr
                     key={item.id}
                     className="border-t border-[#808080] hover:bg-gray-50 transition-colors"
                   >
+                    <td className="p-2 text-center text-gray-750">{index + 1}</td>
                     <td className="p-2 text-center">
                       {item.booking?.tour_date && item.booking?.start_time
                         ? `${item.booking?.tour_date} ${item.booking?.start_time}`
                         : "-"}
+                    </td>
+                    <td className="p-2 text-center text-gray-750">
+                      {item.code_booking}
                     </td>
                     <td className="p-2 text-center text-gray-750">
                       {item.nama_pemesan}

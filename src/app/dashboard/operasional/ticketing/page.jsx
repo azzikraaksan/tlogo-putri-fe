@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import React from "react";
 import Sidebar from "/components/Sidebar.jsx";
-import LoadingFunny from "/components/LoadingFunny.jsx";
+import LoadingRow from "/components/LoadingRow.jsx";
 import SearchInput from "/components/Search.jsx";
 import TicketModal from "/components/TicketModal.jsx";
 import withAuth from "/src/app/lib/withAuth";
@@ -28,7 +28,7 @@ const TicketingPage = () => {
   const [pdfUrl, setPdfUrl] = useState("");
   const [rotationData, setRotationData] = useState([]);
   const [isScheduled, setIsScheduled] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setLoading] = useState(false);
   const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
   const [loadingDrivers, setLoadingDrivers] = React.useState({});
   const [processingId, setProcessingId] = useState(null);
@@ -44,7 +44,7 @@ const TicketingPage = () => {
       const formattedBesok = besok.toISOString().split("T")[0];
 
       const res = await fetch(
-        `http://localhost:8000/api/driver-rotations?date=${formattedBesok}`,
+        `https://tpapi.siunjaya.id/api/driver-rotations?date=${formattedBesok}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -65,103 +65,105 @@ const TicketingPage = () => {
   }, []);
 
   const fetchTicketings = async () => {
-  try {
-    NProgress.start();
+    try {
+      setLoading(true);
+      NProgress.start();
 
-    const jeepRes = await fetch("http://localhost:8000/api/jeeps/all");
-    const jeepJson = await jeepRes.json();
-    const jeeps = jeepJson.data || [];
+      const jeepRes = await fetch("https://tpapi.siunjaya.id/api/jeeps/all");
+      const jeepJson = await jeepRes.json();
+      const jeeps = jeepJson.data || [];
 
-    const response = await fetch("http://localhost:8000/api/ticketings/all");
-    const ticketingData = await response.json();
-    console.log("✅ Data ticketing:", ticketingData);
+      const response = await fetch("https://tpapi.siunjaya.id/api/ticketings/all");
+      const ticketingData = await response.json();
+      console.log("✅ Data ticketing:", ticketingData);
 
-    const token = localStorage.getItem("access_token");
-    const besok = new Date();
-    besok.setDate(besok.getDate() + 1);
-    const tanggalBesok = besok.toISOString().split("T")[0];
+      const token = localStorage.getItem("access_token");
+      const besok = new Date();
+      besok.setDate(besok.getDate() + 1);
+      const tanggalBesok = besok.toISOString().split("T")[0];
 
-    const rotationRes = await fetch(
-      `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    const rotationData = await rotationRes.json();
-    setRotations(rotationData);
+      const rotationRes = await fetch(
+        `https://tpapi.siunjaya.id/api/driver-rotations?date=${tanggalBesok}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const rotationData = await rotationRes.json();
+      setRotations(rotationData);
 
-    for (const rotasi of rotationData) {
-      if (rotasi.skip_reason) {
-        const tiketTerkait = ticketingData.filter(
-          (t) => t.driver_id === rotasi.driver_id
-        );
+      for (const rotasi of rotationData) {
+        if (rotasi.skip_reason) {
+          const tiketTerkait = ticketingData.filter(
+            (t) => t.driver_id === rotasi.driver_id
+          );
 
-        for (const tiket of tiketTerkait) {
-          try {
-            const res = await fetch(
-              `http://localhost:8000/api/ticketings/delete/${tiket.id}`,
-              {
-                method: "DELETE",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-              }
-            );
-            if (res.ok) {
-              console.log(
-                `🗑️ Tiket ${tiket.id} dihapus karena skip_reason untuk driver_id ${rotasi.driver_id}`
+          for (const tiket of tiketTerkait) {
+            try {
+              const res = await fetch(
+                `https://tpapi.siunjaya.id/api/ticketings/delete/${tiket.id}`,
+                {
+                  method: "DELETE",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                }
               );
+              if (res.ok) {
+                console.log(
+                  `🗑️ Tiket ${tiket.id} dihapus karena skip_reason untuk driver_id ${rotasi.driver_id}`
+                );
+              }
+            } catch (error) {
+              console.error("❌ Error saat menghapus tiket:", error);
             }
-          } catch (error) {
-            console.error("❌ Error saat menghapus tiket:", error);
           }
         }
       }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const dayAfterTomorrow = new Date();
+      dayAfterTomorrow.setDate(today.getDate() + 2);
+      dayAfterTomorrow.setHours(0, 0, 0, 0);
+
+      const filteredByDateTicketings = ticketingData.filter((item) => {
+        if (!item.booking?.tour_date) return false;
+        const tourDate = new Date(item.booking.tour_date);
+        return tourDate >= today && tourDate < dayAfterTomorrow;
+      });
+
+      const validTicketings = filteredByDateTicketings.filter((item) => {
+        const driverRotation = rotationData.find(
+          (r) => r.driver_id === item.driver_id
+        );
+        return !(driverRotation && driverRotation.skip_reason);
+      });
+
+      const merged = validTicketings.map((item) => {
+        const driverRotation = rotationData.find(
+          (r) => r.driver_id === item.driver_id
+        );
+        const jeep = jeeps.find(
+          (j) => j.jeep_id === (driverRotation?.jeep_id || item.jeep_id)
+        );
+        return {
+          ...item,
+          assigned: driverRotation ? driverRotation.assigned : 0,
+          jeeps: jeep || null,
+        };
+      });
+
+      setData(merged);
+    } catch (error) {
+      console.error("❌ Error fetch ticketing/rotasi:", error);
+    } finally {
+      setLoading(false);
+      NProgress.done();
     }
-
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const dayAfterTomorrow = new Date();
-    dayAfterTomorrow.setDate(today.getDate() + 2);
-    dayAfterTomorrow.setHours(0, 0, 0, 0);
-
-    const filteredByDateTicketings = ticketingData.filter((item) => {
-      if (!item.booking?.tour_date) return false;
-      const tourDate = new Date(item.booking.tour_date);
-      return tourDate >= today && tourDate < dayAfterTomorrow;
-    });
-
-    const validTicketings = filteredByDateTicketings.filter((item) => {
-      const driverRotation = rotationData.find(
-        (r) => r.driver_id === item.driver_id
-      );
-      return !(driverRotation && driverRotation.skip_reason);
-    });
-
-    const merged = validTicketings.map((item) => {
-      const driverRotation = rotationData.find(
-        (r) => r.driver_id === item.driver_id
-      );
-      const jeep = jeeps.find(
-        (j) => j.jeep_id === (driverRotation?.jeep_id || item.jeep_id)
-      );
-      return {
-        ...item,
-        assigned: driverRotation ? driverRotation.assigned : 0,
-        jeeps: jeep || null,
-      };
-    });
-
-    setData(merged);
-  } catch (error) {
-    console.error("❌ Error fetch ticketing/rotasi:", error);
-  } finally {
-    NProgress.done();
-  }
-};
+  };
 
   const handleSendWA = (item, rotationData, pdfUrl) => {
     if (!pdfUrl) {
@@ -177,7 +179,8 @@ const TicketingPage = () => {
 
     const rotationId = rotation.id;
     const encodedId = hashids.encode(rotationId);
-    const confirmLink = `http://localhost:3000/confirm/${encodedId}`;
+    const confirmLink = `http://localhost:3000//confirm/${encodedId}`;
+    // const confirmLink = `https://tlogoputri.siunjaya.id/confirm/${encodedId}`;
     const phone = item.driver?.telepon.replace(/^0/, "62");
 
     const message = encodeURIComponent(
@@ -220,8 +223,8 @@ const TicketingPage = () => {
   };
 
   const handleOpenModal = (item) => {
-    setSelectedBooking(item); 
-    setShowModal(true); 
+    setSelectedBooking(item);
+    setShowModal(true);
   };
 
   const handleDepartureClick = async (item) => {
@@ -239,7 +242,7 @@ const TicketingPage = () => {
       const formattedBesok = besok.toISOString().split("T")[0];
 
       const rotationRes = await fetch(
-        `http://localhost:8000/api/driver-rotations?date=${formattedBesok}`,
+        `https://tpapi.siunjaya.id/api/driver-rotations?date=${formattedBesok}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -262,7 +265,7 @@ const TicketingPage = () => {
       const rotationId = rotation.id;
 
       const assignResponse = await fetch(
-        `http://localhost:8000/api/driver-rotations/${rotationId}/assign`,
+        `https://tpapi.siunjaya.id/api/driver-rotations/${rotationId}/assign`,
         {
           method: "POST",
           headers: {
@@ -301,7 +304,7 @@ const TicketingPage = () => {
       const formattedBesok = besok.toISOString().split("T")[0];
 
       const rotationRes = await fetch(
-        `http://localhost:8000/api/driver-rotations?date=${formattedBesok}`,
+        `https://tpapi.siunjaya.id/api/driver-rotations?date=${formattedBesok}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -323,7 +326,7 @@ const TicketingPage = () => {
       const rotationId = rotation.id;
 
       const skipResponse = await fetch(
-        `http://localhost:8000/api/driver-rotations/${rotationId}/skip`,
+        `https://tpapi.siunjaya.id/api/driver-rotations/${rotationId}/skip`,
         {
           method: "POST",
           headers: {
@@ -356,7 +359,7 @@ const TicketingPage = () => {
 
     try {
       const resRotations = await fetch(
-        `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
+        `https://tpapi.siunjaya.id/api/driver-rotations?date=${tanggalBesok}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -371,7 +374,7 @@ const TicketingPage = () => {
       const unassignedDrivers = rotationsData.filter((r) => r.assigned === 1);
 
       setIsAlreadyRolled(unassignedDrivers.length > 0);
-      setRotations(unassignedDrivers); 
+      setRotations(unassignedDrivers);
     } catch (err) {
       console.error("❌ Error cek rolling:", err);
     }
@@ -388,7 +391,10 @@ const TicketingPage = () => {
 
   const filteredData = data.filter(
     (item) =>
-      (item.code_booking ?? "")
+      (item.booking?.start_time ?? "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (item.booking?.tour_date ?? "")
         .toLowerCase()
         .includes(searchTerm.toLowerCase()) ||
       (item.nama_pemesan ?? "")
@@ -413,13 +419,13 @@ const TicketingPage = () => {
     setData(newData);
   };
 
+  const allScheduled = filteredData.every(
+    (item) => item.assigned === 1 || loadingDrivers[item.driver_id]
+  );
+
   const handleClickArsip = () => {
     router.push("/dashboard/operasional/ticketing/history");
   };
-
-  if (loading) {
-    return <LoadingFunny />;
-  }
 
   return (
     <div className="flex">
@@ -455,19 +461,30 @@ const TicketingPage = () => {
             placeholder="Cari"
           />
         </div>
-        <div className="flex justify-start mb-4">
+        <div className="flex-col justify-start mb-4">
           <button
             onClick={exportToPDF}
-            className="flex items-center gap-1 bg-red-500 text-white p-2 rounded-[10px] hover:bg-red-600 cursor-pointer"
+            disabled={!allScheduled}
+            className={`flex items-center gap-1 p-2 rounded-[10px] transition-colors ${
+              !allScheduled
+                ? "bg-gray-300 text-white cursor-not-allowed"
+                : "bg-red-500 text-white hover:bg-red-600 cursor-pointer"
+            }`}
           >
             <FileText size={16} /> Unduh Jadwal
           </button>
+          {!allScheduled && (
+            <span className="text-xs text-gray-500 italic font-semibold">
+              *Klik "Jadwalkan” terlebih dahulu
+            </span>
+          )}
         </div>
 
         <div className="overflow-x-auto bg-white rounded-xl shadow max-h-[800px] overflow-y-auto">
           <table className="w-full table-auto">
             <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
               <tr>
+                <th className="p-2 text-center font-normal">No</th>
                 <th className="p-2 text-center font-normal">
                   Tanggal Keberangkatan
                 </th>
@@ -483,12 +500,17 @@ const TicketingPage = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredData.length > 0 ? (
-                filteredData.map((item) => (
+              {isLoading ? (
+                <>
+                  <LoadingRow />
+                </>
+              ) : filteredData.length > 0 ? (
+                filteredData.map((item, index) => (
                   <tr
                     key={item.id}
                     className="border-t border-[#808080] hover:bg-gray-50 transition-colors"
                   >
+                    <td className="p-2 text-center">{index + 1}</td>
                     <td className="p-2 text-center">
                       {item.booking?.tour_date && item.booking?.start_time
                         ? `${item.booking?.tour_date} - ${item.booking?.start_time}`
@@ -571,7 +593,7 @@ const TicketingPage = () => {
               ) : (
                 <tr>
                   <td colSpan="9" className="p-4 text-center text-gray-500">
-                    Data tidak ditemukan.
+                    Tidak ada pemesanan untuk hari ini dan besok. Lihat history untuk detail lengkap.
                   </td>
                 </tr>
               )}

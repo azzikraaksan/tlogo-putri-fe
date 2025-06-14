@@ -35,7 +35,7 @@ const EditAnggota = () => {
 
       try {
         setLoading(true);
-        const res = await fetch("http://localhost:8000/api/users/all", {
+        const res = await fetch("https://tpapi.siunjaya.id/api/users/all", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -95,7 +95,7 @@ const EditAnggota = () => {
     }
 
     try {
-      const res = await fetch(`http://localhost:8000/api/users/update/${id}`, {
+      const res = await fetch(`https://tpapi.siunjaya.id/api/users/update/${id}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

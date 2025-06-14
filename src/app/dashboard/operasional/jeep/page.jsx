@@ -19,60 +19,60 @@ const JeepPage = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchDriversAndJeeps = async () => {
-      setLoading(true);
-      const token = localStorage.getItem("access_token");
-      if (!token) return;
-
-      try {
-        const [driversRes, jeepsRes] = await Promise.all([
-          fetch("http://localhost:8000/api/users/by-role?role=Driver", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch("http://localhost:8000/api/jeeps/all", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        const driversData = await driversRes.json();
-        const jeepsData = await jeepsRes.json();
-
-        const drivers = driversData.data || [];
-        const jeeps = jeepsData.data || [];
-
-        const mergedData = jeeps.map((jeep) => {
-          const driver = drivers.find((d) => d.id === jeep.driver_id);
-
-          return {
-            driver_id: driver?.id,
-            driver_name: driver?.name || "-",
-            telepon: driver?.telepon || "-",
-            lambung: jeep.no_lambung,
-            jeep_id: jeep.jeep_id,
-            plat: jeep.plat_jeep,
-            merek: jeep.merek,
-            tipe: jeep.tipe,
-            tahun: jeep.tahun_kendaraan,
-            status_jeep: jeep.status,
-            status: driver?.status || "Tidak diketahui",
-            kapasitas: jeep.kapasitas || "4",
-            foto: jeep.foto_jeep,
-            kontak: "WhatsApp",
-            konfirmasi: "-",
-            departure: "Pilih Driver",
-          };
-        });
-
-        setJeepData(mergedData);
-      } catch (error) {
-        console.error("Gagal mengambil data driver dan jeep:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDriversAndJeeps();
   }, []);
+
+  const fetchDriversAndJeeps = async () => {
+    setLoading(true);
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+
+    try {
+      const [driversRes, jeepsRes] = await Promise.all([
+        fetch("https://tpapi.siunjaya.id/api/users/by-role?role=Driver", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch("https://tpapi.siunjaya.id/api/jeeps/all", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
+
+      const driversData = await driversRes.json();
+      const jeepsData = await jeepsRes.json();
+
+      const drivers = driversData.data || [];
+      const jeeps = jeepsData.data || [];
+
+      const mergedData = jeeps.map((jeep) => {
+        const driver = drivers.find((d) => d.id === jeep.driver_id);
+
+        return {
+          driver_id: driver?.id,
+          driver_name: driver?.name || "-",
+          telepon: driver?.telepon || "-",
+          lambung: jeep.no_lambung,
+          jeep_id: jeep.jeep_id,
+          plat: jeep.plat_jeep,
+          merek: jeep.merek,
+          tipe: jeep.tipe,
+          tahun: jeep.tahun_kendaraan,
+          status_jeep: jeep.status,
+          status: driver?.status || "Tidak diketahui",
+          kapasitas: jeep.kapasitas || "4",
+          foto: jeep.foto_jeep,
+          kontak: "WhatsApp",
+          konfirmasi: "-",
+          departure: "Pilih Driver",
+        };
+      });
+
+      setJeepData(mergedData);
+    } catch (error) {
+      console.error("Gagal mengambil data driver dan jeep:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredData = jeepData.filter(
     (item) =>
@@ -95,12 +95,15 @@ const JeepPage = () => {
       const token = localStorage.getItem("access_token");
       if (!token) return;
 
-      const res = await fetch(`http://localhost:8000/api/jeeps/delete/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        `https://tpapi.siunjaya.id/api/jeeps/delete/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (res.ok) {
         setJeepData((prevJeep) =>
@@ -121,7 +124,10 @@ const JeepPage = () => {
     router.push(`/dashboard/operasional/jeep/detail-jeep/${encryptedId}`);
   };
 
-  const handleKembali = () => setModeTambah(false);
+  const handleKembali = () => {
+    setModeTambah(false);
+    fetchDriversAndJeeps();
+  };
   const handleTambahJeep = () => setModeTambah(true);
 
   if (loading) {
@@ -170,6 +176,7 @@ const JeepPage = () => {
               <table className="w-full table-auto">
                 <thead className="bg-[#3D6CB9] text-white sticky top-0">
                   <tr>
+                    <th className="p-2 text-center font-normal">No</th>
                     <th className="p-2 text-center font-normal">No. Lambung</th>
                     <th className="p-2 text-center font-normal">Nama Driver</th>
                     <th className="p-2 text-center font-normal">Plat</th>
@@ -182,11 +189,14 @@ const JeepPage = () => {
                 </thead>
                 <tbody>
                   {filteredData.length > 0 ? (
-                    filteredData.map((item) => (
+                    filteredData.map((item, index) => (
                       <tr
                         key={item.lambung}
                         className="border-t border-[#808080] hover:bg-gray-50 transition-colors"
                       >
+                        <td className="p-2 text-center text-gray-750">
+                          {index + 1}
+                        </td>
                         <td className="p-2 text-center text-gray-750">
                           {item.lambung}
                         </td>

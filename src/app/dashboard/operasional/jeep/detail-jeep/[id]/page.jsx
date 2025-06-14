@@ -34,10 +34,10 @@ const DetailJeep = () => {
           const token = localStorage.getItem("access_token");
 
           const [jeepRes, driversRes] = await Promise.all([
-            fetch(`http://localhost:8000/api/jeeps/id/${decodedId}`, {
+            fetch(`https://tpapi.siunjaya.id/api/jeeps/id/${decodedId}`, {
               headers: { Authorization: `Bearer ${token}` },
             }),
-            fetch("http://localhost:8000/api/users/by-role?role=Driver", {
+            fetch("https://tpapi.siunjaya.id/api/users/by-role?role=Driver", {
               headers: { Authorization: `Bearer ${token}` },
             }),
           ]);

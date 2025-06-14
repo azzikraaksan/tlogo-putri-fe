@@ -56,14 +56,14 @@ const PenjadwalanPage = () => {
       }
 
       const [ordersResponse, ticketingResponse] = await Promise.all([
-        fetch("http://localhost:8000/api/bookings", {
+        fetch("https://tpapi.siunjaya.id/api/bookings", {
           method: "GET",
           headers: {
             Accept: "application/json",
             Authorization: `Bearer ${token}`,
           },
         }),
-        fetch("http://localhost:8000/api/ticketings/all", {
+        fetch("https://tpapi.siunjaya.id/api/ticketings/all", {
           method: "GET",
           headers: {
             Accept: "application/json",
@@ -141,15 +141,15 @@ const PenjadwalanPage = () => {
 
       const [rotationRes, jeepRes, ticketingRes] = await Promise.all([
         fetch(
-          `http://localhost:8000/api/driver-rotations?date=${tanggalBesokStr}`,
+          `https://tpapi.siunjaya.id/api/driver-rotations?date=${tanggalBesokStr}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         ),
-        fetch(`http://localhost:8000/api/jeeps/all`, {
+        fetch(`https://tpapi.siunjaya.id/api/jeeps/all`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
-        fetch(`http://localhost:8000/api/ticketings/all`, {
+        fetch(`https://tpapi.siunjaya.id/api/ticketings/all`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -235,7 +235,7 @@ const PenjadwalanPage = () => {
 
           try {
             const res = await fetch(
-              "http://localhost:8000/api/ticketings/create",
+              "https://tpapi.siunjaya.id/api/ticketings/create",
               {
                 method: "POST",
                 headers: {
@@ -314,7 +314,7 @@ const PenjadwalanPage = () => {
       const tanggalBesokStr = tanggalBesok.toISOString().split("T")[0];
 
       const res = await fetch(
-        `http://localhost:8000/api/driver-rotations?date=${tanggalBesokStr}`,
+        `https://tpapi.siunjaya.id/api/driver-rotations?date=${tanggalBesokStr}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -365,7 +365,7 @@ const PenjadwalanPage = () => {
     try {
       const token = localStorage.getItem("access_token");
       const response = await fetch(
-        "http://localhost:8000/api/driver-rotations/generate",
+        "https://tpapi.siunjaya.id/api/driver-rotations/generate",
         {
           method: "POST",
           headers: {
@@ -405,7 +405,7 @@ const PenjadwalanPage = () => {
 
     try {
       const resRotations = await fetch(
-        `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
+        `https://tpapi.siunjaya.id/api/driver-rotations?date=${tanggalBesok}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!resRotations.ok) throw new Error("Gagal fetch driver-rotations");
@@ -439,7 +439,7 @@ const PenjadwalanPage = () => {
 
     try {
       const res = await fetch(
-        `http://localhost:8000/api/driver-rotations?date=${tanggalBesok}`,
+        `https://tpapi.siunjaya.id/api/driver-rotations?date=${tanggalBesok}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -496,7 +496,7 @@ const PenjadwalanPage = () => {
               {selectedBookings.length > 0 ? (
                 <button
                   onClick={handleCetakTiket}
-                  className={`px-2 py-1 rounded-[7px] transition text-white 
+                  className={`px-2 py-1 rounded-[10px] transition text-white 
         ${
           isLoading
             ? "bg-gray-400 cursor-not-allowed"
@@ -516,7 +516,7 @@ const PenjadwalanPage = () => {
                 <button
                   onClick={fetchDriversBesok}
                   disabled={loadingDriversBesok}
-                  className={`bg-green-500 text-white px-2 py-1 rounded-[7px] transition ${
+                  className={`bg-green-500 text-white px-2 py-1 rounded-[10px] transition ${
                     loadingDriversBesok
                       ? "opacity-50 cursor-not-allowed"
                       : "hover:bg-green-600 cursor-pointer"
@@ -528,7 +528,7 @@ const PenjadwalanPage = () => {
                 <button
                   onClick={handleRolling}
                   disabled={loadingRotation || isAlreadyRolled}
-                  className={`bg-[#8FAFD9] text-white px-2 py-1 rounded-[7px] transition ${
+                  className={`bg-[#8FAFD9] text-white px-2 py-1 rounded-[10px] transition ${
                     loadingRotation || isAlreadyRolled
                       ? "opacity-50 cursor-not-allowed"
                       : "hover:bg-[#7ba2d0] cursor-pointer"
@@ -555,6 +555,7 @@ const PenjadwalanPage = () => {
                   <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
                     <tr>
                       <th className="p-2 text-center font-normal">Pilih</th>
+                      <th className="p-2 text-center font-normal">No</th>
                       <th className="p-2 text-center font-normal">
                         Tanggal dan Waktu Keberangkatan
                       </th>
@@ -569,7 +570,7 @@ const PenjadwalanPage = () => {
                   </thead>
                   <tbody>
                     {filteredData.length > 0 ? (
-                      filteredData.map((item) => (
+                      filteredData.map((item, index) => (
                         <tr
                           key={item.booking_id}
                           className="border-t border-[#808080] hover:bg-gray-50 transition-colors"
@@ -614,6 +615,7 @@ const PenjadwalanPage = () => {
                               }}
                             />
                           </td>
+                          <td className="p-2 text-center">{index + 1}</td>
                           <td className="p-2 text-center text-gray-750">
                             {item.tour_date && item.start_time
                               ? `${item.tour_date} - ${item.start_time}`
@@ -650,7 +652,7 @@ const PenjadwalanPage = () => {
                           colSpan="6"
                           className="p-4 text-center text-gray-500"
                         >
-                          Data tidak ditemukan.
+                          Tidak ada data pemesanan hari ini dan besok.
                         </td>
                       </tr>
                     )}

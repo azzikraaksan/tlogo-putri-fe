@@ -23,31 +23,29 @@ const AnggotaPage = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      if (typeof window === "undefined") return;
-
-      const token = localStorage.getItem("access_token");
-      if (!token) return;
-
-      try {
-        const res = await fetch("http://localhost:8000/api/users/all", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        const data = await res.json();
-        setUsers(data);
-      } catch (err) {
-        console.error("Gagal ambil data users:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    const token = localStorage.getItem("access_token");
+    if (!token) return;
+
+    try {
+      const res = await fetch("https://tpapi.siunjaya.id/api/users/all", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      setUsers(data);
+    } catch (err) {
+      console.error("Gagal ambil data users:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredData = users.filter((item) => {
     const search = searchTerm.toLowerCase();
@@ -67,6 +65,7 @@ const AnggotaPage = () => {
 
   const handleKembali = () => {
     setModeTambah(false);
+    fetchUsers();
   };
 
   const handleLihatDetail = (user) => {
@@ -92,12 +91,15 @@ const AnggotaPage = () => {
       const token = localStorage.getItem("access_token");
       if (!token) return;
 
-      const res = await fetch(`http://localhost:8000/api/users/delete/${id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(
+        `https://tpapi.siunjaya.id/api/users/delete/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (res.ok) {
         setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
@@ -214,6 +216,7 @@ const AnggotaPage = () => {
               <table className="w-full table-auto">
                 <thead className="bg-[#3D6CB9] text-white sticky top-0">
                   <tr>
+                    <th className="p-2 text-center font-normal">No</th>
                     <th className="p-2 text-center font-normal">Nama</th>
                     <th className="p-2 text-center font-normal">Email</th>
                     <th className="p-2 text-center font-normal">Peran</th>
@@ -230,13 +233,14 @@ const AnggotaPage = () => {
                         key={item?.id || index}
                         className="border-t border-[#808080] hover:bg-gray-50 transition-colors"
                       >
-                        <td className="p-2 text-center text-gray-700">
+                        <td className="p-2 text-center text-gray-750">{index + 1}</td>
+                        <td className="p-2 text-center text-gray-750">
                           {item?.name || "-"}
                         </td>
-                        <td className="p-2 text-center text-gray-700">
+                        <td className="p-2 text-center text-gray-750">
                           {item?.email || "-"}
                         </td>
-                        <td className="p-2 text-center text-gray-700">
+                        <td className="p-2 text-center text-gray-750">
                           {item?.role || "-"}
                         </td>
                         <td className="p-2 text-center">
@@ -246,7 +250,7 @@ const AnggotaPage = () => {
                                 ? "bg-green-100 text-green-600"
                                 : item.status === "Tidak Aktif"
                                   ? "bg-red-100 text-red-600"
-                                  : "text-gray-700"
+                                  : "text-gray-750"
                             }`}
                           >
                             <span
@@ -258,7 +262,7 @@ const AnggotaPage = () => {
                                     : "bg-gray-400"
                               }`}
                             ></span>
-                            {item?.status || "-"} 
+                            {item?.status || "-"}
                           </span>
                         </td>
                         <td className="p-2 text-center">
@@ -292,7 +296,7 @@ const AnggotaPage = () => {
                         </td>
                         <td className="text-center">
                           <button
-                            className="text-gray-500 hover:text-gray-700 cursor-pointer"
+                            className="text-gray-500 hover:text-gray-750 cursor-pointer"
                             onClick={() => item?.id && handleHapusUser(item.id)}
                             title="Hapus"
                           >

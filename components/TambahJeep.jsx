@@ -33,7 +33,7 @@ export default function AddJeepForm({ onKembali }) {
       const token = localStorage.getItem("access_token");
 
       const res = await axios.get(
-        "http://localhost:8000/api/users/by-role?role=Owner",
+        "https://tpapi.siunjaya.id/api/users/by-role?role=Owner",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -54,13 +54,13 @@ export default function AddJeepForm({ onKembali }) {
     try {
       const token = localStorage.getItem("access_token");
 
-      const jeepsRes = await axios.get("http://localhost:8000/api/jeeps/all", {
+      const jeepsRes = await axios.get("https://tpapi.siunjaya.id/api/jeeps/all", {
         headers: { Authorization: `Bearer ${token}` },
       });
       const usedUserIds = jeepsRes.data.data.map((jeep) => jeep.driver_id);
 
       const driverRes = await axios.get(
-        "http://localhost:8000/api/users/by-role?role=Driver",
+        "https://tpapi.siunjaya.id/api/users/by-role?role=Driver",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -89,17 +89,17 @@ export default function AddJeepForm({ onKembali }) {
 
     const file = files[0];
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
-    const maxSize = 3 * 1024 * 1024; // 3MB dalam byte
+    const maxSize = 3 * 1024 * 1024;
 
     if (!allowedTypes.includes(file.type)) {
       alert("Format file tidak valid. Harus jpeg, jpg, atau png.");
-      e.target.value = ""; // reset input file supaya bisa upload ulang
+      e.target.value = ""; 
       return;
     }
 
     if (file.size > maxSize) {
       alert("Ukuran file maksimal 3MB.");
-      e.target.value = ""; // reset input file
+      e.target.value = "";
       return;
     }
 
@@ -132,13 +132,9 @@ export default function AddJeepForm({ onKembali }) {
       return;
     }
 
-    // if (submitData.foto_jeep === "") {
-    //   submitData.foto_jeep = null;
-    // }
-
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/jeeps/create",
+        "https://tpapi.siunjaya.id/api/jeeps/create",
         submitData,
         {
           headers: {
@@ -149,7 +145,6 @@ export default function AddJeepForm({ onKembali }) {
       );
 
       if (response.status === 201) {
-        alert("Data Jeep berhasil ditambahkan");
         onKembali();
       }
     } catch (error) {
@@ -160,61 +155,6 @@ export default function AddJeepForm({ onKembali }) {
       );
     }
   };
-
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   const token = localStorage.getItem("access_token");
-  //   const requiredFields = [
-  //     "no_lambung",
-  //     "plat_jeep",
-  //     "merek",
-  //     "tipe",
-  //     "tahun_kendaraan",
-  //     "status",
-  //   ];
-  //   console.log("Form sebelum submit:", form);
-
-  //   const isAnyEmpty = requiredFields.some(
-  //     (field) => String(form[field]).trim() === ""
-  //   );
-
-  //   if (isAnyEmpty) {
-  //     alert("Semua field wajib diisi!");
-  //     return;
-  //   }
-
-  //   requiredFields.forEach((field) => {
-  //     console.log(`${field}:`, `"${String(form[field]).trim()}"`);
-  //   });
-
-  //   if (form.foto_jeep === "") {
-  //     form.foto_jeep = null;
-  //   }
-
-  //   try {
-  //     const response = await axios.post(
-  //       "http://localhost:8000/api/jeeps/create",
-  //       form,
-  //       {
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-
-  //     if (response.status === 201) {
-  //       alert("Data Jeep berhasil ditambahkan");
-  //       onKembali();
-  //     }
-  //   } catch (error) {
-  //     console.error("Gagal tambah jeep:", error.response?.data);
-  //     alert(
-  //       "Gagal menambahkan Jeep: " + error.response?.data?.message ||
-  //         "Terjadi masalah!"
-  //     );
-  //   }
-  // };
 
   return (
     <div className="flex">

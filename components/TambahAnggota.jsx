@@ -5,7 +5,7 @@ import { CircleArrowLeft, Upload } from "lucide-react";
 
 const TambahAnggota = ({ onKembali }) => {
   const router = useRouter();
-  const today = new Date().toISOString().split("T")[0]; // format: YYYY-MM-DD
+  const today = new Date().toISOString().split("T")[0]; 
   const [formData, setFormData] = useState({
     name: "",
     username: "",
@@ -26,27 +26,23 @@ const TambahAnggota = ({ onKembali }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // const handleFileChange = (e) => {
-  //   const { name, files } = e.target;
-  //   setFormData((prev) => ({ ...prev, [name]: files[0] }));
-  // };
   const handleFileChange = (e) => {
     const { name, files } = e.target;
     if (!files || files.length === 0) return;
 
     const file = files[0];
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
-    const maxSize = 3 * 1024 * 1024; // 3MB dalam byte
+    const maxSize = 3 * 1024 * 1024; 
 
     if (!allowedTypes.includes(file.type)) {
       alert("Format file tidak valid. Harus jpeg, jpg, atau png.");
-      e.target.value = ""; // reset input file supaya bisa upload ulang
+      e.target.value = ""; 
       return;
     }
 
     if (file.size > maxSize) {
       alert("Ukuran file maksimal 3MB.");
-      e.target.value = ""; // reset input file
+      e.target.value = "";
       return;
     }
 
@@ -62,7 +58,7 @@ const TambahAnggota = ({ onKembali }) => {
         formDataToSubmit.append(key, formData[key]);
       }
 
-      const res = await fetch("http://localhost:8000/api/users/register", {
+      const res = await fetch("https://tpapi.siunjaya.id/api/users/register", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -71,7 +67,6 @@ const TambahAnggota = ({ onKembali }) => {
       });
 
       if (res.ok) {
-        alert("Anggota berhasil ditambahkan!");
         onKembali();
       } else {
         const err = await res.json();
@@ -159,7 +154,7 @@ const TambahAnggota = ({ onKembali }) => {
             <>
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  No Telepon (wajib diawali 628, misal 6281234567890)
+                  No Telepon (wajib diawali 08 atau 628)
                 </label>
                 <input
                   type="number"
@@ -221,7 +216,7 @@ const TambahAnggota = ({ onKembali }) => {
                   accept=".jpeg, .jpg, .png"
                   onChange={handleFileChange}
                   className="cursor-pointer mt-2 p-2 pr-10 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                  style={{ paddingRight: "2.5rem" }} // kasih space kanan buat icon
+                  style={{ paddingRight: "2.5rem" }}
                 />
                 <Upload
                   size={15}
@@ -289,7 +284,7 @@ const TambahAnggota = ({ onKembali }) => {
                   accept=".jpeg, .jpg, .png"
                   onChange={handleFileChange}
                   className="cursor-pointer mt-2 p-2 pr-10 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                  style={{ paddingRight: "2.5rem" }} // kasih space kanan buat icon
+                  style={{ paddingRight: "2.5rem" }}
                 />
                 <Upload
                   size={15}
@@ -357,7 +352,7 @@ const TambahAnggota = ({ onKembali }) => {
                   accept=".jpeg, .jpg, .png"
                   onChange={handleFileChange}
                   className="cursor-pointer mt-2 p-2 pr-10 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                  style={{ paddingRight: "2.5rem" }} // kasih space kanan buat icon
+                  style={{ paddingRight: "2.5rem" }}
                 />
                 <Upload
                   size={15}

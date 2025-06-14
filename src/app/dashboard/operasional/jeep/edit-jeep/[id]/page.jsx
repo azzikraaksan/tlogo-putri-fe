@@ -34,7 +34,7 @@ export default function AddJeepForm({ onKembali }) {
         setLoading(true);
         const token = localStorage.getItem("access_token");
         const res = await axios.get(
-          `http://localhost:8000/api/jeeps/id/${jeep_id}`,
+          `https://tpapi.siunjaya.id/api/jeeps/id/${jeep_id}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -63,7 +63,7 @@ export default function AddJeepForm({ onKembali }) {
 
     try {
       const response = await axios.put(
-        `http://localhost:8000/api/jeeps/update/${jeep_id}`,
+        `https://tpapi.siunjaya.id/api/jeeps/update/${jeep_id}`,
         form,
         {
           headers: {

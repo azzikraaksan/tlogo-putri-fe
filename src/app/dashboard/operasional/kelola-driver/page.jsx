@@ -21,10 +21,10 @@ const PenjadwalanPage = () => {
 
       try {
         const [driversRes, jeepsRes] = await Promise.all([
-          fetch("http://localhost:8000/api/users/by-role?role=Driver", {
+          fetch("https://tpapi.siunjaya.id/api/users/by-role?role=Driver", {
             headers: { Authorization: `Bearer ${token}` },
           }),
-          fetch("http://localhost:8000/api/jeeps/all", {
+          fetch("https://tpapi.siunjaya.id/api/jeeps/all", {
             headers: { Authorization: `Bearer ${token}` },
           }),
         ]);
@@ -132,7 +132,7 @@ const PenjadwalanPage = () => {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/jeeps/update/${item.jeep_id}`,
+        `https://tpapi.siunjaya.id/api/jeeps/update/${item.jeep_id}`,
         {
           method: "PUT",
           headers: {
@@ -192,6 +192,7 @@ const PenjadwalanPage = () => {
           <table className="w-full table-auto">
             <thead className="bg-[#3D6CB9] text-white sticky top-0">
               <tr>
+                <th className="p-2 text-center font-normal">No</th>
                 <th className="p-2 text-center font-normal">No. Lambung</th>
                 <th className="p-2 text-center font-normal">Nama Driver</th>
                 <th className="p-2 text-center font-normal">Status Jeep</th>
@@ -201,11 +202,12 @@ const PenjadwalanPage = () => {
             </thead>
             <tbody>
               {filteredData.length > 0 ? (
-                filteredData.map((item) => (
+                filteredData.map((item, index) => (
                   <tr
                     key={`${item.users_id}-${item.lambung}`}
                     className="border-t border-[#808080] hover:bg-gray-50 transition-colors"
                   >
+                    <td className="p-2 text-center text-gray-750">{index + 1}</td>
                     <td className="p-2 text-center text-gray-750">
                       {item.lambung}
                     </td>

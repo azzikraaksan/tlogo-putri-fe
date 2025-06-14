@@ -1,92 +1,3 @@
-// // app/confirm/[rotasi_id]/ClientConfirmPage.jsx
-// "use client";
-
-// import { useState } from "react";
-
-// export default function ClientConfirmPage({ rotasi_id }) {
-//   const [loading, setLoading] = useState(false);
-//   const [message, setMessage] = useState("");
-//   const [error, setError] = useState("");
-//   const [skipReason, setSkipReason] = useState("Sakit");
-
-//   async function handleConfirm(canGo) {
-//     setLoading(true);
-//     setError("");
-//     setMessage("");
-
-//     try {
-//       let res;
-//       if (canGo) {
-//         res = await fetch(
-//           `http://localhost:8000/api/driver-rotations/${rotasi_id}/assign`,
-//           {
-//             method: "POST",
-//             headers: { "Content-Type": "application/json" },
-//           }
-//         );
-//       } else {
-//         res = await fetch(
-//           `http://localhost:8000/api/driver-rotations/${rotasi_id}/skip`,
-//           {
-//             method: "POST",
-//             headers: { "Content-Type": "application/json" },
-//             body: JSON.stringify({ skip_reason: skipReason }),
-//           }
-//         );
-//       }
-
-//       if (res.ok) {
-//         setMessage("Terima kasih, konfirmasi Anda sudah kami terima.");
-//       } else {
-//         const data = await res.json();
-//         setError(data.error || "Terjadi kesalahan saat mengirim konfirmasi.");
-//       }
-//     } catch {
-//       setError("Gagal mengirim konfirmasi. Silakan coba lagi.");
-//     }
-//     setLoading(false);
-//   }
-
-//   return (
-//     <div style={{ padding: 20, maxWidth: 400, margin: "auto" }}>
-//       <h2>Konfirmasi Kehadiran</h2>
-//       <p>Apakah Anda bisa berangkat besok?</p>
-
-//       {message && <p style={{ color: "green" }}>{message}</p>}
-//       {error && <p style={{ color: "red" }}>{error}</p>}
-
-//       {!message && (
-//         <>
-//           <button onClick={() => handleConfirm(true)} disabled={loading}>
-//             Iya, bisa
-//           </button>
-
-//           <div style={{ marginTop: 10 }}>
-//             <label>
-//               Alasan tidak bisa:
-//               <input
-//                 type="text"
-//                 value={skipReason}
-//                 onChange={(e) => setSkipReason(e.target.value)}
-//                 disabled={loading}
-//                 style={{ marginLeft: 5 }}
-//               />
-//             </label>
-//           </div>
-
-//           <button
-//             onClick={() => handleConfirm(false)}
-//             disabled={loading}
-//             style={{ marginTop: 10, backgroundColor: "red", color: "white" }}
-//           >
-//             Tidak bisa
-//           </button>
-//         </>
-//       )}
-//     </div>
-//   );
-// }
-
 "use client";
 
 import { useState } from "react";
@@ -121,7 +32,7 @@ export default function ClientConfirmPage({ rotasi_id }) {
       let res;
       if (canGo) {
         res = await fetch(
-          `http://localhost:8000/api/driver-rotations/${realId}/assign`,
+          `https://tpapi.siunjaya.id/api/driver-rotations/${realId}/assign`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -135,7 +46,7 @@ export default function ClientConfirmPage({ rotasi_id }) {
         }
 
         res = await fetch(
-          `http://localhost:8000/api/driver-rotations/${realId}/skip`,
+          `https://tpapi.siunjaya.id/api/driver-rotations/${realId}/skip`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

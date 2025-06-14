@@ -13,7 +13,7 @@ const UserNavbar = () => {
       if (!token) return;
 
       try {
-        const res = await fetch("http://localhost:8000/api/users/me", {
+        const res = await fetch("https://tpapi.siunjaya.id/api/users/me", {
           headers: {
             Authorization: `Bearer ${token}`,
           },

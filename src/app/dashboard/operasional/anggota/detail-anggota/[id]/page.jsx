@@ -25,7 +25,7 @@ const DetailAnggota = () => {
 
       try {
         setLoading(true);
-        const res = await fetch("http://localhost:8000/api/users/all", {
+        const res = await fetch("https://tpapi.siunjaya.id/api/users/all", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -77,7 +77,8 @@ const DetailAnggota = () => {
           <div className="w-[300px] h-[380px] rounded-lg overflow-hidden border border-gray-300">
             {userDetails?.foto_profil ? (
               <img
-                src={`http://localhost:8000/storage/${userDetails.foto_profil}`}
+                // src={`https://tpapi.siunjaya.id/storage/${userDetails.foto_profil}`}
+                src={`https://tpapi.siunjaya.id/storage/5`}
                 alt="Foto Profil"
                 className="w-full h-full object-cover"
                 onError={(e) => {

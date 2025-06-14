@@ -105,7 +105,7 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
     const token = localStorage.getItem("access_token");
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:8000/api/auth/logout", {
+      const response = await fetch("https://tpapi.siunjaya.id/api/auth/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

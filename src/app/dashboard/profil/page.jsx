@@ -17,7 +17,7 @@ export default function ProfilPage() {
       if (!token) return;
   
       try {
-        const res = await fetch("http://localhost:8000/api/users/me", {
+        const res = await fetch("https://tpapi.siunjaya.id/api/users/me", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -63,7 +63,7 @@ export default function ProfilPage() {
           <div className="w-40 h-40 mr-8">
             {user?.foto_profil ? (
               <img
-                src={`http://localhost/storage/${user.foto_profil}`}
+                src={`https://tpapi.siunjaya.id/storage/${user.foto_profil}`}
                 alt="Foto Profil"
                 className="w-full h-full object-cover rounded-lg"
               />
