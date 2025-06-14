@@ -8,6 +8,7 @@ import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
 import SlipGaji from "/components/SlipGaji";
 import Hashids from "hashids";
+import LoadingFunny from "/components/LoadingFunny.jsx";
 
 function DaftarGaji() {
   const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
@@ -23,7 +24,7 @@ function DaftarGaji() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [selectedDate, setSelectedDate] = useState("");
   const [reloadTrigger, setReloadTrigger] = useState(0);
-
+  const [loading, setLoading] = useState(false);
   const [dataGaji, setDataGaji] = useState([]);
   const [showSlipModal, setShowSlipModal] = useState(false);
 
@@ -112,103 +113,207 @@ function DaftarGaji() {
     }
   };
 
+  //useEffect(() => {
+  //  const init = async () => {
+  //    //console.log("⏳ INIT useEffect jalan");
+
+  //    const updated = localStorage.getItem("statusUpdated");
+  //        const token = localStorage.getItem("access_token");
+  //    //console.log("📦 statusUpdated dari localStorage:", updated);
+
+  //    try {
+  //    const headers = {
+  //      Authorization: `Bearer ${token}`,
+  //    };
+  //    // Ambil data dari API
+  //    const [previewRes, allRes] = await Promise.all([
+  //      fetch("http://localhost:8000/api/salary/previews", {headers}),
+  //      fetch("http://localhost:8000/api/salary/all", {headers}),
+  //    ]);
+
+  //    const previewJson = await previewRes.json();
+  //    const allJsonRaw = await allRes.json();
+  //    const allJson = allJsonRaw.all || allJsonRaw.data || [];
+
+  //    const previews = previewJson.previews.map((item) => ({
+  //      id: item.id,
+  //      user_id: item.user_id,
+  //      nama: item.nama,
+  //      posisi: item.role,
+  //      role: item.role,
+  //      tanggal: item.payment_date,
+  //      status: item.status,
+  //    }));
+
+  //    const formatDate = (dateStr) =>
+  //      new Date(dateStr).toISOString().slice(0, 10);
+
+  //    const merged = previews.map((preview) => {
+  //      const previewDate = formatDate(preview.tanggal);
+  //      const isMatched =
+  //        Array.isArray(allJson) &&
+  //        allJson.some(
+  //          (s) =>
+  //            s.user_id === preview.user_id &&
+  //            s.role.toLowerCase() === preview.role.toLowerCase() &&
+  //            formatDate(s.payment_date) === previewDate
+  //        );
+
+  //      return {
+  //        ...preview,
+  //        status: isMatched ? "Sudah" : "Belum",
+  //      };
+  //    });
+
+  //    // 🔑 Filter agar tidak duplikat user-role-tanggal
+  //    const uniqueMap = new Map();
+  //    merged.forEach((item) => {
+  //      const dateKey = new Date(item.tanggal).toISOString().slice(0, 10);
+  //      const key = `${item.user_id}_${item.role.toLowerCase()}_${dateKey}`;
+  //      if (!uniqueMap.has(key)) {
+  //        uniqueMap.set(key, item);
+  //      }
+  //    });
+
+  //    const filteredMerged = [...uniqueMap.values()];
+
+  //    setAllPreviews(filteredMerged);
+  //    setData(filteredMerged);
+
+  //    // SIMPAN DATA SEBELUM DIUBAH STATUS SECARA MANUAL
+  //    //setAllPreviews([...merged]);
+  //    //setData([...merged]);
+
+  //    // ✅ INI BAGIAN YANG KAMU MAKSUD
+  //    if (updated && updated.includes("-")) {
+  //      const [uid, r, pdate] = updated.split("-");
+
+  //      // Ganti status di data yang sesuai dengan statusUpdated
+  //      setData((prev) =>
+  //        prev.map((item) => {
+  //          const match =
+  //            String(item.user_id) === uid &&
+  //            item.role.toLowerCase() === r.toLowerCase() &&
+  //            formatDate(item.tanggal) === formatDate(pdate);
+  //          return match ? { ...item, status: "Sudah" } : item;
+  //        })
+  //      );
+
+  //      setAllPreviews((prev) =>
+  //        prev.map((item) => {
+  //          const match =
+  //            String(item.user_id) === uid &&
+  //            item.role.toLowerCase() === r.toLowerCase() &&
+  //            formatDate(item.tanggal) === formatDate(pdate);
+  //          return match ? { ...item, status: "Sudah" } : item;
+  //        })
+  //      );
+
+  //      localStorage.removeItem("statusUpdated");
+  //    }
+  //  };
+
+  //  init();
+  //}, [reloadTrigger]);
+
   useEffect(() => {
     const init = async () => {
-      //console.log("⏳ INIT useEffect jalan");
-
+      setLoading(true);
       const updated = localStorage.getItem("statusUpdated");
-      //console.log("📦 statusUpdated dari localStorage:", updated);
+      const token = localStorage.getItem("access_token");
 
-      // Ambil data dari API
-      const [previewRes, allRes] = await Promise.all([
-        fetch("http://localhost:8000/api/salary/previews"),
-        fetch("http://localhost:8000/api/salary/all"),
-      ]);
+      try {
+        const headers = {
+          Authorization: `Bearer ${token}`,
+        };
 
-      const previewJson = await previewRes.json();
-      const allJsonRaw = await allRes.json();
-      const allJson = allJsonRaw.all || allJsonRaw.data || [];
+        const [previewRes, allRes] = await Promise.all([
+          fetch("http://localhost:8000/api/salary/previews", { headers }),
+          fetch("http://localhost:8000/api/salary/all", { headers }),
+        ]);
 
-      const previews = previewJson.previews.map((item) => ({
-        id: item.id,
-        user_id: item.user_id,
-        nama: item.nama,
-        posisi: item.role,
-        role: item.role,
-        tanggal: item.payment_date,
-        status: item.status,
-      }));
+        const previewJson = await previewRes.json();
+        const allJsonRaw = await allRes.json();
+        const allJson = allJsonRaw.all || allJsonRaw.data || [];
 
-      const formatDate = (dateStr) =>
-        new Date(dateStr).toISOString().slice(0, 10);
+        const previews = previewJson.previews.map((item) => ({
+          id: item.id,
+          user_id: item.user_id,
+          nama: item.nama,
+          posisi: item.role,
+          role: item.role,
+          tanggal: item.payment_date,
+          status: item.status,
+        }));
 
-      const merged = previews.map((preview) => {
-        const previewDate = formatDate(preview.tanggal);
-        const isMatched =
-          Array.isArray(allJson) &&
-          allJson.some(
-            (s) =>
-              s.user_id === preview.user_id &&
-              s.role.toLowerCase() === preview.role.toLowerCase() &&
-              formatDate(s.payment_date) === previewDate
+        const formatDate = (dateStr) =>
+          new Date(dateStr).toISOString().slice(0, 10);
+
+        const merged = previews.map((preview) => {
+          const previewDate = formatDate(preview.tanggal);
+          const isMatched =
+            Array.isArray(allJson) &&
+            allJson.some(
+              (s) =>
+                s.user_id === preview.user_id &&
+                s.role.toLowerCase() === preview.role.toLowerCase() &&
+                formatDate(s.payment_date) === previewDate
+            );
+
+          return {
+            ...preview,
+            status: isMatched ? "Sudah" : "Belum",
+          };
+        });
+
+        const uniqueMap = new Map();
+        merged.forEach((item) => {
+          const dateKey = new Date(item.tanggal).toISOString().slice(0, 10);
+          const key = `${item.user_id}_${item.role.toLowerCase()}_${dateKey}`;
+          if (!uniqueMap.has(key)) {
+            uniqueMap.set(key, item);
+          }
+        });
+
+        const filteredMerged = [...uniqueMap.values()];
+
+        setAllPreviews(filteredMerged);
+        setData(filteredMerged);
+
+        if (updated && updated.includes("-")) {
+          const [uid, r, pdate] = updated.split("-");
+
+          setData((prev) =>
+            prev.map((item) => {
+              const match =
+                String(item.user_id) === uid &&
+                item.role.toLowerCase() === r.toLowerCase() &&
+                formatDate(item.tanggal) === formatDate(pdate);
+              return match ? { ...item, status: "Sudah" } : item;
+            })
           );
 
-        return {
-          ...preview,
-          status: isMatched ? "Sudah" : "Belum",
-        };
-      });
+          setAllPreviews((prev) =>
+            prev.map((item) => {
+              const match =
+                String(item.user_id) === uid &&
+                item.role.toLowerCase() === r.toLowerCase() &&
+                formatDate(item.tanggal) === formatDate(pdate);
+              return match ? { ...item, status: "Sudah" } : item;
+            })
+          );
 
-      // 🔑 Filter agar tidak duplikat user-role-tanggal
-      const uniqueMap = new Map();
-      merged.forEach((item) => {
-        const dateKey = new Date(item.tanggal).toISOString().slice(0, 10);
-        const key = `${item.user_id}_${item.role.toLowerCase()}_${dateKey}`;
-        if (!uniqueMap.has(key)) {
-          uniqueMap.set(key, item);
+          localStorage.removeItem("statusUpdated");
         }
-      });
-
-      const filteredMerged = [...uniqueMap.values()];
-
-      setAllPreviews(filteredMerged);
-      setData(filteredMerged);
-
-      // SIMPAN DATA SEBELUM DIUBAH STATUS SECARA MANUAL
-      //setAllPreviews([...merged]);
-      //setData([...merged]);
-
-      // ✅ INI BAGIAN YANG KAMU MAKSUD
-      if (updated && updated.includes("-")) {
-        const [uid, r, pdate] = updated.split("-");
-
-        // Ganti status di data yang sesuai dengan statusUpdated
-        setData((prev) =>
-          prev.map((item) => {
-            const match =
-              String(item.user_id) === uid &&
-              item.role.toLowerCase() === r.toLowerCase() &&
-              formatDate(item.tanggal) === formatDate(pdate);
-            return match ? { ...item, status: "Sudah" } : item;
-          })
-        );
-
-        setAllPreviews((prev) =>
-          prev.map((item) => {
-            const match =
-              String(item.user_id) === uid &&
-              item.role.toLowerCase() === r.toLowerCase() &&
-              formatDate(item.tanggal) === formatDate(pdate);
-            return match ? { ...item, status: "Sudah" } : item;
-          })
-        );
-
-        localStorage.removeItem("statusUpdated");
+      } catch (error) {
+        console.error("❌ Error saat fetch:", error);
+      } finally {
+        setLoading(false);
       }
-    };
+    }; // <-- nutup init()
 
     init();
-  }, [reloadTrigger]);
+  }, [reloadTrigger]); // <-- nutup useEffect
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -274,7 +379,7 @@ function DaftarGaji() {
 
   const handleCatat = (user_id, role, payment_date) => {
     //console.log("Diterima payment_date:", payment_date); // debug
-
+const encodedUserId = hashids.encode(user_id);
     let encodedDate = "";
     if (payment_date && !isNaN(new Date(payment_date))) {
       encodedDate = encodeURIComponent(
@@ -283,14 +388,17 @@ function DaftarGaji() {
     } else {
       console.warn("Tanggal tidak valid, default ke kosong.");
     }
-    router.push(
-      `/dashboard/penggajian/penggajian-utama/catat/${user_id}/${role}?payment_date=${encodedDate}`
-    );
+     router.push(
+    `/dashboard/penggajian/penggajian-utama/catat/${encodedUserId}/${role}?payment_date=${encodedDate}`
+  );
+    //router.push(
+    //  `/dashboard/penggajian/penggajian-utama/catat/${user_id}/${role}?payment_date=${encodedDate}`
+    //);
   };
 
   const handleLihat = (user_id, role, payment_date) => {
     //console.log("Lihat detail:", user_id, role, payment_date);
-
+const encodedUserId = hashids.encode(user_id);
     let encodedDate = "";
     if (payment_date && !isNaN(new Date(payment_date))) {
       encodedDate = encodeURIComponent(
@@ -301,11 +409,14 @@ function DaftarGaji() {
     }
 
     // ⬅️ Simpan status agar halaman utama tahu mana yang perlu diupdate nanti
-    localStorage.setItem("statusUpdated", `${user_id}-${role}-${encodedDate}`);
+    localStorage.setItem("statusUpdated", `${encodedUserId}-${role}-${encodedDate}`);
 
     router.push(
-      `/dashboard/penggajian/penggajian-utama/catat/${user_id}/${role}?payment_date=${encodedDate}`
-    );
+    `/dashboard/penggajian/penggajian-utama/catat/${encodedUserId}/${role}?payment_date=${encodedDate}`
+  );
+    //router.push(
+    //  `/dashboard/penggajian/penggajian-utama/catat/${user_id}/${role}?payment_date=${encodedDate}`
+    //);
   };
 
   const handleCetak = () => {
@@ -346,10 +457,16 @@ function DaftarGaji() {
   };
 
   const handleGenerateGaji = async () => {
+    const token = localStorage.getItem("access_token");
+
     try {
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
       const res = await fetch(
         "http://localhost:8000/api/salary/previews/generate",
         {
+          headers,
           method: "POST",
         }
       );
@@ -366,6 +483,10 @@ function DaftarGaji() {
       alert("Gagal generate data gaji");
     }
   };
+
+  if (loading) {
+    return <LoadingFunny />;
+  }
 
   return (
     <div className="flex">
@@ -446,7 +567,7 @@ function DaftarGaji() {
               </button>
             </div>
 
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-end items-center mb-4">
               <button
                 onClick={handleGenerateGaji}
                 className="bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition"

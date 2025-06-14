@@ -20,102 +20,633 @@ export default function GajiCatatPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const params = useParams();
-  const id = params.id;
+  //const id = params.id;
   const role = params.role;
   const [data, setData] = useState([]);
   const [totalGaji, setTotalGaji] = useState(0);
   const [status, setStatus] = useState("");
   const [payment_date, setPaymentDate] = useState("");
+  // Dekripsi id dan role dari URL menggunakan hashids
+  //const decryptedId = hashids.decode(params.id)[0]; 
+    const decoded = hashids.decode(params.id);
+  const id = decoded[0];
+  
   //const payment_date = searchParams.get("payment_date");
 
+  //const fetchGajiDetail = async () => {
+  //  setLoading(true);
+  //  setError(null);
+  //  const token = localStorage.getItem("access_token");
+
+  //  try {
+  //      const headers = {
+  //      Authorization: `Bearer ${token}`,
+  //    };
+  //    // 1. Fetch data previews untuk mapping ticketing_id ⇄ payment_date
+  //    const resPreview = await fetch(
+  //      "http://localhost:8000/api/salary/previews", {headers}
+  //    );
+  //    const previewJson = await resPreview.json();
+
+  //    // 2. Ambil semua ticketing_id yang milik user & role & tanggal yang sesuai
+  //    const ticketingIDs = previewJson.previews
+  //      .filter(
+  //        (item) =>
+  //          item.user_id === parseInt(id) &&
+  //          item.role.toLowerCase() === role.toLowerCase() &&
+  //          item.payment_date?.slice(0, 10) === payment_date
+  //      )
+  //      .map((item) => item.ticketing_id);
+
+  //    //console.log("🎯 Ticketing ID untuk tanggal ini:", ticketingIDs);
+
+  //    // 3. Fetch detail dari endpoint preview/:id/:role
+  //    let endpoint = "";
+  //    if (role.toLowerCase() === "driver") {
+  //      endpoint = `http://localhost:8000/api/salary/preview/${id}/driver`;
+  //    } else if (role.toLowerCase() === "owner") {
+  //      endpoint = `http://localhost:8000/api/salary/preview/${id}/owner`;
+  //    } else if (role.toLowerCase() === "front office") {
+  //      `http://localhost:8000/api/salary/preview/${id}/fron office`;
+  //    } else {
+  //      throw new Error("Role tidak dikenali");
+  //    }
+
+  //    const resDetail = await fetch(endpoint);
+  //    const json = await resDetail.json();
+  //    const allData = json.data || [];
+
+  //    // 4. Filter data detail berdasarkan ticketing_id
+  //    const filteredData = allData.filter((item) =>
+  //      ticketingIDs.includes(item.ticketing_id)
+  //    );
+
+  //    setData(filteredData);
+
+  //    // 5. Set nama dari data pertama
+  //    if (filteredData.length > 0) {
+  //      setNama(getNamaByRole(filteredData[0], role));
+  //    }
+
+  //    // 6. Fetch salary/all untuk cek status gaji
+  //    const resSalaryAll = await fetch("http://localhost:8000/api/salary/all");
+  //    const allSalariesJson = await resSalaryAll.json();
+  //    const allSalaries = allSalariesJson.data || [];
+
+  //    const existingSalary = allSalaries.find(
+  //      (item) =>
+  //        item.user_id === parseInt(id) &&
+  //        item.role.toLowerCase() === role.toLowerCase() &&
+  //        item.payment_date?.slice(0, 10) === payment_date
+  //    );
+
+  //    if (existingSalary) {
+  //      setStatus("Sudah");
+  //      setTotalGaji(existingSalary.total_salary || 0);
+  //    } else {
+  //      setStatus("Belum");
+
+  //      const total = filteredData.reduce((acc, cur) => {
+  //        if (role.toLowerCase() === "driver")
+  //          return acc + (cur.driver_share || 0);
+  //        if (role.toLowerCase() === "owner")
+  //          return acc + (cur.owner_share || 0);
+  //        if (role.toLowerCase() === "front office")
+  //          return acc + (cur.total_fo_share || 0);
+  //        return acc;
+  //      }, 0);
+
+  //      setTotalGaji(total);
+  //    }
+  //  } catch (err) {
+  //    console.error(err);
+  //    setError(err.message || "Terjadi kesalahan");
+  //  } finally {
+  //    setLoading(false);
+  //  }
+  //};
+
+  //const fetchGajiDetail = async () => {
+  //  setLoading(true);
+  //  setError(null);
+  //  const token = localStorage.getItem("access_token");
+
+  //  try {
+  //    //if (
+  //    //  role.toLowerCase() === "front office" &&
+  //    //  new Date(payment_date).getDate() !== 1
+  //    //) {
+  //    //  setError("⚠️ Gaji Front Office hanya tersedia setiap tanggal 1.");
+  //    //  setData([]);
+  //    //  setNama("-");
+  //    //  setStatus("Belum");
+  //    //  setLoading(false);
+  //    //  return;
+  //    //}
+
+  //    const headers = {
+  //      Authorization: `Bearer ${token}`,
+  //    };
+
+  //    // 1. Fetch data previews
+  //    const resPreview = await fetch(
+  //      "http://localhost:8000/api/salary/previews",
+  //      { headers }
+  //    );
+  //    const previewJson = await resPreview.json();
+
+  //    // 2. Filter ticketing ID
+  //    const ticketingIDs = previewJson.previews
+  //      .filter(
+  //        (item) =>
+  //          item.user_id === parseInt(id) &&
+  //          item.role.toLowerCase() === role.toLowerCase() &&
+  //          item.payment_date?.slice(0, 10) === payment_date
+  //      )
+  //      .map((item) => item.ticketing_id);
+
+  //    // 3. Tentukan endpoint detail (gunakan encodeURIComponent agar "front office" → "front%20office")
+  //    const encodedRole = encodeURIComponent(role.toLowerCase());
+  //    const endpoint = `http://localhost:8000/api/salary/preview/${id}/${encodedRole}`;
+
+  //    // 4. Fetch detail dengan token
+  //    const resDetail = await fetch(endpoint, { headers });
+  //    const json = await resDetail.json();
+  //    const allData = json.data || [];
+
+  //    // 5. Filter berdasarkan ticketing_id
+  //    const filteredData = allData.filter((item) =>
+  //      ticketingIDs.includes(item.ticketing_id)
+  //    );
+  //    setData(filteredData);
+
+  //    if (filteredData.length > 0) {
+  //      setNama(getNamaByRole(filteredData[0], role));
+  //    }
+
+  //    // 6. Fetch salary/all dengan token
+  //    const resSalaryAll = await fetch("http://localhost:8000/api/salary/all", {
+  //      headers,
+  //    });
+  //    const allSalariesJson = await resSalaryAll.json();
+  //    const allSalaries = allSalariesJson.data || [];
+
+  //    const existingSalary = allSalaries.find(
+  //      (item) =>
+  //        item.user_id === parseInt(id) &&
+  //        item.role.toLowerCase() === role.toLowerCase() &&
+  //        item.payment_date?.slice(0, 10) === payment_date
+  //    );
+
+  //    if (existingSalary) {
+  //      setStatus("Sudah");
+  //      setTotalGaji(existingSalary.total_salary || 0);
+  //    } else {
+  //      setStatus("Belum");
+  //      const total = filteredData.reduce((acc, cur) => {
+  //        if (role.toLowerCase() === "driver")
+  //          return acc + (cur.driver_share || 0);
+  //        if (role.toLowerCase() === "owner")
+  //          return acc + (cur.owner_share || 0);
+  //        if (role.toLowerCase() === "front office")
+  //          return acc + (cur.total_fo_share || 0);
+  //        return acc;
+  //      }, 0);
+  //      setTotalGaji(total);
+  //    }
+  //  } catch (err) {
+  //    console.error(err);
+  //    setError(err.message || "Terjadi kesalahan");
+  //  } finally {
+  //    setLoading(false);
+  //  }
+  //};
+
+  //const getNamaByRole = (detail, role) => {
+  //  switch (role.toLowerCase()) {
+  //    case "driver":
+  //      return detail.driver_name;
+  //    case "owner":
+  //      return detail.owner_name;
+  //    case "front office":
+  //      return detail.name; // contoh, sesuaikan
+  //    default:
+  //      return "Tidak diketahui";
+  //  }
+  //};
+
+  //const fetchGajiDetail = async () => {
+  //  setLoading(true);
+  //  setError(null);
+  //  const token = localStorage.getItem("access_token");
+  //  console.log("📌 Memulai fetchGajiDetail:", { id, role, payment_date });
+
+  //  try {
+  //    const headers = {
+  //      Authorization: `Bearer ${token}`,
+  //    };
+
+  //    // Normalisasi tanggal ke format YYYY-MM-DD agar cocok dengan backend
+  //    const normalizeDate = (dateStr) =>
+  //      new Date(dateStr).toISOString().slice(0, 10);
+  //    const normalizedPaymentDate = normalizeDate(payment_date);
+
+  //    // 1. Fetch data previews
+  //    const resPreview = await fetch(
+  //      "http://localhost:8000/api/salary/previews",
+  //      { headers }
+  //    );
+  //    const previewJson = await resPreview.json();
+
+  //    // 2. Filter ticketing ID (hanya untuk driver & owner)
+  //    //const ticketingIDs = previewJson.previews
+  //    //  .filter(
+  //    //    (item) =>
+  //    //      item.user_id === parseInt(id) &&
+  //    //      item.role.toLowerCase() === role.toLowerCase() &&
+  //    //      normalizeDate(item.payment_date) === normalizedPaymentDate
+  //    //  )
+  //    //  .map((item) => item.ticketing_id);
+
+  //    // 2. Filter ticketing ID (hanya untuk driver & owner)
+  //let ticketingIDs = [];
+  //if (role.toLowerCase() !== "front office") {
+  //  ticketingIDs = previewJson.previews
+  //    .filter(
+  //      (item) =>
+  //        item.user_id === parseInt(id) &&
+  //        item.role.toLowerCase() === role.toLowerCase() &&
+  //        normalizeDate(item.payment_date) === normalizedPaymentDate
+  //    )
+  //    .map((item) => item.ticketing_id);
+  //}
+
+  //    // 3. Tentukan endpoint detail
+  //    const encodedRole = encodeURIComponent(role.toLowerCase());
+  //    console.log("Encoded Role:", encodedRole);
+  //    const endpoint = `http://localhost:8000/api/salary/preview/${id}/${encodedRole}`;
+
+  //    // 4. Fetch detail
+  //    const resDetail = await fetch(endpoint, { headers });
+  //    const json = await resDetail.json();
+
+  //    // 5. Tangani data berdasarkan role
+  //    let filteredData = [];
+
+  //    if (role.toLowerCase() === "front office") {
+  //      // Data hanya berupa object
+  //      filteredData = [json.data];
+  //    } else if (Array.isArray(json.data)) {
+  //      filteredData = json.data.filter((item) =>
+  //        ticketingIDs.includes(item.ticketing_id)
+  //      );
+  //    } else {
+  //      console.log("API Response:", json);
+
+  //      console.warn("Format data tidak dikenali:", json.data);
+  //      filteredData = [];
+  //    }
+
+  //    setData(filteredData);
+
+  //    if (filteredData.length > 0) {
+  //      setNama(getNamaByRole(filteredData[0], role));
+  //    }
+
+  //    // 6. Cek status dari salary/all
+  //    const resSalaryAll = await fetch("http://localhost:8000/api/salary/all", {
+  //      headers,
+  //    });
+  //    const allSalariesJson = await resSalaryAll.json();
+  //    const allSalaries = allSalariesJson.data || [];
+
+  //    const existingSalary = allSalaries.find(
+  //      (item) =>
+  //        item.user_id === parseInt(id) &&
+  //        item.role.toLowerCase() === role.toLowerCase() &&
+  //        normalizeDate(item.payment_date) === normalizedPaymentDate
+  //    );
+
+  //    if (existingSalary) {
+  //      setStatus("Sudah");
+  //      setTotalGaji(existingSalary.total_salary || 0);
+  //    } else {
+  //      setStatus("Belum");
+
+  //      const total = filteredData.reduce((acc, cur) => {
+  //        if (role.toLowerCase() === "driver")
+  //          return acc + (cur.driver_share || 0);
+  //        if (role.toLowerCase() === "owner")
+  //          return acc + (cur.owner_share || 0);
+  //        if (role.toLowerCase() === "front office")
+  //          return acc + (cur.total_fo_share || 0); // total dari response FO
+  //        return acc;
+  //      }, 0);
+
+  //      setTotalGaji(total);
+  //    }
+  //  } catch (err) {
+  //    console.error(err);
+  //    setError(err.message || "Terjadi kesalahan");
+  //  } finally {
+  //    setLoading(false);
+  //  }
+  //};
+
+  //const fetchGajiDetail = async () => {
+  //  setLoading(true);
+  //  setError(null);
+  //  const token = localStorage.getItem("access_token");
+  //  console.log("📌 Memulai fetchGajiDetail:", { id, role, payment_date });
+
+  //  try {
+  //    const headers = {
+  //      Authorization: `Bearer ${token}`,
+  //    };
+
+  //    // Normalisasi tanggal ke format YYYY-MM-DD agar cocok dengan backend
+  //    const normalizeDate = (dateStr) =>
+  //      new Date(dateStr).toISOString().slice(0, 10);
+  //    const normalizedPaymentDate = normalizeDate(payment_date);
+
+  //    // 1. Fetch data previews
+  //    const resPreview = await fetch(
+  //      "http://localhost:8000/api/salary/previews",
+  //      { headers }
+  //    );
+  //    const previewJson = await resPreview.json();
+
+  //    // 2. Filter ticketing ID (hanya untuk driver & owner)
+  //    let ticketingIDs = [];
+  //    if (role.toLowerCase() !== "front office") {
+  //      ticketingIDs = previewJson.previews
+  //        .filter(
+  //          (item) =>
+  //            item.user_id === parseInt(id) &&
+  //            item.role.toLowerCase() === role.toLowerCase() &&
+  //            normalizeDate(item.payment_date) === normalizedPaymentDate
+  //        )
+  //        .map((item) => item.ticketing_id);
+  //    }
+
+  //    // 3. Tentukan endpoint detail
+  //    // Pastikan 'Front Office' tetap dengan kapitalisasi yang benar, sementara role lainnya tetap diubah ke lowercase
+  //    //const encodedRole =
+  //    //  role === "Front Office" ? encodeURIComponent(role) : encodeURIComponent(role.toLowerCase());
+  //    //console.log("Encoded Role:", encodedRole);
+  //    //    let encodedRole = role;
+
+  //    //if (role.toLowerCase() !== "Front Office") {
+  //    //  // Lakukan encode untuk role lain yang bukan Front Office
+  //    //  encodedRole = encodeURIComponent(role.toLowerCase());
+  //    //}
+
+  //    //console.log("Encoded Role:", encodedRole);
+
+  //    //    const endpoint = `http://localhost:8000/api/salary/preview/${id}/${encodedRole}`;
+
+  //    //let endpoint = "";
+  //    //if (role.toLowerCase() === "driver") {
+  //    //  endpoint = `http://localhost:8000/api/salary/preview/${id}/driver`;
+  //    //} else if (role.toLowerCase() === "owner") {
+  //    //  endpoint = `http://localhost:8000/api/salary/preview/${id}/owner`;
+  //    //} else if (role === "Front Office") {
+  //    //  endpoint = `http://localhost:8000/api/salary/preview/${id}/Front%20Office`;
+  //    //} else {
+  //    //  throw new Error("Role tidak dikenali");
+  //    //}
+  //    let endpoint = "";
+  //    const decodedRole = decodeURIComponent(role); // Decode role sebelum perbandingan
+
+  //    if (role.toLowerCase() === "driver") {
+  //      endpoint = `http://localhost:8000/api/salary/preview/${id}/driver`;
+  //    } else if (role.toLowerCase() === "owner") {
+  //      endpoint = `http://localhost:8000/api/salary/preview/${id}/owner`;
+  //    } else if (decodedRole === "Front Office") {
+  //      endpoint = `http://localhost:8000/api/salary/preview/${id}/Front%20Office`;
+  //    } else {
+  //      throw new Error("Role tidak dikenali");
+  //    }
+
+  //    // Menentukan role
+  //    //const role = 'Front Office'; // Atau 'owner' atau 'Front Office'
+
+  //    // Membuat URL endpoint dengan kondisi untuk mengecek apakah role mengandung spasi atau tidak
+  //    //const endpoint = `http://localhost:8000/api/salary/preview/${id}/${role.includes(' ') ? encodeURIComponent(role) : role}`;
+
+  //    //console.log(endpoint); // Cek URL yang dihasilkan
+
+  //    // 4. Fetch detail
+  //    const resDetail = await fetch(endpoint, { headers });
+  //    const json = await resDetail.json();
+
+  //    // 5. Tangani data berdasarkan role
+  //    //let filteredData = [];
+
+  //    //if (role.toLowerCase() === "front office") {
+  //    //  // Data hanya berupa object
+  //    //  filteredData = [json.data];
+  //    //} else if (Array.isArray(json.data)) {
+  //    //  filteredData = json.data.filter((item) =>
+  //    //    ticketingIDs.includes(item.ticketing_id)
+  //    //  );
+  //    //} else {
+  //    //  console.log("API Response:", json);
+  //    //  console.warn("Format data tidak dikenali:", json.data);
+  //    //  filteredData = [];
+  //    //}
+
+  //    //setData(filteredData);
+
+  //    //if (filteredData.length > 0) {
+  //    //  setNama(getNamaByRole(filteredData[0], role));
+  //    //}
+
+  //    let filteredData = [];
+
+  //    // Mengakses data langsung dari objek
+  //    if (json) {
+  //      if (role.toLowerCase() === "front office") {
+  //        // Data hanya berupa objek, jadi masukkan ke dalam array
+  //        filteredData = [json];
+  //      } else {
+  //        // Jika data berupa array, filter sesuai dengan ticketing IDs
+  //        if (Array.isArray(json.data)) {
+  //          filteredData = json.data.filter((item) => {
+  //            //ticketingIDs.includes(item.ticketing_id)
+  //           const decodedRole = decodeURIComponent(item.role); // Decode role di dalam filteredData
+  //      return ticketingIDs.includes(item.ticketing_id) && decodedRole === role;
+  //        });
+  //        } else {
+  //          console.warn("Format data tidak dikenali:", json);
+  //          filteredData = [];
+  //        }
+  //      }
+  //    } else {
+  //      console.warn("Data tidak ditemukan dalam respons:", json);
+  //    }
+
+  //    setData(filteredData);
+
+  //    if (filteredData.length > 0) {
+  //      setNama(getNamaByRole(filteredData[0], role));
+  //    }
+
+  //    // 6. Cek status dari salary/all
+  //    const resSalaryAll = await fetch("http://localhost:8000/api/salary/all", {
+  //      headers,
+  //    });
+  //    const allSalariesJson = await resSalaryAll.json();
+  //    const allSalaries = allSalariesJson.data || [];
+
+  //    const existingSalary = allSalaries.find(
+  //      (item) =>
+  //        item.user_id === parseInt(id) &&
+  //        item.role.toLowerCase() === role.toLowerCase() &&
+  //        normalizeDate(item.payment_date) === normalizedPaymentDate
+  //    );
+
+  //    if (existingSalary) {
+  //      setStatus("Sudah");
+  //      setTotalGaji(existingSalary.total_salary || 0);
+  //    } else {
+  //      setStatus("Belum");
+
+  //      const total = filteredData.reduce((acc, cur) => {
+  //        if (role.toLowerCase() === "driver")
+  //          return acc + (cur.driver_share || 0);
+  //        if (role.toLowerCase() === "owner")
+  //          return acc + (cur.owner_share || 0);
+  //        if (role === "Front Office") return acc + (cur.total_fo_share || 0); // total dari response FO
+  //        return acc;
+  //      }, 0);
+
+  //      setTotalGaji(total);
+  //    }
+  //  } catch (err) {
+  //    console.error(err);
+  //    setError(err.message || "Terjadi kesalahan");
+  //  } finally {
+  //    setLoading(false);
+  //  }
+  //};
+
   const fetchGajiDetail = async () => {
-    setLoading(true);
-    setError(null);
+  setLoading(true);
+  setError(null);
+  const token = localStorage.getItem("access_token");
+  console.log("📌 Memulai fetchGajiDetail:", { id, role, payment_date });
 
-    try {
-      // 1. Fetch data previews untuk mapping ticketing_id ⇄ payment_date
-      const resPreview = await fetch(
-        "http://localhost:8000/api/salary/previews"
-      );
-      const previewJson = await resPreview.json();
+  try {
+    const headers = {
+      Authorization: `Bearer ${token}`,
+    };
 
-      // 2. Ambil semua ticketing_id yang milik user & role & tanggal yang sesuai
-      const ticketingIDs = previewJson.previews
+    // Normalisasi tanggal ke format YYYY-MM-DD agar cocok dengan backend
+    const normalizeDate = (dateStr) =>
+      new Date(dateStr).toISOString().slice(0, 10);
+    const normalizedPaymentDate = normalizeDate(payment_date);
+
+    // 1. Fetch data previews
+    const resPreview = await fetch(
+      "http://localhost:8000/api/salary/previews",
+      { headers }
+    );
+    const previewJson = await resPreview.json();
+
+    // 2. Filter ticketing ID (hanya untuk driver & owner)
+    let ticketingIDs = [];
+    if (role.toLowerCase() !== "front office") {
+      ticketingIDs = previewJson.previews
         .filter(
           (item) =>
             item.user_id === parseInt(id) &&
             item.role.toLowerCase() === role.toLowerCase() &&
-            item.payment_date?.slice(0, 10) === payment_date
+            normalizeDate(item.payment_date) === normalizedPaymentDate
         )
         .map((item) => item.ticketing_id);
+    }
 
-      //console.log("🎯 Ticketing ID untuk tanggal ini:", ticketingIDs);
+    // 3. Tentukan endpoint detail
+    let endpoint = "";
+    const decodedRole = decodeURIComponent(role); // Decode role sebelum perbandingan
 
-      // 3. Fetch detail dari endpoint preview/:id/:role
-      let endpoint = "";
-      if (role.toLowerCase() === "driver") {
-        endpoint = `http://localhost:8000/api/salary/preview/${id}/driver`;
-      } else if (role.toLowerCase() === "owner") {
-        endpoint = `http://localhost:8000/api/salary/preview/${id}/owner`;
-      } else if (role.toLowerCase() === "front office") {
-        `http://localhost:8000/api/salary/preview/${id}/fron office`;
-      } else {
-        throw new Error("Role tidak dikenali");
-      }
+    if (role.toLowerCase() === "driver") {
+      endpoint = `http://localhost:8000/api/salary/preview/${id}/driver`;
+    } else if (role.toLowerCase() === "owner") {
+      endpoint = `http://localhost:8000/api/salary/preview/${id}/owner`;
+    } else if (decodedRole === "Front Office") {
+      endpoint = `http://localhost:8000/api/salary/preview/${id}/Front%20Office`;
+    } else {
+      throw new Error("Role tidak dikenali");
+    }
 
-      const resDetail = await fetch(endpoint);
-      const json = await resDetail.json();
-      const allData = json.data || [];
+    // 4. Fetch detail
+    const resDetail = await fetch(endpoint, { headers });
+    const json = await resDetail.json();
+    console.log("API Response:", json); // Debugging respons API
 
-      // 4. Filter data detail berdasarkan ticketing_id
-      const filteredData = allData.filter((item) =>
+    // 5. Tangani data berdasarkan role
+    let filteredData = [];
+
+    if (role.toLowerCase() === "front office") {
+      // Jika role adalah Front Office, akses langsung data dari json
+      filteredData = [json.data]; // Menyimpan data dalam array
+    } else if (Array.isArray(json.data)) {
+      filteredData = json.data.filter((item) =>
         ticketingIDs.includes(item.ticketing_id)
       );
-
-      setData(filteredData);
-
-      // 5. Set nama dari data pertama
-      if (filteredData.length > 0) {
-        setNama(getNamaByRole(filteredData[0], role));
-      }
-
-      // 6. Fetch salary/all untuk cek status gaji
-      const resSalaryAll = await fetch("http://localhost:8000/api/salary/all");
-      const allSalariesJson = await resSalaryAll.json();
-      const allSalaries = allSalariesJson.data || [];
-
-      const existingSalary = allSalaries.find(
-        (item) =>
-          item.user_id === parseInt(id) &&
-          item.role.toLowerCase() === role.toLowerCase() &&
-          item.payment_date?.slice(0, 10) === payment_date
-      );
-
-      if (existingSalary) {
-        setStatus("Sudah");
-        setTotalGaji(existingSalary.total_salary || 0);
-      } else {
-        setStatus("Belum");
-
-        const total = filteredData.reduce((acc, cur) => {
-          if (role.toLowerCase() === "driver")
-            return acc + (cur.driver_share || 0);
-          if (role.toLowerCase() === "owner")
-            return acc + (cur.owner_share || 0);
-          if (role.toLowerCase() === "front office")
-            return acc + (cur.front_office_share || 0);
-          return acc;
-        }, 0);
-
-        setTotalGaji(total);
-      }
-    } catch (err) {
-      console.error(err);
-      setError(err.message || "Terjadi kesalahan");
-    } finally {
-      setLoading(false);
+    } else {
+      console.warn("Format data tidak dikenali:", json);
+      filteredData = [];
     }
-  };
+
+    // 6. Set data dan nama berdasarkan filteredData
+    setData(filteredData);
+
+    if (filteredData.length > 0) {
+      setNama(getNamaByRole(filteredData[0], role));
+    }
+
+    // 7. Cek status dari salary/all
+    const resSalaryAll = await fetch("http://localhost:8000/api/salary/all", {
+      headers,
+    });
+    const allSalariesJson = await resSalaryAll.json();
+    const allSalaries = allSalariesJson.data || [];
+
+    const existingSalary = allSalaries.find(
+      (item) =>
+        item.user_id === parseInt(id) &&
+        item.role.toLowerCase() === role.toLowerCase() &&
+        normalizeDate(item.payment_date) === normalizedPaymentDate
+    );
+
+    if (existingSalary) {
+      setStatus("Sudah");
+      setTotalGaji(existingSalary.total_salary || 0);
+    } else {
+      setStatus("Belum");
+
+      const total = filteredData.reduce((acc, cur) => {
+        if (role.toLowerCase() === "driver")
+          return acc + (cur.driver_share || 0);
+        if (role.toLowerCase() === "owner")
+          return acc + (cur.owner_share || 0);
+        if (role.toLowerCase() === "front office")
+          return acc + (cur.total_fo_share || 0); // total dari response FO
+        return acc;
+      }, 0);
+
+      setTotalGaji(total);
+    }
+  } catch (err) {
+    console.error(err);
+    setError(err.message || "Terjadi kesalahan");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const getNamaByRole = (detail, role) => {
     switch (role.toLowerCase()) {
@@ -123,8 +654,8 @@ export default function GajiCatatPage() {
         return detail.driver_name;
       case "owner":
         return detail.owner_name;
-      case "fron office":
-        return detail.name; // contoh, sesuaikan
+      case "front office":
+        return detail.name;
       default:
         return "Tidak diketahui";
     }
@@ -139,21 +670,38 @@ export default function GajiCatatPage() {
   //}, [id, role, payment_date]);
 
   useEffect(() => {
-  if (typeof window !== "undefined") {
-    const url = new URL(window.location.href);
-    const param = url.searchParams.get("payment_date");
-    setPaymentDate(param || "");
-    setTanggal(param || ""); // langsung set tanggal di sini
-  }
-}, []);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      const param = url.searchParams.get("payment_date");
+      console.log("📆 Payment Date dari URL:", param);
+      setPaymentDate(param || "");
+      setTanggal(param || ""); // langsung set tanggal di sini
+    }
+  }, []);
 
+  //useEffect(() => {
+  //  if (id && role && payment_date) {
+  //    const day = new Date(payment_date).getDate();
+
+  //    if (role.toLowerCase() === "front office" && day !== 1) {
+  //      setError("⚠️ Gaji Front Office hanya tersedia setiap tanggal 1.");
+  //      setData([]);
+  //      setNama("-");
+  //      setStatus("Belum");
+  //      setLoading(false);
+  //      return;
+  //    }
+
+  //    fetchGajiDetail();
+  //  }
+  //}, [id, role, payment_date]);
 
   useEffect(() => {
-  if (id && role && payment_date) {
-    fetchGajiDetail();
-  }
-}, [id, role, payment_date]);
-
+    if (id && role && payment_date) {
+      console.log("📌 Memulai fetchGajiDetail:", { id, role, payment_date });
+      fetchGajiDetail();
+    }
+  }, [id, role, payment_date]);
 
   const formatRupiah = (num) => {
     if (typeof num !== "number") return "Rp 0";
@@ -175,6 +723,15 @@ export default function GajiCatatPage() {
   const handleTerbayarkan = async () => {
     setLoading(true);
 
+    //if (
+    //  role?.toLowerCase() === "front office" &&
+    //  new Date(tanggal).getDate() !== 1
+    //) {
+    //  alert("⚠️ Gaji Front Office hanya bisa dicatat pada tanggal 1.");
+    //  setLoading(false);
+    //  return;
+    //}
+
     const selected = data?.[0];
     if (!selected) {
       console.error("Data tidak ditemukan:", selected);
@@ -191,8 +748,8 @@ export default function GajiCatatPage() {
       case "owner":
         user_id = selected.owner_id;
         break;
-      case "frontoffice":
-        user_id = selected.front_office_id;
+      case "front office":
+        user_id = selected.user_id;
         break;
       default:
         console.error("Role tidak valid atau belum dipilih:", role);
@@ -225,10 +782,10 @@ export default function GajiCatatPage() {
           user_id = item.owner_id;
           nama = item.owner_name;
           roleName = "Owner";
-        } else if (normalizedRole === "fron office") {
-          user_id = item.front_office_id;
-          nama = item.front_office_name;
-          roleName = "Front Office";
+        } else if (normalizedRole === "Front Office") {
+          user_id = item.user_id;
+          nama = item.name;
+          roleName = "front office";
         }
 
         return {
@@ -244,7 +801,7 @@ export default function GajiCatatPage() {
               ? item.driver_share || 0
               : normalizedRole === "owner"
                 ? item.owner_share || 0
-                : item.front_office_share || 0,
+                : item.total_fo_share || 0,
           total_salary: item.net || 0,
           payment_date: tanggal,
         };
@@ -258,6 +815,7 @@ export default function GajiCatatPage() {
       );
 
     const payload = { salaries: validSalaries };
+    const token = localStorage.getItem("access_token");
 
     const endpoint = `http://localhost:8000/api/salary/store/${user_id}/${role.toLowerCase()}`;
     //console.log("Mengirim data ke endpoint:", endpoint);
@@ -268,6 +826,7 @@ export default function GajiCatatPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
@@ -433,7 +992,7 @@ export default function GajiCatatPage() {
           </div>
         );
 
-      case "fron office":
+      case "front office":
         return (
           <div className="border border-gray-300 rounded-md p-4">
             <h2 className="text-lg font-semibold mb-4">
