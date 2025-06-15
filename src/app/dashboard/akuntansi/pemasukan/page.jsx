@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import Sidebar from "/components/Sidebar.jsx"; 
-import withAuth from "/src/app/lib/withAuth"; 
+import Sidebar from "/components/Sidebar.jsx";
+import withAuth from "/src/app/lib/withAuth";
 import {
     CalendarDays,
     FileText,
@@ -117,6 +117,15 @@ const PemasukanPage = () => {
                     throw new Error("Format data dari backend (properti 'income') tidak valid.");
                 }
 
+                const parseDateString = (dateString) => {
+                    if (!dateString || dateString === '-') return null;
+                    const parts = dateString.split('-');
+                    if (parts.length === 3) {
+                        return new Date(parts[2], parts[1] - 1, parts[0]);
+                    }
+                    return null;
+                };
+                
                 const cleanedData = fetchedRawData.map(item => ({
                     booking_date: item.booking_date ? formatDateToDisplay(item.booking_date) : '-',
                     income: parseFloat(item.income || 0),
@@ -124,6 +133,16 @@ const PemasukanPage = () => {
                     cash: parseFloat(item.cash || 0),
                 }));
 
+                cleanedData.sort((a, b) => {
+                    const dateA = parseDateString(a.booking_date);
+                    const dateB = parseDateString(b.booking_date);
+
+                    if (dateA === null) return 1;
+                    if (dateB === null) return -1;
+
+                    return dateB - dateA; 
+                });
+                
                 setDataPemasukan(cleanedData);
                 
                 if (selectedDateForFilter) { 
