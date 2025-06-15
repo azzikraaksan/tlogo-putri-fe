@@ -191,7 +191,7 @@ export default function Page() {
     left: isSidebarOpen ? 290 : 70, // biar sinkron sama sidebar
   }}
 >
-  <h1 className="text-[#000000] font-bold text-[32px] pl-4">
+  <h1 className="text-[#000000] font-semibold text-[32px] pl-4">
     Tlogo Generate Content
   </h1>
 </div>

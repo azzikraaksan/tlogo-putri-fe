@@ -1,8 +1,9 @@
-'use client'; 
+'use client';
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation'; 
+import { useRouter, useSearchParams } from 'next/navigation';
 import SearchInput from '/components/Search.jsx';
 import EditorArtikel from '/components/EditArtikel.jsx';
+import LoadingRow from "/components/LoadingRow.jsx";
 import { FiEdit, FiRotateCcw, FiTrash2 } from 'react-icons/fi';
 import DOMPurify from 'dompurify';
 import Sidebar from "/components/Sidebar";
@@ -33,11 +34,11 @@ function formatStatus(status) {
   return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
 }
 
-export default function Artikel() { 
+export default function Artikel() {
   const [activeTab, setActiveTab] = useState('semua');
   const [searchTerm, setSearchTerm] = useState('');
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
@@ -182,63 +183,78 @@ export default function Artikel() {
     router.push('/dashboard/ai-generate/draft');
   };
 
-  if (loading) {
-  return (
-    <div className="flex bg-white font-poppins min-h-screen">
-      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
-      <div
-        className="transition-all duration-300 ease-in-out w-full"
-        style={{
-          marginLeft: isSidebarOpen ? 290 : 70,
-        }}
-      >
-        <main className="md:px-10 py-6 space-y-6">
-          <h1 className="text-3xl font-bold text-black mb-4">Daftar Artikel</h1>
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex gap-2">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.value}
-                  onClick={() => setActiveTab(tab.value)}
-                  className={`px-3 py-1 rounded-full border text-sm font-medium transition-all duration-150 ${
-                    activeTab === tab.value
-                      ? "bg-[#3D6CB9] text-white"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+  if (isLoading) {
+    return (
+      <div className="flex bg-white font-poppins min-h-screen">
+        <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <div
+          className="transition-all duration-300 ease-in-out w-full"
+          style={{
+            marginLeft: isSidebarOpen ? 290 : 70,
+          }}
+        >
+          <main className="md:px-10 py-6 space-y-6">
+            <h1 className="text-3xl font-semibold text-black mb-4">Daftar Artikel</h1>
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex gap-2">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.value}
+                    onClick={() => setActiveTab(tab.value)}
+                    className={`px-3 py-1 rounded-full border text-sm font-medium transition-all duration-150 ${activeTab === tab.value
+                        ? "bg-[#3D6CB9] text-white"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                      }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             </div>
-            <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-          </div>
 
-          <div className="overflow-x-auto rounded-md shadow-md max-h-139">
-            <table className="min-w-full text-sm text-left text-gray-600">
-              <thead className="bg-[#3D6CB9] text-white">
-                <tr>
-                  <th className="px-4 py-2 text-center">Tanggal</th>
-                  <th className="px-4 py-2 text-center">Judul</th>
-                  <th className="px-4 py-2 text-center">Pemilik</th>
-                  <th className="px-4 py-2 text-center">Kategori</th>
-                  <th className="px-4 py-2 text-center">Detail AIOSEO</th>
-                  <th className="px-4 py-2 text-center">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td colSpan="6" className="text-center py-4 text-gray-500">
-                    Memuat data...
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </main>
+            <div className="overflow-x-auto rounded-md shadow-md max-h-139">
+              <table className="min-w-full text-sm text-left text-gray-600">
+                <thead className="bg-[#3D6CB9] text-white">
+                  <tr>
+                    <th className="px-4 py-2 text-center">Tanggal</th>
+                    <th className="px-4 py-2 text-center">Judul</th>
+                    <th className="px-4 py-2 text-center">Pemilik</th>
+                    <th className="px-4 py-2 text-center">Kategori</th>
+                    <th className="px-4 py-2 text-center">Detail AIOSEO</th>
+                    <th className="px-4 py-2 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {isLoading ? (
+                        <LoadingRow colCount={6} />
+                  ):  data.length > 0 ? (
+                      data.map((item, index) => (
+                        <tr key={index}>
+                          <td className="px-4 py-2 text-center">{item.tanggal}</td>
+                          <td className="px-4 py-2 text-center">{item.judul}</td>
+                          <td className="px-4 py-2 text-center">{item.pemilik}</td>
+                          <td className="px-4 py-2 text-center">{item.kategori}</td>
+                          <td className="px-4 py-2 text-center">{item.aioseo}</td>
+                          <td className="px-4 py-2 text-center">{/* aksi di sini */}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="text-center py-4 text-gray-500">
+                          Tidak ada data ditemukan.
+                        </td>
+                      </tr>
+                  )}
+                </tbody>
+
+              </table>
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
   // if (loading) return <div>Memuat data...</div>;
   if (error) return <div>Terjadi kesalahan: {error}</div>;
 
@@ -260,13 +276,13 @@ export default function Artikel() {
       <div className="min-h-screen flex bg-white font-poppins">
         <aside className="w-64">
           <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
-          
-                <div
-                  className="transition-all duration-300 ease-in-out"
-                  style={{
-                    marginLeft: isSidebarOpen ? 290 : 70,
-                  }}
-                ></div>
+
+          <div
+            className="transition-all duration-300 ease-in-out"
+            style={{
+              marginLeft: isSidebarOpen ? 290 : 70,
+            }}
+          ></div>
         </aside>
         <main className="flex-1 px-8 md:px-10 py-6 space-y-6">
           <EditorArtikel
@@ -274,7 +290,7 @@ export default function Artikel() {
             onSave={handleSave}
             onPublish={handlePublish}
             onBack={onBack}
-            
+
           />
         </main>
       </div>
@@ -283,18 +299,18 @@ export default function Artikel() {
 
   return (
     <div className="flex bg-white font-poppins">
-        <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
-          
-                <div
-                  className="transition-all duration-300 ease-in-out"
-                  style={{
-                    marginLeft: isSidebarOpen ? 290 : 70,
-                  }}
-                ></div>
+      <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
+
+      <div
+        className="transition-all duration-300 ease-in-out"
+        style={{
+          marginLeft: isSidebarOpen ? 290 : 70,
+        }}
+      ></div>
 
       <main className="md:px-10 py-6 space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-black">Daftar Artikel</h1>
+          <h1 className="text-3xl font-semibold text-black">Daftar Artikel</h1>
         </div>
 
         <div className="flex flex-wrap justify-between items-center gap-1 mb-6">
@@ -303,18 +319,18 @@ export default function Artikel() {
               <button
                 key={tab.value}
                 onClick={() => setActiveTab(tab.value)}
-                className={`px-3 py-1 rounded-full border text-sm font-medium transition-all duration-150 cursor-pointer ${
-                  activeTab === tab.value
+                className={`px-3 py-1 rounded-full border text-sm font-medium transition-all duration-150 cursor-pointer ${activeTab === tab.value
                     ? "bg-[#3D6CB9] text-white"
                     : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-                }`}
+                  }`}
               >
                 {tab.label}
               </button>
             ))}
           </div>
 
-          <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+            onClear={() => setSearchTerm("")} />
         </div>
 
         <div className="overflow-x-auto rounded-md shadow-md max-h-139">
@@ -344,8 +360,8 @@ export default function Artikel() {
                     formattedStatus === 'Diterbitkan'
                       ? 'bg-green-100 text-green-700'
                       : formattedStatus === 'Sampah'
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-yellow-100 text-yellow-700';
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-yellow-100 text-yellow-700';
 
                   return (
                     <tr key={item.id} className="border-b hover:bg-gray-50">
@@ -385,35 +401,35 @@ export default function Artikel() {
                       <td className="px-6 py-3 align-middle">
                         <div className="flex flex-row items-center justify-center space-x-3 h-full">
 
-                        {item.status?.toLowerCase() === 'sampah' ? (
-                          <button
-                          onClick={() => handleRestore(item.id)}
-                          title="Restore"
-                          className="text-green-600 hover:text-green-800 leading-none flex items-center justify-center cursor-pointer"
-                          >
-                            <FiRotateCcw size={18} />
-                          </button>
-                        ) : (
-                          <>
-                        <button
-                          onClick={() => {
-                            const encodedId = hashids.encode(item.id);
-                            router.push(`/dashboard/ai-generate/draft?id=${encodedId}`);
-                          }}
-                          title="Edit"
-                          className="text-blue-600 hover:text-blue-800 leading-none flex items-center justify-center cursor-pointer"
-                          >
-                          <FiEdit size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(item.id)}
-                          title="Hapus"
-                          className="text-red-600 hover:text-blue-800 leading-none flex items-center justify-center cursor-pointer"
-                          >
-                          <FiTrash2 size={18} />
-                        </button>
-                        </>
-                        )}
+                          {item.status?.toLowerCase() === 'sampah' ? (
+                            <button
+                              onClick={() => handleRestore(item.id)}
+                              title="Restore"
+                              className="text-green-600 hover:text-green-800 leading-none flex items-center justify-center cursor-pointer"
+                            >
+                              <FiRotateCcw size={18} />
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => {
+                                  const encodedId = hashids.encode(item.id);
+                                  router.push(`/dashboard/ai-generate/draft?id=${encodedId}`);
+                                }}
+                                title="Edit"
+                                className="text-blue-600 hover:text-blue-800 leading-none flex items-center justify-center cursor-pointer"
+                              >
+                                <FiEdit size={18} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(item.id)}
+                                title="Hapus"
+                                className="text-red-600 hover:text-blue-800 leading-none flex items-center justify-center cursor-pointer"
+                              >
+                                <FiTrash2 size={18} />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>

@@ -99,7 +99,7 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
           <button onClick={onBack} className="text-black-600 hover:text-blue-800">
             <FiArrowLeftCircle className="w-6 h-6 cursor-pointer" />
           </button>
-          <h1 className="text-3xl font-bold text-black">Editor Artikel</h1>
+          <h1 className="text-3xl font-semibold text-black">Editor Artikel</h1>
         </div>
 
         <div className="space-y-6 mb-4">
