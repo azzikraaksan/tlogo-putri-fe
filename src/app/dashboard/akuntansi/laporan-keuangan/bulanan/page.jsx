@@ -76,6 +76,17 @@ const BulananPage = ({ children }) => {
                 cleanOperations: parseFloat(item.clean_operations || 0),
                 jeepAmount: parseInt(item.jeep_amount || 0),
             }));
+
+            formattedData.sort((a, b) => {
+                const dateA = new Date(a.reportDate);
+                const dateB = new Date(b.reportDate);
+
+                if (isNaN(dateA.getTime())) return 1;
+                if (isNaN(dateB.getTime())) return -1;
+
+                return dateB - dateA;
+            });
+
             setDataBulanan(formattedData);
         } catch (error) {
             setDataBulanan([]); 
@@ -282,6 +293,8 @@ const BulananPage = ({ children }) => {
 
 export default withAuth(BulananPage);
 
+
+// // // // // 
 
 // import { Suspense } from "react";
 

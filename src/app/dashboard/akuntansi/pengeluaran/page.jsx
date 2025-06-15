@@ -161,6 +161,16 @@ const PengeluaranPage = ({ children }) => {
             setLabelForDisplayedPeriod("Total Bulan Ini:");
         }
     
+        dataToDisplayInTable.sort((a, b) => {   
+            const dateA = new Date(a.issue_date);
+            const dateB = new Date(b.issue_date);
+
+            if (isNaN(dateA.getTime())) return 1;
+            if (isNaN(dateB.getTime())) return -1;
+            
+            return dateB - dateA;
+        });
+
         const totalSumForPeriod = expendituresForSumCalculation.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
         setTotalForDisplayedPeriod(totalSumForPeriod);
         setFilteredData(dataToDisplayInTable);
