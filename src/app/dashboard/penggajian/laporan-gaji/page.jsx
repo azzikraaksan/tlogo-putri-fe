@@ -31,7 +31,7 @@ function Page() {
         const token = localStorage.getItem("access_token");
         if (!token) throw new Error("Token tidak ditemukan");
 
-        const res = await fetch("http://localhost:8000/api/salary/all", {
+        const res = await fetch("https://tpapi.siunjaya.id/api/salary/all", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -54,7 +54,8 @@ function Page() {
             tanggal,
             bulan,
             tahun,
-            total_salary: item.total_salary || 0,
+            // total_salary: item.total_salary || 0,
+            salarie: item.salarie || 0,
           };
         });
 
@@ -85,7 +86,8 @@ function Page() {
       Nama: item.nama,
       Role: item.role,
       Tanggal: item.tanggal,
-      "Total Gaji": item.total_salary,
+      // "Total Gaji": item.total_salary,
+       "Total Gaji": item.salarie,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataWithNo);
@@ -121,10 +123,12 @@ function Page() {
         item.nama,
         item.role,
         item.tanggal,
-        `Rp ${item.total_salary?.toLocaleString("id-ID") || 0}`,
+        // `Rp ${item.total_salary?.toLocaleString("id-ID") || 0}`,
+        `Rp ${item.salarie?.toLocaleString("id-ID") || 0}`,
       ]);
 
-      const totalSalary = filteredData.reduce((sum, item) => sum + (item.total_salary || 0), 0);
+      // const totalSalary = filteredData.reduce((sum, item) => sum + (item.salary || 0), 0);
+      const Salary = filteredData.reduce((sum, item) => sum + (item.salarie || 0), 0);
 
       autoTable(doc, {
         startY: 55,
@@ -133,7 +137,8 @@ function Page() {
           ...tableBody,
           [
             { content: "Total Pendapatan Gaji", colSpan: 3, styles: { halign: "right", fontStyle: "bold" } },
-            { content: `Rp ${totalSalary.toLocaleString("id-ID")}`, styles: { halign: "right", fontStyle: "bold" } },
+            // { content: `Rp ${totalSalary.toLocaleString("id-ID")}`, styles: { halign: "right", fontStyle: "bold" } },
+            { content: `Rp ${Salary.toLocaleString("id-ID")}`, styles: { halign: "right", fontStyle: "bold" } }
           ],
         ],
         styles: { fontSize: 9 },
@@ -223,7 +228,7 @@ function Page() {
                 <td className="p-2">{item.nama}</td>
                 <td className="p-2">{item.role}</td>
                 <td className="p-2">{item.tanggal}</td>
-                <td className="p-2">Rp {item.total_salary.toLocaleString("id-ID")}</td>
+                <td className="p-2">Rp {item.salarie.toLocaleString("id-ID")}</td>
               </tr>
             )) : (
               <tr>
@@ -267,7 +272,7 @@ function Page() {
                       <td className="p-2 border">{item.nama}</td>
                       <td className="p-2 border">{item.role}</td>
                       <td className="p-2 border">{item.tanggal}</td>
-                      <td className="p-2 border">Rp {item.total_salary?.toLocaleString("id-ID")}</td>
+                      <td className="p-2 border">Rp {item.salarie?.toLocaleString("id-ID")}</td>
                     </tr>
                   ))}
                   {filteredData.length === 0 && (
