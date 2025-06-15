@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Sidebar from "/components/Sidebar.jsx";
-import UserMenu from "/components/Pengguna.jsx";
+import UserMenu from "/components/Pengguna.jsx"; // Diasumsikan ini digunakan di tempat lain atau akan digunakan
 import SearchInput from "/components/Search.jsx";
 import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
@@ -24,6 +24,8 @@ const DaftarPesanan = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
   const [remainingPayment, setRemainingPayment] = useState(null);
+  const [countdownText, setCountdownText] = useState(""); // State untuk teks countdown
+  const [paymentStatusMessage, setPaymentStatusMessage] = useState(""); // State untuk pesan status pembayaran umum
 
   const refreshOrders = (data) => {
     setOrders(data);
@@ -54,11 +56,15 @@ const DaftarPesanan = () => {
     const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
     const fetchRemainingPayment = async () => {
-      if (!selectedOrder || !selectedOrder.order_id || selectedOrder.payment_status !== "unpaid") {
-        return;
+      // **PENTING:** Logika ini hanya relevan jika pembayaran BELUM LUNAS (unpaid)
+      // DAN jika payment_type BUKAN 'full'.
+      // Ini mencegah panggilan ke endpoint yang mungkin tidak relevan
+      // atau mengembalikan error 400 jika pembayaran sudah 'full'
+      if (!selectedOrder || !selectedOrder.order_id || selectedOrder.payment_status !== "unpaid" || selectedOrder.payment_type === "full") {
+        setRemainingPayment(null); // Pastikan ini direset jika tidak relevan
+        return; // Hentikan fungsi jika kondisi tidak terpenuhi
       }
-      // Reset dulu agar menampilkan "Memuat..." saat order baru dipilih
-      setRemainingPayment(null);
+      setRemainingPayment(null); // Reset untuk menampilkan "Memuat..."
 
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
@@ -76,7 +82,7 @@ const DaftarPesanan = () => {
           );
 
           if (!res.ok) throw new Error(`Gagal fetch, status: ${res.status}`);
-          
+
           const text = await res.text();
           if (!text) throw new Error("Response kosong dari server");
 
@@ -95,18 +101,114 @@ const DaftarPesanan = () => {
     };
 
     fetchRemainingPayment();
-  }, [selectedOrder]);
+
+    // Logika untuk menghitung countdown dan mengatur pesan status pembayaran
+    const calculateAndSetMessages = () => {
+      if (selectedOrder) {
+        const tourDate = new Date(selectedOrder.tour_date);
+        const now = new Date();
+        // Atur jam, menit, detik, milidetik ke 0 untuk perbandingan tanggal saja
+        now.setHours(0, 0, 0, 0);
+        tourDate.setHours(0, 0, 0, 0);
+
+        const timeDiff = tourDate.getTime() - now.getTime();
+        const daysDiff = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)); // Selisih hari
+
+        if (selectedOrder.payment_status === "unpaid") {
+          // Reset pesan status pembayaran umum
+          setPaymentStatusMessage("");
+
+          if (daysDiff > 5) {
+            setCountdownText(""); // Tidak ada notifikasi khusus jika > H-5
+          } else if (daysDiff >= 0 && daysDiff <= 5) {
+            // H-5 sampai H-0 (hari H)
+            setCountdownText(`🚨 Sisa ${daysDiff} hari lagi menuju tur! Harap segera lunasi pembayaran.`);
+          } else if (daysDiff < 0) {
+            // Tanggal tur sudah terlewat dan belum lunas
+            // Pastikan tidak menampilkan pesan ini jika booking_status sudah 'cancel' atau 'expire'
+            if (selectedOrder.booking_status !== "cancel" && selectedOrder.booking_status !== "expire") {
+                setCountdownText(`⚠️ Tanggal tur telah terlewat (${Math.abs(daysDiff)} hari lalu) dan pembayaran masih belum lunas.`);
+            } else {
+                setCountdownText(""); // Jika sudah terlewat dan booking_status sudah dibatalkan/expired
+            }
+          }
+        } else if (selectedOrder.payment_status === "paid") {
+          // Jika status pembayaran adalah "paid" (lunas)
+          setCountdownText(""); // Kosongkan countdown
+          setRemainingPayment(null); // Pastikan ini juga direset jika sudah lunas
+          setPaymentStatusMessage("Pembayaran telah lunas.");
+        } else {
+          // Kasus status pembayaran lain yang tidak ditangani secara spesifik
+          setCountdownText("");
+          setPaymentStatusMessage("");
+        }
+      } else {
+        // Reset semua state terkait modal jika tidak ada pesanan yang dipilih (modal tertutup)
+        setCountdownText("");
+        setRemainingPayment(null);
+        setPaymentStatusMessage("");
+      }
+    };
+
+    if (isModalOpen && selectedOrder) { // Panggil fungsi ini hanya saat modal terbuka dan ada pesanan dipilih
+      calculateAndSetMessages();
+      // Opsional: Jika Anda ingin countdown real-time (detik, menit),
+      // Anda perlu mengaktifkan setInterval di sini dan membersihkannya di cleanup.
+      // const interval = setInterval(calculateAndSetMessages, 1000); // Perbarui setiap detik
+      // return () => clearInterval(interval);
+    } else {
+        // Pastikan semua state yang terkait modal direset saat modal ditutup
+        setCountdownText("");
+        setRemainingPayment(null);
+        setPaymentStatusMessage("");
+    }
+
+  }, [selectedOrder, isModalOpen]); // Tambahkan isModalOpen sebagai dependency
 
   if (!isMounted) return null;
 
-  const handleArchive = async (id) => {
+  const handleArchive = async (item) => {
+    // Hitung tanggal H-1 dari tour_date
+    const tourDate = new Date(item.tour_date);
+    const today = new Date();
+    // Penting: Atur jam, menit, detik, milidetik ke 0 untuk perbandingan tanggal saja
+    today.setHours(0, 0, 0, 0);
+    tourDate.setHours(0, 0, 0, 0);
+
+    // Dapatkan tanggal "besok" untuk perbandingan H-1
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+
+    // Cek apakah status booking adalah 'pending' atau 'settlement'
+    // DAN tanggal tur adalah hari ini (H-0) atau besok (H-1)
+    const isSpecialCaseForArchiveRestriction =
+      (item.booking_status === "pending" ||
+        item.booking_status === "settlement") &&
+      (tourDate <= tomorrow); // Jika tanggal tur <= tanggal besok (artinya H-1 atau H-0)
+
+    // Jika masuk ke kondisi khusus pembatasan pengarsipan
+    if (isSpecialCaseForArchiveRestriction) {
+      alert("Pesanan ini tidak dapat diarsipkan karena sudah H-1 atau kurang dari tanggal tur dan statusnya Pending/Settlement.");
+      return; // Hentikan proses pengarsipan
+    }
+
+    // Untuk status selain "expire", minta konfirmasi
+    if (item.booking_status !== "expire") {
+      const confirmArchive = confirm("Apakah Anda yakin ingin mengarsipkan pesanan ini? Status pesanan akan menjadi 'cancel'.");
+      if (!confirmArchive) {
+        return; // Hentikan jika pengguna membatalkan
+      }
+    }
+
+    // Lanjutkan pengarsipan jika tidak ada pembatasan atau konfirmasi disetujui
     try {
       const token = localStorage.getItem("access_token");
       if (!token) {
         console.error("Token tidak ditemukan.");
         return;
       }
-      const res = await fetch(`https://tpapi.siunjaya.id/api/bookings/${id}`, {
+      const res = await fetch(`https://tpapi.siunjaya.id/api/bookings/${item.booking_id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -154,7 +256,7 @@ const DaftarPesanan = () => {
         matchesStatus = item.payment_status === "paid";
       } else if (statusFilter === "Belum Lunas") {
         matchesStatus = item.payment_status === "unpaid";
-      } else if (statusFilter === "Riwayat") {
+      } else if (statusFilter === "Semua") {
         matchesStatus = true;
       }
 
@@ -179,61 +281,62 @@ const DaftarPesanan = () => {
           )}
         </h1>
         <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
-  {/* Kiri: Tombol status dan Arsip */}
-  <div className="flex flex-wrap items-center gap-2">
-    {loading
-      ? [...Array(4)].map((_, i) => (
-          <div
-            key={i}
-            className="h-8 w-24 rounded-full bg-gray-200 animate-pulse"
-          />
-        ))
-      : ["Baru", "Sudah Bayar", "Belum Lunas", "Riwayat"].map((status) => (
-          <button
-            key={status}
-            onClick={() => {
-              setStatusFilter(status);
-              setShowHistory(false);
-            }}
-            className={`px-3 py-1 rounded-full border text-sm font-medium transition-all duration-150 cursor-pointer ${
-              statusFilter === status && !showHistory
-                ? "bg-[#3D6CB9] text-white"
-                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-            }`}
-          >
-            {status}
-          </button>
-        ))}
+          {/* Kiri: Tombol status dan Arsip */}
+          <div className="flex flex-wrap items-center gap-2">
+            {loading
+              ? [...Array(4)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-8 w-24 rounded-full bg-gray-200 animate-pulse"
+                  />
+                ))
+              : ["Baru", "Sudah Bayar", "Belum Lunas", "Semua"].map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => {
+                      setStatusFilter(status);
+                      setShowHistory(false); // Pastikan history mati saat memilih filter ini
+                    }}
+                    className={`px-3 py-1 rounded-full border text-sm font-medium transition-all duration-150 cursor-pointer ${
+                      statusFilter === status && !showHistory
+                        ? "bg-[#3D6CB9] text-white"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    {status}
+                  </button>
+                ))}
 
-    {!loading && (
-      <button
-        onClick={() => setShowHistory(!showHistory)}
-        className={`px-3 py-1 rounded-full border text-sm font-medium transition-all duration-150 cursor-pointer  ${
-          showHistory
-            ? "bg-[#3D6CB9] text-white"
-            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
-        }`}
-      >
-        Arsip
-      </button>
-    )}
-  </div>
+            {!loading && (
+              <button
+                onClick={() => {
+                  setShowHistory(!showHistory);
+                }}
+                className={`px-3 py-1 rounded-full border text-sm font-medium transition-all duration-150 cursor-pointer ${
+                  showHistory
+                    ? "bg-[#3D6CB9] text-white"
+                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-100"
+                }`}
+              >
+                Arsip
+              </button>
+            )}
+          </div>
 
-  {/* Kanan: SearchInput */}
-  <div className="flex-shrink-0">
-    {loading ? (
-      <div className="h-10 w-96 bg-gray-200 rounded animate-pulse" />
-    ) : (
-      <SearchInput
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        onClear={() => setSearchTerm("")}
-        placeholder="Cari"
-      />
-    )}
-  </div>
-</div>
-
+          {/* Kanan: SearchInput */}
+          <div className="flex-shrink-0">
+            {loading ? (
+              <div className="h-10 w-96 bg-gray-200 rounded animate-pulse" />
+            ) : (
+              <SearchInput
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onClear={() => setSearchTerm("")}
+                placeholder="Cari"
+              />
+            )}
+          </div>
+        </div>
 
         {loading ? (
           <div className="space-y-4 p-4">
@@ -256,131 +359,114 @@ const DaftarPesanan = () => {
               <table className="min-w-full table-auto">
                 <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
                   <tr>
-                    {showHistory ? (
-                      Object.keys(filteredData[0] || {}).map((key, index) => (
-                        <th
-                          key={index}
-                          className="p-3 text-center font-semibold"
-                        >
-                          {key}
-                        </th>
-                      ))
-                    ) : (
-                      <>
-                        <th className="p-3 text-center font-semibold">No</th>
-                        <th className="p-3 text-center font-semibold">
-                          Kode Pesanan
-                        </th>
-                        <th className="p-3 text-center font-semibold">Nama</th>
-                        <th className="p-3 text-center font-semibold">
-                          No. HP
-                        </th>
-                        <th className="p-3 text-center font-semibold">
-                          Waktu
-                        </th>
-                        <th className="p-3 text-center font-semibold">
-                          Paket
-                        </th>
-                        <th className="p-3 text-center font-semibold">Tipe</th>
-                        <th className="p-3 text-center font-semibold">
-                          Status
-                        </th>
-                        <th className="p-3 text-center font-semibold">Aksi</th>
-                      </>
-                    )}
+                    <th className="p-3 text-center font-semibold">No</th>
+                    <th className="p-3 text-center font-semibold">
+                      Kode Pesanan
+                    </th>
+                    <th className="p-3 text-center font-semibold">Nama</th>
+                    <th className="p-3 text-center font-semibold">
+                      No. HP
+                    </th>
+                    <th className="p-3 text-center font-semibold">
+                      Waktu
+                    </th>
+                    <th className="p-3 text-center font-semibold">
+                      Paket
+                    </th>
+                    <th className="p-3 text-center font-semibold">Tipe</th>
+                    <th className="p-3 text-center font-semibold">
+                      Status
+                    </th>
+                    <th className="p-3 text-center font-semibold">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredData.length > 0 ? (
-                    filteredData.map((item, index) => (
-                      <tr
-                        key={item.booking_id}
-                        className="border-b text-center hover:bg-gray-50"
-                      >
-                        {showHistory ? (
-                          Object.values(item).map((value, i) => (
-                            <td key={i} className="p-2 text-sm text-center">
-                              {typeof value === "object" && value !== null
-                                ? JSON.stringify(value)
-                                : value?.toString() || "-"}
-                            </td>
-                          ))
-                        ) : (
-                          <>
-                            <td className="p-2">{index + 1}</td>
-                            <td className="p-2">{item.order_id}</td>
-                            <td className="p-2">{item.customer_name}</td>
-                            <td className="p-2">{item.customer_phone}</td>
-                            <td className="p-2">
-                              {
-                                new Date(item.created_at)
-                                  .toISOString()
-                                  .split("T")[0]
-                              }
-                            </td>
-                            <td className="p-2">
-                              {item.package?.package_name}
-                            </td>
-                            <td className="p-2">
-                              <span className="px-2 py-1 rounded-full text-xs font-medium">
-                                {item.payment_status === "paid"
-                                  ? "Lunas"
-                                  : "DP"}
-                              </span>
-                            </td>
-                            <td className="p-2">
-                              <span
-                                className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                  item.booking_status === "confirmed"
-                                    ? "bg-green-100 text-green-800"
-                                    : item.booking_status === "pending"
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : item.booking_status === "expire"
-                                    ? "bg-red-100 text-red-800"
-                                    : "bg-green-200 text-gray-700"
-                                }`}
-                              >
-                                {item.booking_status}
-                              </span>
-                            </td>
-                            <td className="p-2 flex justify-center gap-3">
-                              <button
-                                onClick={() => {
-                                  setSelectedOrder(item);
-                                  setIsModalOpen(true);
-                                }}
-                                className="text-gray-600 hover:text-black cursor-pointer"
-                              >
-                                <Eye size={16} />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  const encodeId = hashids.encode(
-                                    item.booking_id
-                                  );
-                                  router.push(
-                                    `/dashboard/pemesanan/daftar-pesanan/${encodeId}`
-                                  );
-                                }}
-                                className="text-blue-600 hover:text-blue-800 cursor-pointer"
-                              >
-                                <Pencil size={16} />
-                              </button>
-                              <button
-                                onClick={() => handleArchive(item.booking_id)}
-                                className="text-red-600 hover:text-red-800 cursor-pointer"
-                              >
-                                <Archive size={16} />
-                              </button>
-                            </td>
-                          </>
-                        )}
-                      </tr>
-                    ))
+                    filteredData.map((item, index) => {
+                      // Hanya tampilkan tombol arsip jika tidak dalam tampilan riwayat
+                      const showArchiveButton = !showHistory;
+
+                      return (
+                        <tr
+                          key={item.booking_id}
+                          className="border-b text-center hover:bg-gray-50"
+                        >
+                          <td className="p-2">{index + 1}</td>
+                          <td className="p-2">{item.order_id}</td>
+                          <td className="p-2">{item.customer_name}</td>
+                          <td className="p-2">{item.customer_phone}</td>
+                          <td className="p-2">
+                            {
+                              new Date(item.created_at)
+                                .toISOString()
+                                .split("T")[0]
+                            }
+                          </td>
+                          <td className="p-2">
+                            {item.package?.package_name}
+                          </td>
+                          <td className="p-2">
+                            <span className="px-2 py-1 rounded-full text-xs font-medium">
+                              {item.payment_type === "dp" ? "DP" : "Full"}
+                            </span>
+                          </td>
+                          <td className="p-2">
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                item.booking_status === "confirmed" || item.booking_status === "settlement"
+                                  ? "bg-green-100 text-green-800"
+                                  : item.booking_status === "pending"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : item.booking_status === "expire" || item.booking_status === "cancel"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-gray-100 text-gray-700"
+                              }`}
+                            >
+                              {item.booking_status}
+                            </span>
+                          </td>
+                          <td className="p-2 flex justify-center gap-3">
+                            <button
+                              onClick={() => {
+                                setSelectedOrder(item);
+                                setIsModalOpen(true);
+                              }}
+                              className="text-gray-600 hover:text-black cursor-pointer"
+                            >
+                              <Eye size={16} />
+                            </button>
+                            {showArchiveButton && (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    const encodeId = hashids.encode(
+                                      item.booking_id
+                                    );
+                                    router.push(
+                                      `/dashboard/pemesanan/daftar-pesanan/${encodeId}`
+                                    );
+                                  }}
+                                  className="text-blue-600 hover:text-blue-800 cursor-pointer"
+                                >
+                                  <Pencil size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleArchive(item)}
+                                  className="text-red-600 hover:text-red-800 cursor-pointer"
+                                  title="Arsipkan pesanan ini."
+                                >
+                                  <Archive size={16} />
+                                </button>
+                              </>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
                       <td
-                        colSpan={showHistory ? 99 : 9}
+                        colSpan={9}
                         className="p-4 text-center text-gray-500"
                       >
                         Belum Ada Pesanan.
@@ -392,19 +478,18 @@ const DaftarPesanan = () => {
             </div>
             {isModalOpen && selectedOrder && (
               <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50">
-                <div className="bg-white rounded-xl shadow-xl p-6 w-[90%] max-w-md relative">
+                <div className="bg-white rounded-xl shadow-xl p-4 w-[90%] max-w-md relative">
                   <button
                     className="absolute top-3 right-3 text-gray-500 hover:text-black text-xl"
                     onClick={() => setIsModalOpen(false)}
                   >
                     &times;
                   </button>
-                  <h2 className="text-xl font-bold text-center flex justify-center items-center gap-2 mb-4">
+                  <h2 className="text-xl font-bold text-center flex justify-center items-center gap-2 mb-2">
                     🧾 Detail Pesanan
                   </h2>
-                  <div className="space-y-6 text-sm">
-                    {/* ===== AWAL PERUBAHAN TAMPILAN ===== */}
-                    <div className="border p-4 rounded-lg bg-gray-50 shadow-sm space-y-2">
+                  <div className="space-y-3 text-sm">
+                    <div className="border p-3 rounded-lg bg-gray-50 shadow-sm space-y-2">
                       <p className="flex">
                         <span className="w-44 font-semibold text-gray-600 shrink-0">🔖 Kode Pemesanan</span>
                         <span>: {selectedOrder.order_id}</span>
@@ -427,7 +512,6 @@ const DaftarPesanan = () => {
                       </p>
                       <p className="flex">
                         <span className="w-44 font-semibold text-gray-600 shrink-0">🕒 Waktu Pemesanan</span>
-                        {/* ===== BARIS INI DIUBAH ===== */}
                         <span>
                           : {new Date(selectedOrder.created_at).toISOString().split("T")[0]}
                         </span>
@@ -437,18 +521,17 @@ const DaftarPesanan = () => {
                         <span>:{" "}
                           <span
                               className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${
-                                selectedOrder.booking_status === "settlement" || selectedOrder.booking_status === "capture"
+                                selectedOrder.booking_status === "confirmed" || selectedOrder.booking_status === "settlement"
                                   ? "bg-green-100 text-green-800"
                                   : selectedOrder.booking_status === "pending"
                                   ? "bg-yellow-100 text-yellow-800"
-                                  : selectedOrder.booking_status === "expire"
+                                  : selectedOrder.booking_status === "expire" || selectedOrder.booking_status === "cancel"
                                   ? "bg-red-100 text-red-800"
                                   : "bg-gray-100 text-gray-700"
                               }`}
-                            >
-                              {selectedOrder.booking_status}
-                            </span>
-
+                          >
+                            {selectedOrder.booking_status}
+                          </span>
                         </span>
                       </p>
                       <p className="flex">
@@ -462,7 +545,7 @@ const DaftarPesanan = () => {
                         <span>: {selectedOrder.qty}</span>
                       </p>
                     </div>
-                    <div className="border p-4 rounded-lg bg-gray-50 shadow-sm space-y-2">
+                    <div className="border p-3 rounded-lg bg-gray-50 shadow-sm space-y-2">
                       <p className="text-base font-semibold mb-2 flex items-center gap-2">
                         💳 Status Pembayaran
                       </p>
@@ -486,6 +569,7 @@ const DaftarPesanan = () => {
                         <span className="w-44 font-semibold text-gray-600 shrink-0">Jenis Pembayaran</span>
                         <span>: {selectedOrder.payment_type === "dp" ? "DP" : "Full"}</span>
                       </p>
+                      {/* --- KONDISI KHUSUS UNTUK PEMBAYARAN BELUM LUNAS --- */}
                       {selectedOrder.payment_status === "unpaid" && (
                         <>
                           <p className="flex">
@@ -506,25 +590,36 @@ const DaftarPesanan = () => {
                                     : "Memuat..."}
                                 </span>
                               </p>
-                              <p className="text-red-600 text-sm mt-2">
+                              <p className="text-red-600 text-xs mt-2">
                                 Ini adalah pembayaran DP. Silakan lunasi sebelum{" "}
                                 <strong className="text-red-700">{selectedOrder.due_date}</strong>
                               </p>
                             </>
                           )}
+                          {/* Notifikasi Countdown atau Tanggal Terlewat untuk 'unpaid' */}
+                          {countdownText && (
+                            <p className="text-xs font-semibold text-orange-600 bg-orange-50 p-2 rounded-md border border-orange-200 mt-2">
+                              {countdownText}
+                            </p>
+                          )}
                         </>
                       )}
+                      {/* --- KONDISI KHUSUS UNTUK PEMBAYARAN SUDAH LUNAS --- */}
                       {selectedOrder.payment_status === "paid" && (
                         <>
                           <p className="flex">
                             <span className="w-44 font-semibold text-gray-600 shrink-0">Total Pembayaran</span>
                             <span>: Rp {Number(selectedOrder.gross_amount * selectedOrder.qty).toLocaleString("id-ID")}</span>
                           </p>
-                        
+                          {/* Pesan status pembayaran umum untuk 'paid' */}
+                          {paymentStatusMessage && (
+                            <p className="text-xs font-semibold text-green-600 bg-green-50 p-2 rounded-md border border-green-200 mt-2">
+                                {paymentStatusMessage}
+                            </p>
+                          )}
                         </>
                       )}
                     </div>
-                    {/* ===== AKHIR PERUBAHAN TAMPILAN ===== */}
                     <div className="text-center mt-4">
                       <a
                         href={`https://wa.me/${formatNomorWA(
