@@ -19,7 +19,8 @@ import Hashids from "hashids";
 const HASHIDS_SECRET = process.env.NEXT_PUBLIC_HASHIDS_SECRET || "fallback_secret_salt_pengeluaran_jika_env_tidak_ada";
 const hashids = new Hashids(HASHIDS_SECRET, 20);
 
-const API_BASE_URL = 'http://localhost:8000/api';
+// const API_BASE_URL = "http://localhost:8000/api";
+const API_BASE_URL = "https://tpapi.siunjaya.id/api";
 
 const formatDateToDisplay = (dateInput) => {
     if (!dateInput) return "";

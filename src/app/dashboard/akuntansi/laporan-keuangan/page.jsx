@@ -281,7 +281,8 @@ import {
 } from "recharts";
 import { TrendingUp, TrendingDown, DollarSign, FileText, BarChart2, ChevronRight } from "lucide-react";
 
-const API_BASE_URL = "http://localhost:8000/api";
+// const API_BASE_URL = "http://localhost:8000/api";
+const API_BASE_URL = "https://tpapi.siunjaya.id/api";
 
 const formatCurrency = (value, type = "full") => {
     if (typeof value !== 'number' || isNaN(value)) return type === "axis" ? '0' : 'Rp 0';
