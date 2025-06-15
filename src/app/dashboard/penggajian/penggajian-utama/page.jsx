@@ -3,12 +3,12 @@
 import { useState, useEffect, useMemo } from "react";
 import Sidebar from "/components/Sidebar";
 import SearchInput from "/components/Search";
-//import GajiCatat from "/components/GajiCatat";
 import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
 import SlipGaji from "/components/SlipGaji";
 import Hashids from "hashids";
-import LoadingFunny from "/components/LoadingFunny.jsx";
+//import LoadingFunny from "/components/LoadingFunny.jsx";
+import LoadingRow from "/components/LoadingRow.jsx";
 
 function DaftarGaji() {
   const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
@@ -24,7 +24,8 @@ function DaftarGaji() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [selectedDate, setSelectedDate] = useState("");
   const [reloadTrigger, setReloadTrigger] = useState(0);
-  const [loading, setLoading] = useState(false);
+  //const [loading, setLoading] = useState(false);
+  const [isLoading, setLoading] = useState(false);
   const [dataGaji, setDataGaji] = useState([]);
   const [showSlipModal, setShowSlipModal] = useState(false);
 
@@ -113,309 +114,107 @@ function DaftarGaji() {
     }
   };
 
-  //useEffect(() => {
-  //  const init = async () => {
-  //    //console.log("⏳ INIT useEffect jalan");
-
-  //    const updated = localStorage.getItem("statusUpdated");
-  //        const token = localStorage.getItem("access_token");
-  //    //console.log("📦 statusUpdated dari localStorage:", updated);
-
-  //    try {
-  //    const headers = {
-  //      Authorization: `Bearer ${token}`,
-  //    };
-  //    // Ambil data dari API
-  //    const [previewRes, allRes] = await Promise.all([
-  //      fetch("https://tpapi.siunjaya.id/api/salary/previews", {headers}),
-  //      fetch("https://tpapi.siunjaya.id/api/salary/all", {headers}),
-  //    ]);
-
-  //    const previewJson = await previewRes.json();
-  //    const allJsonRaw = await allRes.json();
-  //    const allJson = allJsonRaw.all || allJsonRaw.data || [];
-
-  //    const previews = previewJson.previews.map((item) => ({
-  //      id: item.id,
-  //      user_id: item.user_id,
-  //      nama: item.nama,
-  //      posisi: item.role,
-  //      role: item.role,
-  //      tanggal: item.payment_date,
-  //      status: item.status,
-  //    }));
-
-  //    const formatDate = (dateStr) =>
-  //      new Date(dateStr).toISOString().slice(0, 10);
-
-  //    const merged = previews.map((preview) => {
-  //      const previewDate = formatDate(preview.tanggal);
-  //      const isMatched =
-  //        Array.isArray(allJson) &&
-  //        allJson.some(
-  //          (s) =>
-  //            s.user_id === preview.user_id &&
-  //            s.role.toLowerCase() === preview.role.toLowerCase() &&
-  //            formatDate(s.payment_date) === previewDate
-  //        );
-
-  //      return {
-  //        ...preview,
-  //        status: isMatched ? "Sudah" : "Belum",
-  //      };
-  //    });
-
-  //    // 🔑 Filter agar tidak duplikat user-role-tanggal
-  //    const uniqueMap = new Map();
-  //    merged.forEach((item) => {
-  //      const dateKey = new Date(item.tanggal).toISOString().slice(0, 10);
-  //      const key = `${item.user_id}_${item.role.toLowerCase()}_${dateKey}`;
-  //      if (!uniqueMap.has(key)) {
-  //        uniqueMap.set(key, item);
-  //      }
-  //    });
-
-  //    const filteredMerged = [...uniqueMap.values()];
-
-  //    setAllPreviews(filteredMerged);
-  //    setData(filteredMerged);
-
-  //    // SIMPAN DATA SEBELUM DIUBAH STATUS SECARA MANUAL
-  //    //setAllPreviews([...merged]);
-  //    //setData([...merged]);
-
-  //    // ✅ INI BAGIAN YANG KAMU MAKSUD
-  //    if (updated && updated.includes("-")) {
-  //      const [uid, r, pdate] = updated.split("-");
-
-  //      // Ganti status di data yang sesuai dengan statusUpdated
-  //      setData((prev) =>
-  //        prev.map((item) => {
-  //          const match =
-  //            String(item.user_id) === uid &&
-  //            item.role.toLowerCase() === r.toLowerCase() &&
-  //            formatDate(item.tanggal) === formatDate(pdate);
-  //          return match ? { ...item, status: "Sudah" } : item;
-  //        })
-  //      );
-
-  //      setAllPreviews((prev) =>
-  //        prev.map((item) => {
-  //          const match =
-  //            String(item.user_id) === uid &&
-  //            item.role.toLowerCase() === r.toLowerCase() &&
-  //            formatDate(item.tanggal) === formatDate(pdate);
-  //          return match ? { ...item, status: "Sudah" } : item;
-  //        })
-  //      );
-
-  //      localStorage.removeItem("statusUpdated");
-  //    }
-  //  };
-
-  //  init();
-  //}, [reloadTrigger]);
-
-
-  //INI YANG DARI NIKEN
-  // useEffect(() => {
-  //   const init = async () => {
-  //     setLoading(true);
-  //     const updated = localStorage.getItem("statusUpdated");
-  //     const token = localStorage.getItem("access_token");
-
-  //     try {
-  //       const headers = {
-  //         Authorization: `Bearer ${token}`,
-  //       };
-
-  //       const [previewRes, allRes] = await Promise.all([
-  //         fetch("https://tpapi.siunjaya.id/api/salary/previews", { headers }),
-  //         fetch("https://tpapi.siunjaya.id/api/salary/all", { headers }),
-  //       ]);
-
-  //       const previewJson = await previewRes.json();
-  //       const allJsonRaw = await allRes.json();
-  //       const allJson = allJsonRaw.all || allJsonRaw.data || [];
-
-  //       const previews = previewJson.previews.map((item) => ({
-  //         id: item.id,
-  //         user_id: item.user_id,
-  //         nama: item.nama,
-  //         posisi: item.role,
-  //         role: item.role,
-  //         tanggal: item.payment_date,
-  //         status: item.status,
-  //       }));
-
-  //       const formatDate = (dateStr) =>
-  //         new Date(dateStr).toISOString().slice(0, 10);
-
-  //       const merged = previews.map((preview) => {
-  //         const previewDate = formatDate(preview.tanggal);
-  //         const isMatched =
-  //           Array.isArray(allJson) &&
-  //           allJson.some(
-  //             (s) =>
-  //               s.user_id === preview.user_id &&
-  //               s.role.toLowerCase() === preview.role.toLowerCase() &&
-  //               formatDate(s.payment_date) === previewDate
-  //           );
-
-  //         return {
-  //           ...preview,
-  //           status: isMatched ? "Sudah" : "Belum",
-  //         };
-  //       });
-
-  //       const uniqueMap = new Map();
-  //       merged.forEach((item) => {
-  //         const dateKey = new Date(item.tanggal).toISOString().slice(0, 10);
-  //         const key = `${item.user_id}_${item.role.toLowerCase()}_${dateKey}`;
-  //         if (!uniqueMap.has(key)) {
-  //           uniqueMap.set(key, item);
-  //         }
-  //       });
-
-  //       const filteredMerged = [...uniqueMap.values()];
-
-  //       setAllPreviews(filteredMerged);
-  //       setData(filteredMerged);
-
-  //       if (updated && updated.includes("-")) {
-  //         const [uid, r, pdate] = updated.split("-");
-
-  //         setData((prev) =>
-  //           prev.map((item) => {
-  //             const match =
-  //               String(item.user_id) === uid &&
-  //               item.role.toLowerCase() === r.toLowerCase() &&
-  //               formatDate(item.tanggal) === formatDate(pdate);
-  //             return match ? { ...item, status: "Sudah" } : item;
-  //           })
-  //         );
-
-  //         setAllPreviews((prev) =>
-  //           prev.map((item) => {
-  //             const match =
-  //               String(item.user_id) === uid &&
-  //               item.role.toLowerCase() === r.toLowerCase() &&
-  //               formatDate(item.tanggal) === formatDate(pdate);
-  //             return match ? { ...item, status: "Sudah" } : item;
-  //           })
-  //         );
-
-  //         localStorage.removeItem("statusUpdated");
-  //       }
-  //     } catch (error) {
-  //       console.error("❌ Error saat fetch:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }; // <-- nutup init()
-
-  //   init();
-  // }, [reloadTrigger]); // <-- nutup useEffect
-
-  // INI DARI JIKRAAA
   useEffect(() => {
-  const init = async () => {
-    setLoading(true);
-    const updated = localStorage.getItem("statusUpdated");
-    const token = localStorage.getItem("access_token");
+    const init = async () => {
+      setLoading(true);
+      const updated = localStorage.getItem("statusUpdated");
+      const token = localStorage.getItem("access_token");
 
-    try {
-      const headers = {
-        Authorization: `Bearer ${token}`,
-      };
-
-      const [previewRes, allRes] = await Promise.all([
-        fetch("https://tpapi.siunjaya.id/api/salary/previews", { headers }),
-        fetch("https://tpapi.siunjaya.id/api/salary/all", { headers }),
-      ]);
-
-      const previewJson = await previewRes.json();
-      const allJsonRaw = await allRes.json();
-      const allJson = allJsonRaw.all || allJsonRaw.data || [];
-
-      const formatDate = (dateStr) => {
-        if (!dateStr) return "";
-        const d = new Date(dateStr);
-        if (isNaN(d.getTime())) {
-          console.warn("❌ Invalid date:", dateStr);
-          return "";
-        }
-        return d.toISOString().slice(0, 10);
-      };
-
-      const previews = (previewJson.previews || [])
-        .filter((item) => item.payment_date) // skip kalau gak ada tanggal
-        .map((item) => ({
-          id: item.id,
-          user_id: item.user_id,
-          nama: item.nama,
-          posisi: item.role,
-          role: item.role,
-          tanggal: item.payment_date,
-          status: item.status,
-        }));
-
-      const merged = previews.map((preview) => {
-        const previewDate = formatDate(preview.tanggal);
-        const isMatched =
-          Array.isArray(allJson) &&
-          allJson.some(
-            (s) =>
-              s.user_id === preview.user_id &&
-              s.role?.toLowerCase() === preview.role?.toLowerCase() &&
-              formatDate(s.payment_date) === previewDate
-          );
-
-        return {
-          ...preview,
-          status: isMatched ? "Sudah" : "Belum",
+      try {
+        const headers = {
+          Authorization: `Bearer ${token}`,
         };
-      });
 
-      const uniqueMap = new Map();
-      merged.forEach((item) => {
-        const dateKey = formatDate(item.tanggal);
-        const key = `${item.user_id}_${item.role?.toLowerCase()}_${dateKey}`;
-        if (!uniqueMap.has(key)) {
-          uniqueMap.set(key, item);
+        const [previewRes, allRes] = await Promise.all([
+          fetch("https://tpapi.siunjaya.id/api/salary/previews", { headers }),
+          fetch("https://tpapi.siunjaya.id/api/salary/all", { headers }),
+        ]);
+
+        const previewJson = await previewRes.json();
+        const allJsonRaw = await allRes.json();
+        const allJson = allJsonRaw.all || allJsonRaw.data || [];
+
+        const formatDate = (dateStr) => {
+          if (!dateStr) return "";
+          const d = new Date(dateStr);
+          if (isNaN(d.getTime())) {
+            console.warn("❌ Invalid date:", dateStr);
+            return "";
+          }
+          return d.toISOString().slice(0, 10);
+        };
+
+        const previews = (previewJson.previews || [])
+          .filter((item) => item.payment_date) // skip kalau gak ada tanggal
+          .map((item) => ({
+            id: item.id,
+            user_id: item.user_id,
+            nama: item.nama,
+            posisi: item.role,
+            role: item.role,
+            tanggal: item.payment_date,
+            status: item.status,
+          }));
+
+        const merged = previews.map((preview) => {
+          const previewDate = formatDate(preview.tanggal);
+          const isMatched =
+            Array.isArray(allJson) &&
+            allJson.some(
+              (s) =>
+                s.user_id === preview.user_id &&
+                s.role?.toLowerCase() === preview.role?.toLowerCase() &&
+                formatDate(s.payment_date) === previewDate
+            );
+
+          return {
+            ...preview,
+            status: isMatched ? "Sudah" : "Belum",
+          };
+        });
+
+        const uniqueMap = new Map();
+        merged.forEach((item) => {
+          const dateKey = formatDate(item.tanggal);
+          const key = `${item.user_id}_${item.role?.toLowerCase()}_${dateKey}`;
+          if (!uniqueMap.has(key)) {
+            uniqueMap.set(key, item);
+          }
+        });
+
+        const filteredMerged = [...uniqueMap.values()];
+        setAllPreviews(filteredMerged);
+        setData(filteredMerged);
+
+        if (updated && updated.includes("-")) {
+          const [uid, r, pdate] = updated.split("-");
+
+          const matchFn = (item) =>
+            String(item.user_id) === uid &&
+            item.role?.toLowerCase() === r.toLowerCase() &&
+            formatDate(item.tanggal) === formatDate(pdate);
+
+          setData((prev) =>
+            prev.map((item) =>
+              matchFn(item) ? { ...item, status: "Sudah" } : item
+            )
+          );
+          setAllPreviews((prev) =>
+            prev.map((item) =>
+              matchFn(item) ? { ...item, status: "Sudah" } : item
+            )
+          );
+          localStorage.removeItem("statusUpdated");
         }
-      });
-
-      const filteredMerged = [...uniqueMap.values()];
-      setAllPreviews(filteredMerged);
-      setData(filteredMerged);
-
-      if (updated && updated.includes("-")) {
-        const [uid, r, pdate] = updated.split("-");
-
-        const matchFn = (item) =>
-          String(item.user_id) === uid &&
-          item.role?.toLowerCase() === r.toLowerCase() &&
-          formatDate(item.tanggal) === formatDate(pdate);
-
-        setData((prev) =>
-          prev.map((item) => (matchFn(item) ? { ...item, status: "Sudah" } : item))
-        );
-        setAllPreviews((prev) =>
-          prev.map((item) => (matchFn(item) ? { ...item, status: "Sudah" } : item))
-        );
-        localStorage.removeItem("statusUpdated");
+      } catch (error) {
+        console.error("❌ Error saat fetch:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("❌ Error saat fetch:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  init();
-}, [reloadTrigger]);
-
+    init();
+  }, [reloadTrigger]);
 
   useEffect(() => {
     const handleStorageChange = () => {
@@ -443,10 +242,7 @@ function DaftarGaji() {
     return (data || [])
       .filter((item) => {
         const matchesSearch =
-          item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.posisi.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.status.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.tanggal?.toLowerCase().includes(searchQuery.toLowerCase());
+          item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ;
 
         return (
           (positionFilter === "Semua" || item.posisi === positionFilter) &&
@@ -481,7 +277,7 @@ function DaftarGaji() {
 
   const handleCatat = (user_id, role, payment_date) => {
     //console.log("Diterima payment_date:", payment_date); // debug
-const encodedUserId = hashids.encode(user_id);
+    const encodedUserId = hashids.encode(user_id);
     let encodedDate = "";
     if (payment_date && !isNaN(new Date(payment_date))) {
       encodedDate = encodeURIComponent(
@@ -490,9 +286,9 @@ const encodedUserId = hashids.encode(user_id);
     } else {
       console.warn("Tanggal tidak valid, default ke kosong.");
     }
-     router.push(
-    `/dashboard/penggajian/penggajian-utama/catat/${encodedUserId}/${role}?payment_date=${encodedDate}`
-  );
+    router.push(
+      `/dashboard/penggajian/penggajian-utama/catat/${encodedUserId}/${role}?payment_date=${encodedDate}`
+    );
     //router.push(
     //  `/dashboard/penggajian/penggajian-utama/catat/${user_id}/${role}?payment_date=${encodedDate}`
     //);
@@ -500,7 +296,7 @@ const encodedUserId = hashids.encode(user_id);
 
   const handleLihat = (user_id, role, payment_date) => {
     //console.log("Lihat detail:", user_id, role, payment_date);
-const encodedUserId = hashids.encode(user_id);
+    const encodedUserId = hashids.encode(user_id);
     let encodedDate = "";
     if (payment_date && !isNaN(new Date(payment_date))) {
       encodedDate = encodeURIComponent(
@@ -511,11 +307,14 @@ const encodedUserId = hashids.encode(user_id);
     }
 
     // ⬅️ Simpan status agar halaman utama tahu mana yang perlu diupdate nanti
-    localStorage.setItem("statusUpdated", `${encodedUserId}-${role}-${encodedDate}`);
+    localStorage.setItem(
+      "statusUpdated",
+      `${encodedUserId}-${role}-${encodedDate}`
+    );
 
     router.push(
-    `/dashboard/penggajian/penggajian-utama/catat/${encodedUserId}/${role}?payment_date=${encodedDate}`
-  );
+      `/dashboard/penggajian/penggajian-utama/catat/${encodedUserId}/${role}?payment_date=${encodedDate}`
+    );
     //router.push(
     //  `/dashboard/penggajian/penggajian-utama/catat/${user_id}/${role}?payment_date=${encodedDate}`
     //);
@@ -558,37 +357,37 @@ const encodedUserId = hashids.encode(user_id);
     );
   };
 
-  const handleGenerateGaji = async () => {
-    const token = localStorage.getItem("access_token");
+  //const handleGenerateGaji = async () => {
+  //  const token = localStorage.getItem("access_token");
 
-    try {
-      const headers = {
-        Authorization: `Bearer ${token}`,
-      };
-      const res = await fetch(
-        "https://tpapi.siunjaya.id/api/salary/previews/generate",
-        {
-          headers,
-          method: "POST",
-        }
-      );
+  //  try {
+  //    const headers = {
+  //      Authorization: `Bearer ${token}`,
+  //    };
+  //    const res = await fetch(
+  //      "https://tpapi.siunjaya.id/api/salary/previews/generate",
+  //      {
+  //        headers,
+  //        method: "POST",
+  //      }
+  //    );
 
-      if (!res.ok) throw new Error("Gagal generate data gaji");
+  //    if (!res.ok) throw new Error("Gagal generate data gaji");
 
-      const result = await res.json();
-      console.log("✅ Generate sukses:", result);
+  //    const result = await res.json();
+  //    console.log("✅ Generate sukses:", result);
 
-      // Trigger reload data dari API setelah generate
-      setReloadTrigger((prev) => prev + 1);
-    } catch (err) {
-      console.error("❌ Gagal generate data gaji:", err);
-      alert("Gagal generate data gaji");
-    }
-  };
+  //    // Trigger reload data dari API setelah generate
+  //    setReloadTrigger((prev) => prev + 1);
+  //  } catch (err) {
+  //    console.error("❌ Gagal generate data gaji:", err);
+  //    alert("Gagal generate data gaji");
+  //  }
+  //};
 
-  if (loading) {
-    return <LoadingFunny />;
-  }
+  //if (loading) {
+  //  return <LoadingFunny />;
+  //}
 
   return (
     <div className="flex">
@@ -670,13 +469,6 @@ const encodedUserId = hashids.encode(user_id);
             </div>
 
             <div className="flex justify-end items-center mb-4">
-              <button
-                onClick={handleGenerateGaji}
-                className="bg-blue-600 text-white text-sm px-4 py-2 rounded hover:bg-yellow-600 transition"
-              >
-                Generate Data Gaji
-              </button>
-
               <SearchInput
                 value={searchQuery}
                 onChange={(e) => {
@@ -701,7 +493,11 @@ const encodedUserId = hashids.encode(user_id);
                     </tr>
                   </thead>
                   <tbody>
-                    {paginatedData.length > 0 ? (
+                    {isLoading ? (
+                      <>
+                        <LoadingRow colCount={8} />
+                      </>
+                    ) : paginatedData.length > 0 ? (
                       paginatedData.map((item) => (
                         <tr key={item.id} className="border-b last:border-b-0">
                           <td className="p-3">{item.nama}</td>
@@ -737,7 +533,7 @@ const encodedUserId = hashids.encode(user_id);
                                 }}
                                 className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-800 text-sm"
                               >
-                                Catat
+                                Pratinjau
                               </button>
                             ) : (
                               <>

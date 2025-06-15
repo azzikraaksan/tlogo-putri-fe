@@ -290,7 +290,7 @@ export default function SlipGajiModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center">
+    <div className="fixed inset-0 z-50 backdrop-blur-sm bg-transparent flex justify-center items-center">
       <div className="bg-white p-4 rounded-md shadow-md w-full max-w-3xl h-[90vh] flex flex-col">
         <h2 className="text-xl font-bold mb-2">Preview Slip Gaji</h2>
         <div className="flex-1 overflow-auto border">

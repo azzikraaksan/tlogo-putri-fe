@@ -19,14 +19,15 @@ function Page() {
   const [allData, setAllData] = useState([]);
   const [selectedRole, setSelectedRole] = useState('');
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  
+  const [loading, setLoading] = useState(true); // State loading baru
 
   const itemsPerPage = 10;
   const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
   const years = Array.from({ length: 11 }, (_, i) => 2020 + i);
 
- useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
+      setLoading(true); // Set loading ke true saat memulai fetch data
       try {
         const token = localStorage.getItem("access_token");
         if (!token) throw new Error("Token tidak ditemukan");
@@ -54,7 +55,6 @@ function Page() {
             tanggal,
             bulan,
             tahun,
-            // total_salary: item.total_salary || 0,
             salarie: item.salarie || 0,
           };
         });
@@ -62,6 +62,8 @@ function Page() {
         setAllData(allData);
       } catch (err) {
         console.error("Gagal mengambil data:", err.message);
+      } finally {
+        setLoading(false); // Set loading ke false setelah fetch data selesai (berhasil atau gagal)
       }
     };
 
@@ -86,8 +88,7 @@ function Page() {
       Nama: item.nama,
       Role: item.role,
       Tanggal: item.tanggal,
-      // "Total Gaji": item.total_salary,
-       "Total Gaji": item.salarie,
+      "Total Gaji": item.salarie,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataWithNo);
@@ -123,11 +124,9 @@ function Page() {
         item.nama,
         item.role,
         item.tanggal,
-        // `Rp ${item.total_salary?.toLocaleString("id-ID") || 0}`,
         `Rp ${item.salarie?.toLocaleString("id-ID") || 0}`,
       ]);
 
-      // const totalSalary = filteredData.reduce((sum, item) => sum + (item.salary || 0), 0);
       const Salary = filteredData.reduce((sum, item) => sum + (item.salarie || 0), 0);
 
       autoTable(doc, {
@@ -137,7 +136,6 @@ function Page() {
           ...tableBody,
           [
             { content: "Total Pendapatan Gaji", colSpan: 3, styles: { halign: "right", fontStyle: "bold" } },
-            // { content: `Rp ${totalSalary.toLocaleString("id-ID")}`, styles: { halign: "right", fontStyle: "bold" } },
             { content: `Rp ${Salary.toLocaleString("id-ID")}`, styles: { halign: "right", fontStyle: "bold" } }
           ],
         ],
@@ -186,31 +184,31 @@ function Page() {
               </select>
             </div>
 
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Role</label> 
-            <select value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)} className="text-sm border border-gray-300 rounded px-3 py-2">
-              <option value="">Semua Role</option>
-              <option value="Owner">Owner</option>
-              <option value="FO">Front Office</option>
-              <option value="Driver">Driver</option>
-            </select>
-          </div>
-        </div>
-
-            <div className="flex flex-col gap-2">
-              <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-              <div className="flex gap-2">
-                <button onClick={() => { setExportType("excel"); setShowExportModal(true); }} className="flex items-center gap-1 bg-green-500 text-white p-2 rounded hover:bg-green-600">
-                  <FileSpreadsheet size={16} /> Export Excel
-                </button>
-                <button onClick={() => { setExportType("pdf"); setShowExportModal(true); }} className="flex items-center gap-1 bg-red-500 text-white p-2 rounded hover:bg-red-600">
-                  <FileText size={16} /> Export PDF
-                </button>
-              </div>
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium text-gray-700">Role</label>
+              <select value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)} className="text-sm border border-gray-300 rounded px-3 py-2">
+                <option value="">Semua Role</option>
+                <option value="Owner">Owner</option>
+                <option value="FO">Front Office</option>
+                <option value="Driver">Driver</option>
+              </select>
             </div>
           </div>
 
+          <div className="flex flex-col gap-2">
+            <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            <div className="flex gap-2">
+              <button onClick={() => { setExportType("excel"); setShowExportModal(true); }} className="flex items-center gap-1 bg-green-500 text-white p-2 rounded hover:bg-green-600">
+                <FileSpreadsheet size={16} /> Export Excel
+              </button>
+              <button onClick={() => { setExportType("pdf"); setShowExportModal(true); }} className="flex items-center gap-1 bg-red-500 text-white p-2 rounded hover:bg-red-600">
+                <FileText size={16} /> Export PDF
+              </button>
+            </div>
+          </div>
+        </div>
 
+        {/* Bagian tabel utama */}
         <table className="w-full bg-white shadow rounded overflow-hidden mt-4">
           <thead className="bg-[#3D6CB9] text-white">
             <tr>
@@ -222,36 +220,63 @@ function Page() {
             </tr>
           </thead>
           <tbody>
-            {currentData.length > 0 ? currentData.map((item, index) => (
-              <tr key={index} className="border-t">
-                <td className="p-2">{startIndex + index + 1}</td>
-                <td className="p-2">{item.nama}</td>
-                <td className="p-2">{item.role}</td>
-                <td className="p-2">{item.tanggal}</td>
-                <td className="p-2">Rp {item.salarie.toLocaleString("id-ID")}</td>
-              </tr>
-            )) : (
-              <tr>
-                <td colSpan="5" className="p-4 text-center text-gray-500">Tidak ada data</td>
-              </tr>
+            {loading ? (
+              // Placeholder untuk baris tabel saat loading
+              [...Array(itemsPerPage)].map((_, index) => (
+                <tr key={index} className="border-t animate-pulse">
+                  <td className="p-2">
+                    <div className="h-4 bg-gray-200 rounded w-8"></div>
+                  </td>
+                  <td className="p-2">
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                  </td>
+                  <td className="p-2">
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </td>
+                  <td className="p-2">
+                    <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                  </td>
+                  <td className="p-2">
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              // Data aktual saat tidak loading
+              currentData.length > 0 ? currentData.map((item, index) => (
+                <tr key={index} className="border-t">
+                  <td className="p-2">{startIndex + index + 1}</td>
+                  <td className="p-2">{item.nama}</td>
+                  <td className="p-2">{item.role}</td>
+                  <td className="p-2">{item.tanggal}</td>
+                  <td className="p-2">Rp {item.salarie.toLocaleString("id-ID")}</td>
+                </tr>
+              )) : (
+                <tr>
+                  <td colSpan="5" className="p-4 text-center text-gray-500">Tidak ada data</td>
+                </tr>
+              )
             )}
           </tbody>
         </table>
 
-        <div className="mt-4 flex justify-center gap-2">
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-[#3D6CB9] text-white" : "bg-gray-200"}`}
-            >
-              {i + 1}
-            </button>
-          ))}
-        </div>
+        {/* Bagian paginasi hanya muncul jika tidak loading */}
+        {!loading && (
+          <div className="mt-4 flex justify-center gap-2">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-1 rounded ${currentPage === i + 1 ? "bg-[#3D6CB9] text-white" : "bg-gray-200"}`}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        )}
 
         {showExportModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50" onClick={() => setShowExportModal(false)}>
+          <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 rounded-lg shadow mb-8" onClick={() => setShowExportModal(false)}>
             <div className="bg-white p-6 rounded shadow-md w-full max-w-3xl overflow-y-auto max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
               <h2 className="text-lg font-semibold mb-4">Pratinjau Data yang Akan Diekspor ({exportType.toUpperCase()})</h2>
               <p className="mb-2 text-sm text-gray-600">Menampilkan {filteredData.length} data sesuai filter.</p>
