@@ -77,8 +77,8 @@ const DetailAnggota = () => {
           <div className="w-[300px] h-[380px] rounded-lg overflow-hidden border border-gray-300">
             {userDetails?.foto_profil ? (
               <img
-                // src={`https://tpapi.siunjaya.id/storage/${userDetails.foto_profil}`}
-                src={`https://tpapi.siunjaya.id/storage/5`}
+                src={`https://tpapi.siunjaya.id/storage/app/public/profile_images/${userDetails.foto_profil}`}
+                // src={`https://tpapi.siunjaya.id/storage/5`}
                 alt="Foto Profil"
                 className="w-full h-full object-cover"
                 onError={(e) => {

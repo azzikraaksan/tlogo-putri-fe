@@ -13,7 +13,7 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
 
   useEffect(() => {
     if (article?.gambar) {
-      const url = `http://127.0.0.1:8000/storage/gambar/${article.gambar}`;
+      const url = `https://tpapi.siunjaya.id/storage/gambar/${article.gambar}`;
       setImagePreview(url);
     }
   }, [article]);
@@ -41,13 +41,13 @@ export default function EditorArtikel({ article, onSave, onDelete, onBack }) {
 
     try {
       const res = await fetch(
-        `http://127.0.0.1:8000/api/content-generate/article/${article.id}/gambar`,
+        `https://tpapi.siunjaya.id/api/content-generate/article/${article.id}/gambar`,
         { method: 'POST', body: formData }
       );
       if (!res.ok) throw new Error('Gagal upload gambar');
       const data = await res.json();
       alert('Gambar berhasil diupload!');
-      setImagePreview(`http://127.0.0.1:8000/storage/${data.gambar}`);
+      setImagePreview(`https://tpapi.siunjaya.id/storage/${data.gambar}`);
     } catch (err) {
       alert(err.message);
     }
