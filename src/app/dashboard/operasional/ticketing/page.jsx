@@ -11,7 +11,6 @@ import { useRouter } from "next/navigation";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Hashids from "hashids";
-import NProgress from "nprogress";
 
 const TicketingPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -67,7 +66,6 @@ const TicketingPage = () => {
   const fetchTicketings = async () => {
     try {
       setLoading(true);
-      NProgress.start();
 
       const jeepRes = await fetch("https://tpapi.siunjaya.id/api/jeeps/all");
       const jeepJson = await jeepRes.json();
@@ -161,7 +159,6 @@ const TicketingPage = () => {
       console.error("❌ Error fetch ticketing/rotasi:", error);
     } finally {
       setLoading(false);
-      NProgress.done();
     }
   };
 
@@ -502,7 +499,7 @@ const TicketingPage = () => {
             <tbody>
               {isLoading ? (
                 <>
-                  <LoadingRow />
+                  <LoadingRow colCount={8} />
                 </>
               ) : filteredData.length > 0 ? (
                 filteredData.map((item, index) => (

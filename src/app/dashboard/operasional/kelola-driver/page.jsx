@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Sidebar from "/components/Sidebar.jsx";
-import LoadingFunny from "/components/LoadingFunny.jsx";
+import LoadingRow from "/components/LoadingRow.jsx";
 import SearchInput from "/components/Search.jsx";
 import withAuth from "/src/app/lib/withAuth";
 
@@ -11,7 +11,7 @@ const PenjadwalanPage = () => {
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchDriversAndJeeps = async () => {
@@ -161,9 +161,6 @@ const PenjadwalanPage = () => {
     }
   };
 
-  if (loading) {
-    return <LoadingFunny />;
-  }
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -201,13 +198,19 @@ const PenjadwalanPage = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredData.length > 0 ? (
+              {isLoading ? (
+                <>
+                  <LoadingRow colCount={6} />
+                </>
+              ) : filteredData.length > 0 ? (
                 filteredData.map((item, index) => (
                   <tr
                     key={`${item.users_id}-${item.lambung}`}
                     className="border-t border-[#808080] hover:bg-gray-50 transition-colors"
                   >
-                    <td className="p-2 text-center text-gray-750">{index + 1}</td>
+                    <td className="p-2 text-center text-gray-750">
+                      {index + 1}
+                    </td>
                     <td className="p-2 text-center text-gray-750">
                       {item.lambung}
                     </td>
@@ -246,7 +249,7 @@ const PenjadwalanPage = () => {
                         }
                         className="px-3 rounded-[10px] text-white bg-green-500 hover:bg-green-600 cursor-pointer inline-block"
                       >
-                        WhatsApp 
+                        WhatsApp
                       </button>
                     </td>
 

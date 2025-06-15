@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Sidebar from "/components/Sidebar.jsx";
-import LoadingFunny from "/components/LoadingFunny.jsx";
+import LoadingRow from "/components/LoadingRow.jsx";
 import SearchInput from "/components/Search.jsx";
 import TambahJeep from "/components/TambahJeep";
 import withAuth from "/src/app/lib/withAuth";
@@ -16,7 +16,7 @@ const JeepPage = () => {
   const [modeTambah, setModeTambah] = useState(false);
   const router = useRouter();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchDriversAndJeeps();
@@ -130,10 +130,6 @@ const JeepPage = () => {
   };
   const handleTambahJeep = () => setModeTambah(true);
 
-  if (loading) {
-    return <LoadingFunny />;
-  }
-
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -188,7 +184,11 @@ const JeepPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredData.length > 0 ? (
+                  {isLoading ? (
+                    <>
+                      <LoadingRow colCount={9} />
+                    </>
+                  ) : filteredData.length > 0 ? (
                     filteredData.map((item, index) => (
                       <tr
                         key={item.lambung}
