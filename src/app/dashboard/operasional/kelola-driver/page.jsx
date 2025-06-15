@@ -171,7 +171,7 @@ const PenjadwalanPage = () => {
           marginLeft: isSidebarOpen ? 290 : 70,
         }}
       ></div>
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 overflow-y-auto">
         <h1 className="text-[32px] font-semibold mb-6 text-black">
           Kelola Driver
         </h1>
@@ -185,7 +185,7 @@ const PenjadwalanPage = () => {
           />
         </div>
 
-        <div className="overflow-x-auto bg-white rounded-xl shadow max-h-[520px] overflow-y-auto">
+        <div className="overflow-x-auto bg-white rounded-xl shadow max-h-[520px]">
           <table className="w-full table-auto">
             <thead className="bg-[#3D6CB9] text-white sticky top-0">
               <tr>

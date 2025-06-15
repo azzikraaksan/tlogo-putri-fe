@@ -41,9 +41,6 @@ export default function ProfilPage() {
       `/dashboard/profil/edit-profil`
     );
   };
-  if (!user) {
-      return <LoadingFunny />;
-    }
 
   return (
     <div className="flex">
@@ -55,7 +52,11 @@ export default function ProfilPage() {
                 marginLeft: isSidebarOpen ? 290 : 70,
               }}
             ></div>
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 overflow-y-auto">
+        {!user ? (
+                <LoadingFunny />
+              ) : (
+                <>
         <div className="flex items-center gap-2">
           <h1 className="text-[32px] font-semibold">Profil Saya</h1>
         </div>
@@ -114,6 +115,8 @@ export default function ProfilPage() {
             </div>
           </div>
         </div>
+          </>
+          )}
       </div>
     </div>
   );

@@ -468,7 +468,7 @@ const PenjadwalanPage = () => {
         }}
       ></div>
 
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 overflow-y-auto">
         {selectedBooking ? (
           <RollingDriverPage
             onKembali={handleKembali}
@@ -547,7 +547,7 @@ const PenjadwalanPage = () => {
               </p>
             )}
             <div className="bg-white rounded-xl shadow overflow-x-auto">
-              <div className="max-h-[470px] overflow-y-auto">
+              <div className="max-h-[490px]">
                 <table className="w-full table-auto">
                   <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
                     <tr>

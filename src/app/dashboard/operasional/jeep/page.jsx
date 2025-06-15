@@ -17,6 +17,8 @@ const JeepPage = () => {
   const router = useRouter();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isLoading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   useEffect(() => {
     fetchDriversAndJeeps();
@@ -85,18 +87,22 @@ const JeepPage = () => {
       item.status?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const confirmDelete = (id) => {
+    setSelectedUserId(id);
+    setIsModalOpen(true);
+  };
+  
   const handleHapusJeep = async (id) => {
     if (!id) return;
 
-    const konfirmasi = window.confirm("Yakin mau hapus jeep ini?");
-    if (!konfirmasi) return;
+    if (!selectedUserId) return;
 
     try {
       const token = localStorage.getItem("access_token");
       if (!token) return;
 
       const res = await fetch(
-        `https://tpapi.siunjaya.id/api/jeeps/delete/${id}`,
+        `https://tpapi.siunjaya.id/api/jeeps/delete/${selectedUserId}`,
         {
           method: "DELETE",
           headers: {
@@ -107,7 +113,7 @@ const JeepPage = () => {
 
       if (res.ok) {
         setJeepData((prevJeep) =>
-          prevJeep.filter((jeep) => jeep.jeep_id !== id)
+          prevJeep.filter((jeep) => jeep.jeep_id !== selectedUserId)
         );
       } else {
         console.error("Gagal hapus jeep");
@@ -116,6 +122,9 @@ const JeepPage = () => {
     } catch (error) {
       console.error("Error saat hapus jeep:", error);
       alert("Terjadi kesalahan saat menghapus.");
+    } finally {
+      setIsModalOpen(false);
+      setSelectedUserId(null);
     }
   };
 
@@ -140,7 +149,7 @@ const JeepPage = () => {
           marginLeft: isSidebarOpen ? 290 : 70,
         }}
       ></div>
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 overflow-y-auto">
         {modeTambah ? (
           <TambahJeep onKembali={handleKembali} />
         ) : (
@@ -152,7 +161,7 @@ const JeepPage = () => {
             <div className="flex">
               <button
                 onClick={handleTambahJeep}
-                className="bg-[#3D6CB9] rounded-[10px] text-white py-1 px-3 mt-2 cursor-pointer hover:bg-[#7ba2d0] transition flex items-center"
+                className="bg-[#3D6CB9] rounded-[10px] text-white py-1 px-3 mt-2 mb-2 cursor-pointer hover:bg-[#7ba2d0] transition flex items-center"
               >
                 <Plus size={18} className="mr-2 w-[20px] h-auto" />
                 Tambah Jeep
@@ -168,7 +177,7 @@ const JeepPage = () => {
               />
             </div>
 
-            <div className="overflow-x-auto bg-white rounded-xl shadow max-h-[470px] overflow-y-auto">
+            <div className="overflow-x-auto bg-white rounded-xl shadow max-h-[470px]">
               <table className="w-full table-auto">
                 <thead className="bg-[#3D6CB9] text-white sticky top-0">
                   <tr>
@@ -264,7 +273,7 @@ const JeepPage = () => {
                           <button
                             className="text-gray-500 hover:text-gray-700 cursor-pointer"
                             onClick={() =>
-                              item?.jeep_id && handleHapusJeep(item.jeep_id)
+                              item?.jeep_id && confirmDelete(item.jeep_id)
                             }
                             title="Hapus"
                           >
@@ -283,6 +292,30 @@ const JeepPage = () => {
                 </tbody>
               </table>
             </div>
+            {isModalOpen && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                <div className="bg-white p-6 rounded-lg shadow-lg w-[350px]">
+                  <h2 className="text-xl font-semibold mb-4">
+                    Konfirmasi Hapus
+                  </h2>
+                  <p className="mb-6">Yakin ingin menghapus user ini?</p>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setIsModalOpen(false)}
+                      className="px-3 py-1 bg-gray-300 text-gray-800 rounded-[10px] cursor-pointer hover:bg-gray-400"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      onClick={handleHapusJeep}
+                      className="px-3 py-1 bg-red-500 text-white rounded-[10px] cursor-pointer hover:bg-red-600"
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

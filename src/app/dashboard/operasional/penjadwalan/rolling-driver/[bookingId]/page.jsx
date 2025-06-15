@@ -294,7 +294,7 @@ const PenjadwalanPage = () => {
           marginLeft: isSidebarOpen ? 290 : 70,
         }}
       ></div>
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 overflow-y-auto">
         <div className="flex items-center gap-3 mb-6">
           <CircleArrowLeft
             onClick={handleKembali}
@@ -325,7 +325,7 @@ const PenjadwalanPage = () => {
         <div className="overflow-x-auto bg-white rounded-xl shadow">
 
           <table className="w-full table-auto">
-            <thead className="bg-[#3D6CB9] text-white">
+            <thead className="bg-[#3D6CB9] text-white sticky top-0">
               <tr>
                 <th className="p-2 text-center font-normal">Nama Driver</th>
                 <th className="p-2 text-center font-normal">Aksi</th>

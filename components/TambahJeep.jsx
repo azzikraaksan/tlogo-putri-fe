@@ -22,6 +22,7 @@ export default function AddJeepForm({ onKembali }) {
   const [owners, setOwners] = useState([]);
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     fetchOwnersWithJeepLimit();
@@ -54,9 +55,12 @@ export default function AddJeepForm({ onKembali }) {
     try {
       const token = localStorage.getItem("access_token");
 
-      const jeepsRes = await axios.get("https://tpapi.siunjaya.id/api/jeeps/all", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const jeepsRes = await axios.get(
+        "https://tpapi.siunjaya.id/api/jeeps/all",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       const usedUserIds = jeepsRes.data.data.map((jeep) => jeep.driver_id);
 
       const driverRes = await axios.get(
@@ -93,7 +97,7 @@ export default function AddJeepForm({ onKembali }) {
 
     if (!allowedTypes.includes(file.type)) {
       alert("Format file tidak valid. Harus jpeg, jpg, atau png.");
-      e.target.value = ""; 
+      e.target.value = "";
       return;
     }
 
@@ -105,6 +109,57 @@ export default function AddJeepForm({ onKembali }) {
 
     setForm((prev) => ({ ...prev, [name]: file }));
   };
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   const token = localStorage.getItem("access_token");
+
+  //   const submitData = {
+  //     ...form,
+  //     users_id: form.owner_id,
+  //   };
+
+  //   const requiredFields = [
+  //     "no_lambung",
+  //     "plat_jeep",
+  //     "merek",
+  //     "tipe",
+  //     "tahun_kendaraan",
+  //     "status",
+  //   ];
+
+  //   const isAnyEmpty = requiredFields.some(
+  //     (field) => String(submitData[field]).trim() === ""
+  //   );
+
+  //   if (isAnyEmpty || !submitData.owner_id) {
+  //     alert("Semua field wajib diisi!");
+  //     return;
+  //   }
+
+  //   try {
+  //     const response = await axios.post(
+  //       "https://tpapi.siunjaya.id/api/jeeps/create",
+  //       submitData,
+  //       {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+
+  //     if (response.status === 201) {
+  //       onKembali();
+  //     }
+  //   } catch (error) {
+  //     console.error("Gagal tambah jeep:", error.response?.data);
+  //     alert(
+  //       "Gagal menambahkan Jeep: " + error.response?.data?.message ||
+  //         "Terjadi masalah!"
+  //     );
+  //   }
+  // };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("access_token");
@@ -128,7 +183,9 @@ export default function AddJeepForm({ onKembali }) {
     );
 
     if (isAnyEmpty || !submitData.owner_id) {
-      alert("Semua field wajib diisi!");
+      setErrors({
+        form: "Semua field wajib diisi!",
+      });
       return;
     }
 
@@ -145,17 +202,33 @@ export default function AddJeepForm({ onKembali }) {
       );
 
       if (response.status === 201) {
+        setErrors({});
         onKembali();
       }
     } catch (error) {
       console.error("Gagal tambah jeep:", error.response?.data);
-      alert(
-        "Gagal menambahkan Jeep: " + error.response?.data?.message ||
-          "Terjadi masalah!"
-      );
+
+      if (error.response && error.response.data) {
+        const message = error.response.data.message || "";
+
+        const newErrors = {};
+
+        if (message.includes("no_lambung")) {
+          newErrors.no_lambung = "Nomor lambung sudah digunakan.";
+        }
+
+        if (message.includes("plat_jeep")) {
+          newErrors.plat_jeep = "Plat jeep sudah digunakan.";
+        }
+
+        if (Object.keys(newErrors).length === 0) {
+          newErrors.form = message || "Terjadi masalah!";
+        }
+
+        setErrors(newErrors);
+      }
     }
   };
-
   return (
     <div className="flex">
       <div className="flex-1">
@@ -208,6 +281,11 @@ export default function AddJeepForm({ onKembali }) {
           <label className="block text-sm font-medium mb-1">
             Masukan No Lambung :
           </label>
+
+          {errors.no_lambung && (
+            <p className="text-red-500 text-sm mb-1">{errors.no_lambung}</p>
+          )}
+
           <input
             name="no_lambung"
             value={form.no_lambung}
@@ -215,9 +293,13 @@ export default function AddJeepForm({ onKembali }) {
             onChange={handleChange}
             className="p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
           />
+
           <label className="block text-sm font-medium mb-1">
             Masukan No Plat :
           </label>
+          {errors.plat_jeep && (
+            <p className="text-red-500 text-sm mb-1">{errors.plat_jeep}</p>
+          )}
           <input
             name="plat_jeep"
             value={form.plat_jeep}
@@ -225,17 +307,6 @@ export default function AddJeepForm({ onKembali }) {
             onChange={handleChange}
             className="p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
           />
-
-          {/* <label className="block text-sm font-medium mb-1">
-            Masukan Foto Jeep :
-          </label>
-          <input
-            name="foto_jeep"
-            value={form.foto_jeep}
-            placeholder="Nama File Foto (contoh: jeep1.jpg)"
-            onChange={handleChange}
-            className="p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-          /> */}
 
           <label className="block text-sm font-medium mb-1">
             Masukan Merek Jeep :

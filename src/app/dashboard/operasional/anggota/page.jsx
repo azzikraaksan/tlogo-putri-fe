@@ -21,6 +21,8 @@ const AnggotaPage = () => {
   const router = useRouter();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [isLoading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -50,6 +52,8 @@ const AnggotaPage = () => {
   const filteredData = users.filter((item) => {
     const search = searchTerm.toLowerCase();
     const matchSearch =
+      (item?.name || "").toLowerCase().includes(search) ||
+      (item?.role || "").toLowerCase().includes(search) ||
       (item?.email || "").toLowerCase().includes(search) ||
       (item?.peran || "").toLowerCase().includes(search) ||
       (item?.status || "").toLowerCase().includes(search);
@@ -81,18 +85,20 @@ const AnggotaPage = () => {
     setSelectedUser(null);
   };
 
-  const handleHapusUser = async (id) => {
-    if (!id) return;
+  const confirmDelete = (id) => {
+    setSelectedUserId(id);
+    setIsModalOpen(true);
+  };
 
-    const konfirmasi = window.confirm("Yakin mau hapus user ini?");
-    if (!konfirmasi) return;
+  const handleHapusUser = async () => {
+    if (!selectedUserId) return;
 
     try {
       const token = localStorage.getItem("access_token");
       if (!token) return;
 
       const res = await fetch(
-        `https://tpapi.siunjaya.id/api/users/delete/${id}`,
+        `https://tpapi.siunjaya.id/api/users/delete/${selectedUserId}`,
         {
           method: "DELETE",
           headers: {
@@ -102,7 +108,9 @@ const AnggotaPage = () => {
       );
 
       if (res.ok) {
-        setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
+        setUsers((prevUsers) =>
+          prevUsers.filter((user) => user.id !== selectedUserId)
+        );
       } else {
         console.error("Gagal hapus user");
         alert("Gagal hapus user.");
@@ -110,8 +118,40 @@ const AnggotaPage = () => {
     } catch (error) {
       console.error("Error saat hapus user:", error);
       alert("Terjadi kesalahan saat menghapus.");
+    } finally {
+      setIsModalOpen(false);
+      setSelectedUserId(null);
     }
   };
+
+  // const handleHapusUser = async (id) => {
+  //   if (!id) return;
+
+  //   try {
+  //     const token = localStorage.getItem("access_token");
+  //     if (!token) return;
+
+  //     const res = await fetch(
+  //       `https://tpapi.siunjaya.id/api/users/delete/${id}`,
+  //       {
+  //         method: "DELETE",
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //         },
+  //       }
+  //     );
+
+  //     if (res.ok) {
+  //       setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
+  //     } else {
+  //       console.error("Gagal hapus user");
+  //       alert("Gagal hapus user.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error saat hapus user:", error);
+  //     alert("Terjadi kesalahan saat menghapus.");
+  //   }
+  // };
 
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
@@ -121,7 +161,7 @@ const AnggotaPage = () => {
     setRoleFilter(role);
     setIsDropdownOpen(false);
   };
-  
+
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -133,7 +173,7 @@ const AnggotaPage = () => {
         }}
       ></div>
 
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 overflow-y-auto">
         {modeTambah ? (
           <TambahAnggota onKembali={handleKembali} />
         ) : selectedUser ? (
@@ -193,7 +233,7 @@ const AnggotaPage = () => {
             <div className="flex">
               <button
                 onClick={handleTambahAnggota}
-                className="bg-[#3D6CB9] rounded-[10px] text-white py-1 px-3 mt-2 cursor-pointer hover:bg-[#7ba2d0] transition flex items-center"
+                className="bg-[#3D6CB9] rounded-[10px] text-white py-1 px-3 mt-2 mb-2 cursor-pointer hover:bg-[#7ba2d0] transition flex items-center"
               >
                 <Plus size={18} className="mr-2 w-[20px] h-auto" />
                 Tambah Anggota
@@ -208,7 +248,7 @@ const AnggotaPage = () => {
                 placeholder="Cari"
               />
             </div>
-            <div className="overflow-x-auto bg-white rounded-xl shadow max-h-[470px] overflow-y-auto">
+            <div className="overflow-x-auto bg-white rounded-xl shadow max-h-[470px]">
               <table className="w-full table-auto">
                 <thead className="bg-[#3D6CB9] text-white sticky top-0">
                   <tr>
@@ -299,7 +339,7 @@ const AnggotaPage = () => {
                         <td className="text-center">
                           <button
                             className="text-gray-500 hover:text-gray-750 cursor-pointer"
-                            onClick={() => item?.id && handleHapusUser(item.id)}
+                            onClick={() => item?.id && confirmDelete(item.id)}
                             title="Hapus"
                           >
                             <Trash2 size={18} />
@@ -317,6 +357,30 @@ const AnggotaPage = () => {
                 </tbody>
               </table>
             </div>
+            {isModalOpen && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                <div className="bg-white p-6 rounded-lg shadow-lg w-[350px]">
+                  <h2 className="text-xl font-semibold mb-4">
+                    Konfirmasi Hapus
+                  </h2>
+                  <p className="mb-6">Yakin ingin menghapus user ini?</p>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setIsModalOpen(false)}
+                      className="px-3 py-1 bg-gray-300 text-gray-800 rounded-[10px] cursor-pointer hover:bg-gray-400"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      onClick={handleHapusUser}
+                      className="px-3 py-1 bg-red-500 text-white rounded-[10px] cursor-pointer hover:bg-red-600"
+                    >
+                      Hapus
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>

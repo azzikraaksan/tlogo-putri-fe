@@ -5,6 +5,7 @@ import { CircleArrowLeft, Upload } from "lucide-react";
 
 const TambahAnggota = ({ onKembali }) => {
   const router = useRouter();
+  const [errors, setErrors] = useState({});
   const today = new Date().toISOString().split("T")[0]; 
   const [formData, setFormData] = useState({
     name: "",
@@ -182,7 +183,7 @@ const TambahAnggota = ({ onKembali }) => {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  Jumlah Jeep
+                  Jumlah Jeep (Maksimal 2)
                 </label>
                 <input
                   type="number"
@@ -236,7 +237,7 @@ const TambahAnggota = ({ onKembali }) => {
             <>
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  No Telepon (wajib diawali 628, misal 6281234567890)
+                  No Telepon (wajib diawali 08 atau 628)
                 </label>
                 <input
                   type="number"
@@ -304,7 +305,7 @@ const TambahAnggota = ({ onKembali }) => {
             <>
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  No Telepon (wajib diawali 628, misal 6281234567890)
+                  No Telepon (wajib diawali 08 atau 628)
                 </label>
                 <input
                   type="number"

@@ -52,9 +52,6 @@ const DetailAnggota = () => {
     router.push(`/dashboard/operasional/anggota/edit-anggota/${params.id}`);
   };
 
-  if (loading) {
-    return <LoadingFunny />;
-  }
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -65,7 +62,11 @@ const DetailAnggota = () => {
           marginLeft: isSidebarOpen ? 290 : 70,
         }}
       ></div>
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 overflow-y-auto">
+        {loading ? (
+        <LoadingFunny />
+      ) : (
+        <>
         <div className="flex items-center gap-2">
           <CircleArrowLeft
             onClick={() => router.push("/dashboard/operasional/anggota")}
@@ -144,9 +145,11 @@ const DetailAnggota = () => {
               <div className="text-[#808080]">{userDetails?.status || "-"}</div>
             </div>
           </div>
+          </div>
+          </>
+          )}
         </div>
       </div>
-    </div>
   );
 };
 

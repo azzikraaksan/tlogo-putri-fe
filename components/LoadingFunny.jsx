@@ -18,7 +18,7 @@ const LoadingFunny = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-blue-50 text-center">
+    <div className="flex flex-col items-center justify-center h-screen text-center">
       <div className="relative w-30 h-14 overflow-hidden">
         <div className="absolute right-0 animate-walk text-4xl">🥴</div>
       </div>

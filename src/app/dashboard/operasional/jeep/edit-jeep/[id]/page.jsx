@@ -86,9 +86,7 @@ export default function AddJeepForm({ onKembali }) {
       );
     }
   };
-  if (loading) {
-    return <LoadingFunny />;
-  }
+
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -99,7 +97,11 @@ export default function AddJeepForm({ onKembali }) {
           marginLeft: isSidebarOpen ? 290 : 70,
         }}
       ></div>
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-6 overflow-y-auto">
+        {loading ? (
+                  <LoadingFunny />
+                ) : (
+                  <>
         <div className="flex items-center gap-2">
           <CircleArrowLeft
             onClick={() => router.back()}
@@ -171,6 +173,8 @@ export default function AddJeepForm({ onKembali }) {
             </button>
           </div>
         </form>
+        </>
+        )}
       </div>
     </div>
   );
