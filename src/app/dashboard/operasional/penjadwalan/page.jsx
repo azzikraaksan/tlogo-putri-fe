@@ -7,6 +7,7 @@ import LoadingFunny from "/components/LoadingFunny.jsx";
 import RollingDriverPage from "/components/RollingDriver.jsx";
 import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
+import LoadingRow from "/components/LoadingRow.jsx";
 import Hashids from "hashids";
 
 const PenjadwalanPage = () => {
@@ -27,9 +28,8 @@ const PenjadwalanPage = () => {
   const [isRolled, setIsRolled] = useState(false);
   const now = new Date();
   const [rotations, setRotations] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setLoading] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
@@ -129,7 +129,7 @@ const PenjadwalanPage = () => {
     }
 
     setLoading(true);
-    setIsLoading(true);
+    setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
       if (!token)
@@ -231,6 +231,7 @@ const PenjadwalanPage = () => {
             driver_id: driverId,
             jeep_id: jeepId,
             booking_id: order.booking_id,
+            package_id: order.package_id,
           };
 
           try {
@@ -263,7 +264,6 @@ const PenjadwalanPage = () => {
           .map((f) => `• Booking ${f.bookingId}: ${f.message}`)
           .join("\n");
         alert(`❌ Beberapa tiket gagal dicetak:\n\n${msg}`);
-
       } else {
         setShowSuccessModal(true);
         setSelectedBookings([]);
@@ -280,7 +280,7 @@ const PenjadwalanPage = () => {
       alert("Terjadi kesalahan saat cetak tiket.");
     } finally {
       setLoading(false);
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -417,7 +417,7 @@ const PenjadwalanPage = () => {
 
       console.log("✅ Driver yang bisa dipilih:", unassignedRotations);
 
-      setIsAlreadyRolled(rotationsData.length > 0); 
+      setIsAlreadyRolled(rotationsData.length > 0);
       setRotations(unassignedRotations);
     } catch (err) {
       console.error("Error cek rolling:", err);
@@ -456,9 +456,6 @@ const PenjadwalanPage = () => {
     }
   };
 
-  if (loading) {
-    return <LoadingFunny />;
-  }
 
   return (
     <div className="flex">
@@ -569,7 +566,11 @@ const PenjadwalanPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredData.length > 0 ? (
+                    {isLoading ? (
+                      <>
+                        <LoadingRow colCount={6} />
+                      </>
+                    ) : filteredData.length > 0 ? (
                       filteredData.map((item, index) => (
                         <tr
                           key={item.booking_id}

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "/components/Sidebar";
-import LoadingFunny from "/components/LoadingFunny.jsx";
+import LoadingRow from "/components/LoadingRow.jsx";
 import TambahAnggota from "/components/TambahAnggota";
 import DetailAnggota from "/components/LihatDetail";
 import SearchInput from "/components/Search";
@@ -20,7 +20,7 @@ const AnggotaPage = () => {
   const [roleFilter, setRoleFilter] = useState("");
   const router = useRouter();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -121,11 +121,7 @@ const AnggotaPage = () => {
     setRoleFilter(role);
     setIsDropdownOpen(false);
   };
-
-  if (loading) {
-    return <LoadingFunny />;
-  }
-
+  
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -227,13 +223,19 @@ const AnggotaPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredData.length > 0 ? (
+                  {isLoading ? (
+                    <>
+                      <LoadingRow colCount={8} />
+                    </>
+                  ) : filteredData.length > 0 ? (
                     filteredData.map((item, index) => (
                       <tr
                         key={item?.id || index}
                         className="border-t border-[#808080] hover:bg-gray-50 transition-colors"
                       >
-                        <td className="p-2 text-center text-gray-750">{index + 1}</td>
+                        <td className="p-2 text-center text-gray-750">
+                          {index + 1}
+                        </td>
                         <td className="p-2 text-center text-gray-750">
                           {item?.name || "-"}
                         </td>
