@@ -64,7 +64,7 @@ const DashboardPage = () => {
         }
   
         const [anggotaRes, driverRes, jeepRes] = await Promise.all([
-          fetch("https://tpapi.siunjaya.id/api/users/all", {
+          fetch(" /api/users/all", {
             headers: { Authorization: `Bearer ${token}` },
           }),
           fetch("https://tpapi.siunjaya.id/api/users/by-role?role=DRIVER", {
