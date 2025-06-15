@@ -14,7 +14,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useRouter } from 'next/navigation';
 
-const API_BASE_URL = "http://localhost:8000/api";
+// const API_BASE_URL = "http://localhost:8000/api";
+const API_BASE_URL = "https://tpapi.siunjaya.id/api";
 
 const formatRupiah = (number) => {
     if (number === null || typeof number === 'undefined' || isNaN(number)) {
@@ -280,3 +281,35 @@ const BulananPage = ({ children }) => {
 };
 
 export default withAuth(BulananPage);
+
+
+// import { Suspense } from "react";
+
+// import Sidebar from "/components/Sidebar.jsx";
+// import withAuth from "/src/app/lib/withAuth";
+// import { ambilLaporanBulanan } from "/components/akuntansi/bulanan/Utilitas.js";
+// import LaporanBulananClient from "/components/akuntansi/bulanan/LaporanBulananClient.jsx";
+
+// const BulananPageContent = async ({ searchParams }) => {
+//     // Tentukan bulan dan tahun dari URL (aman dilakukan di server)
+//     const bulan = searchParams.month ? parseInt(searchParams.month) : new Date().getMonth() + 1;
+//     const tahun = searchParams.year ? parseInt(searchParams.year) : new Date().getFullYear();
+
+//     // Ambil data awal di server
+//     const dataAwal = await ambilLaporanBulanan(bulan, tahun);
+
+//     return (
+        
+//         // Suspense untuk menampilkan fallback saat Client Component dimuat
+//         <Suspense fallback={<div className="flex min-h-screen w-full items-center justify-center bg-gray-50 text-lg font-medium text-gray-700">Memuat laporan...</div>}>
+//             <LaporanBulananClient 
+//                 dataAwal={dataAwal} 
+//                 bulanAwal={bulan} 
+//                 tahunAwal={tahun} 
+//             />
+//         </Suspense>
+//     );
+// };
+
+// // Ekspor komponen server secara langsung
+// export default BulananPageContent;

@@ -9,7 +9,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useRouter } from 'next/navigation';
 
-const API_BASE_URL = "http://localhost:8000/api";
+// const API_BASE_URL = "http://localhost:8000/api";
+const API_BASE_URL = "https://tpapi.siunjaya.id/api";
 
 const formatRupiah = (number) => {
     if (number === null || typeof number === 'undefined' || isNaN(number)) {

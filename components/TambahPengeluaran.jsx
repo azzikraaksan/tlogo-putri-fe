@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-const API_BASE_URL = 'http://localhost:8000/api';
+// const API_BASE_URL = "http://localhost:8000/api";
+const API_BASE_URL = "https://tpapi.siunjaya.id/api";
 
 const formatDateForAPI = (date) => {
     if (!date) return null;
