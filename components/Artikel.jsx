@@ -310,7 +310,7 @@ export default function Artikel() {
 
       <main className="md:px-10 py-6 space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-black">Daftar Artikel</h1>
+          <h1 className="text-3xl font-semibold text-black">Daftar Artikel</h1>
         </div>
 
         <div className="flex flex-wrap justify-between items-center gap-1 mb-6">
