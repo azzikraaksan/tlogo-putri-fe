@@ -314,7 +314,8 @@ export default function Artikel() {
             ))}
           </div>
 
-          <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} 
+            onClear={() => setSearchTerm("")}/>
         </div>
 
         <div className="overflow-x-auto rounded-md shadow-md max-h-139">
