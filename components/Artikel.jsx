@@ -194,7 +194,7 @@ export default function Artikel() {
           }}
         >
           <main className="md:px-10 py-6 space-y-6">
-            <h1 className="text-3xl font-bold text-black mb-4">Daftar Artikel</h1>
+            <h1 className="text-3xl font-semibold text-black mb-4">Daftar Artikel</h1>
             <div className="flex justify-between items-center mb-4">
               <div className="flex gap-2">
                 {tabs.map((tab) => (
