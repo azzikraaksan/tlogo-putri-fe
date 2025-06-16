@@ -243,24 +243,19 @@ const DaftarPesanan = () => {
     });
 
   return (
-    <div className="flex h-screen bg-gray-50"> {/* Menambahkan h-screen dan bg-gray-50 */}
+    <div className="flex h-screen bg-gray-50">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div
         className="transition-all duration-300 ease-in-out"
         style={{ marginLeft: isSidebarOpen ? 290 : 70 }}
       />
-
-      {/* 1. UBAH DIV INI MENJADI FLEX-COL UNTUK LAYOUT UTAMA */}
-      <div className="flex-1 flex flex-col p-6 overflow-hidden"> {/* Tambahkan flex, flex-col, dan overflow-hidden */}
+      <div className="flex-1 flex flex-col p-6 overflow-hidden">
         <ToastContainer autoClose={3000} hideProgressBar={false} />
-        
-        {/* Bagian Header (Judul dan Filter) */}
         <div>
           <h1 className="text-[32px] font-semibold mb-6 text-black">
             {loading ? ( <div className="h-8 w-56 bg-gray-300 rounded animate-pulse" /> ) : showHistory ? "Arsip Pesanan" : "Daftar Pesanan"}
           </h1>
           <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
-            {/* ... (Filter, Arsip, Search tidak berubah) ... */}
             <div className="flex flex-wrap items-center gap-2">
               {loading ? [...Array(4)].map((_, i) => (
                   <div key={i} className="h-8 w-24 rounded-full bg-gray-200 animate-pulse" />
@@ -305,10 +300,8 @@ const DaftarPesanan = () => {
             </div>
           </div>
         </div>
-
-        {/* Bagian Konten (Tabel atau Skeleton) */}
         {loading ? (
-          <div className="flex-grow space-y-4 p-4"> {/* Menambahkan flex-grow */}
+          <div className="flex-grow space-y-4 p-4">
             {[...Array(5)].map((_, index) => (
               <div key={index} className="animate-pulse bg-white p-4 rounded-xl shadow flex items-center justify-between">
                 <div className="flex flex-col space-y-2 w-full">
@@ -321,12 +314,10 @@ const DaftarPesanan = () => {
           </div>
         ) : (
           <>
-            {/* 2. UBAH PEMBUNGKUS TABEL INI */}
-            <div className="flex-grow overflow-y-auto bg-white rounded-xl shadow"> {/* Tambahkan flex-grow dan overflow-y-auto */}
+            <div className="flex-grow overflow-y-auto bg-white rounded-xl shadow">
               <table className="min-w-full table-auto">
                 <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
-                  {/* ... (Header tabel tidak berubah) ... */}
-                   <tr>
+                  <tr>
                     <th className="p-3 text-center font-semibold">No</th>
                     <th className="p-3 text-center font-semibold">Kode Pesanan</th>
                     <th className="p-3 text-center font-semibold">Nama</th>
@@ -341,7 +332,6 @@ const DaftarPesanan = () => {
                 <tbody>
                   {filteredData.length > 0 ? (
                     filteredData.map((item, index) => {
-                      // ... (map logic tidak berubah)
                       const showArchiveButton = !showHistory;
                       return (
                         <tr key={item.booking_id} className="border-b text-center hover:bg-gray-50">
@@ -359,55 +349,26 @@ const DaftarPesanan = () => {
                           <td className="p-2">
                             <span
                               className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                item.booking_status === "confirmed" || item.booking_status === "settlement"
-                                  ? "bg-green-100 text-green-800"
-                                  : item.booking_status === "pending"
-                                  ? "bg-yellow-100 text-yellow-800"
-                                  : item.booking_status === "expire" || item.booking_status === "cancel"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-gray-100 text-gray-700"
+                                item.booking_status === "confirmed" || item.booking_status === "settlement" ? "bg-green-100 text-green-800" : item.booking_status === "pending" ? "bg-yellow-100 text-yellow-800" : item.booking_status === "expire" || item.booking_status === "cancel" ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-700"
                               }`}
                             >
                               {item.booking_status}
                             </span>
                           </td>
                           <td className="p-2 flex justify-center gap-3">
-                            <button
-                              onClick={() => { setSelectedOrder(item); setIsModalOpen(true); }}
-                              className="text-gray-600 hover:text-black cursor-pointer"
-                              title="Lihat Detail"
-                            >
+                            <button onClick={() => { setSelectedOrder(item); setIsModalOpen(true); }} className="text-gray-600 hover:text-black cursor-pointer" title="Lihat Detail">
                               <Eye size={16} />
                             </button>
                             {showArchiveButton && (
                               <>
-                                <button
-                                  onClick={() => {
-                                    const encodeId = hashids.encode(item.booking_id);
-                                    router.push(`/dashboard/pemesanan/daftar-pesanan/${encodeId}`);
-                                  }}
-                                  className="text-blue-600 hover:text-blue-800 cursor-pointer"
-                                  title="Ubah Pesanan"
-                                >
+                                <button onClick={() => { const encodeId = hashids.encode(item.booking_id); router.push(`/dashboard/pemesanan/daftar-pesanan/${encodeId}`); }} className="text-blue-600 hover:text-blue-800 cursor-pointer" title="Ubah Pesanan">
                                   <Pencil size={16} />
                                 </button>
-                                <button
-                                  onClick={() => handleArchive(item)}
-                                  className="text-red-600 hover:text-red-800 cursor-pointer"
-                                  title="Arsipkan Pesanan"
-                                >
+                                <button onClick={() => handleArchive(item)} className="text-red-600 hover:text-red-800 cursor-pointer" title="Arsipkan Pesanan">
                                   <Archive size={16} />
                                 </button>
-                                <button
-                                  onClick={() => handleSyncStatus(item.order_id, item.booking_id)}
-                                  disabled={!!refreshingItemId}
-                                  className="text-green-600 hover:text-black cursor-pointer disabled:cursor-not-allowed"
-                                  title="Sinkronkan status pembayaran"
-                                >
-                                  <RefreshCw
-                                    size={16}
-                                    className={refreshingItemId === item.booking_id ? 'animate-spin' : ''}
-                                  />
+                                <button onClick={() => handleSyncStatus(item.order_id, item.booking_id)} disabled={!!refreshingItemId} className="text-gray-600 hover:text-black cursor-pointer disabled:cursor-not-allowed" title="Sinkronkan status pembayaran">
+                                  <RefreshCw size={16} className={refreshingItemId === item.booking_id ? 'animate-spin' : ''} />
                                 </button>
                               </>
                             )}
@@ -417,17 +378,67 @@ const DaftarPesanan = () => {
                     })
                   ) : (
                     <tr>
-                      <td colSpan={9} className="p-4 text-center text-gray-500">
-                        Belum Ada Pesanan.
-                      </td>
+                      <td colSpan={9} className="p-4 text-center text-gray-500">Belum Ada Pesanan.</td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
+
+            {/* KODE MODAL DETAIL PESANAN YANG DIKEMBALIKAN */}
             {isModalOpen && selectedOrder && (
               <div className="fixed inset-0 bg-black/30 flex justify-center items-center z-50">
-                {/* ... (Modal tidak berubah) ... */}
+                <div className="bg-white rounded-xl shadow-xl p-4 w-[90%] max-w-md relative">
+                  <button className="absolute top-3 right-3 text-blue-500 hover:text-black text-xl cursor-pointer" onClick={() => setIsModalOpen(false)}>
+                    &times;
+                  </button>
+                  <h2 className="text-xl font-bold text-center flex justify-center items-center gap-2 mb-2">
+                    🧾 Detail Pesanan
+                  </h2>
+                  <div className="space-y-3 text-sm">
+                    <div className="border p-3 rounded-lg bg-gray-50 shadow-sm space-y-2">
+                      <p className="flex"><span className="w-44 font-semibold text-gray-600 shrink-0">🔖 Kode Pemesanan</span><span>: {selectedOrder.order_id}</span></p>
+                      <p className="flex"><span className="w-44 font-semibold text-gray-600 shrink-0">👤 Nama</span><span>: {selectedOrder.customer_name}</span></p>
+                      <p className="flex"><span className="w-44 font-semibold text-gray-600 shrink-0">📧 Email</span><span>: {selectedOrder.customer_email}</span></p>
+                      <p className="flex"><span className="w-44 font-semibold text-gray-600 shrink-0">📞 No. HP</span><span>: {selectedOrder.customer_phone}</span></p>
+                      <p className="flex"><span className="w-44 font-semibold text-gray-600 shrink-0">📦 Paket</span><span>: {selectedOrder.package?.package_name}</span></p>
+                      <p className="flex"><span className="w-44 font-semibold text-gray-600 shrink-0">🕒 Waktu Pemesanan</span><span>: {new Date(selectedOrder.created_at).toISOString().split("T")[0]}</span></p>
+                      <p className="flex items-center"><span className="w-44 font-semibold text-gray-600 shrink-0">📌 Status Booking</span><span>:{" "}<span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${ selectedOrder.booking_status === "confirmed" || selectedOrder.booking_status === "settlement" ? "bg-green-100 text-green-800" : selectedOrder.booking_status === "pending" ? "bg-yellow-100 text-yellow-800" : selectedOrder.booking_status === "expire" || selectedOrder.booking_status === "cancel" ? "bg-red-100 text-red-800" : "bg-gray-100 text-gray-700"}`}>{selectedOrder.booking_status}</span></span></p>
+                      <p className="flex"><span className="w-44 font-semibold text-gray-600 shrink-0">📅 Waktu Tour</span><span>: {selectedOrder.start_time?.slice(0, 5)} WIB, {selectedOrder.tour_date}</span></p>
+                      <p className="flex"><span className="w-44 font-semibold text-gray-600 shrink-0">👥 Jumlah Pesanan</span><span>: {selectedOrder.qty}</span></p>
+                    </div>
+                    <div className="border p-3 rounded-lg bg-gray-50 shadow-sm space-y-2">
+                      <p className="text-base font-semibold mb-2 flex items-center gap-2">💳 Status Pembayaran</p>
+                      <p className="flex items-center"><span className="w-44 font-semibold text-gray-600 shrink-0">Status</span><span>:{" "}<span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full ${selectedOrder.payment_status === "paid" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-600"}`}>{selectedOrder.payment_status === "paid" ? "Lunas" : "Belum Lunas"}</span></span></p>
+                      <p className="flex"><span className="w-44 font-semibold text-gray-600 shrink-0">Metode Pembayaran</span><span>: {selectedOrder.payment_type}</span></p>
+                      <p className="flex"><span className="w-44 font-semibold text-gray-600 shrink-0">Jenis Pembayaran</span><span>: {selectedOrder.payment_type === "dp" ? "DP" : "Full"}</span></p>
+                      {selectedOrder.payment_status === "unpaid" && (
+                        <>
+                          <p className="flex"><span className="w-44 font-semibold text-gray-600 shrink-0">Total Tagihan</span><span>: Rp {Number(selectedOrder.gross_amount * selectedOrder.qty).toLocaleString("id-ID")}</span></p>
+                          {selectedOrder.payment_type === "dp" && (
+                            <>
+                              <p className="flex"><span className="w-44 font-semibold text-gray-600 shrink-0">Dibayar (DP)</span><span>: Rp {Number(selectedOrder.dp_amount).toLocaleString("id-ID")}</span></p>
+                              <p className="flex"><span className="w-44 font-semibold text-gray-600 shrink-0">Sisa Pembayaran</span><span>:{" "}{remainingPayment !== null ? `Rp ${Number(remainingPayment).toLocaleString("id-ID")}` : "Memuat..."}</span></p>
+                              <p className="text-red-600 text-xs mt-2">Ini adalah pembayaran DP. Silakan lunasi sebelum <strong className="text-red-700">{selectedOrder.due_date}</strong></p>
+                            </>
+                          )}
+                          {countdownText && ( <p className="text-xs font-semibold text-orange-600 bg-orange-50 p-2 rounded-md border border-orange-200 mt-2">{countdownText}</p> )}
+                        </>
+                      )}
+                      {selectedOrder.payment_status === "paid" && (
+                        <>
+                          <p className="flex"><span className="w-44 font-semibold text-gray-600 shrink-0">Total Pembayaran</span><span>: Rp {Number(selectedOrder.gross_amount * selectedOrder.qty).toLocaleString("id-ID")}</span></p>
+                          {paymentStatusMessage && ( <p className="text-xs font-semibold text-green-600 bg-green-50 p-2 rounded-md border border-green-200 mt-2">{paymentStatusMessage}</p> )}
+                        </>
+                      )}
+                    </div>
+                    <div className="text-center mt-4">
+                      <a href={`https://wa.me/${formatNomorWA(selectedOrder.customer_phone)}?text=Halo ${selectedOrder.customer_name}, kami dari tim admin ingin mengonfirmasi pesanan Anda dengan kode ${selectedOrder.order_id}`} target="_blank" rel="noopener noreferrer" className="inline-block bg-[#3D6CB9] hover:bg-blue-700 transition-all duration-150 text-white font-medium py-2 px-4 rounded text-sm">
+                        Hubungi Pelanggan via WhatsApp
+                      </a>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
           </>
