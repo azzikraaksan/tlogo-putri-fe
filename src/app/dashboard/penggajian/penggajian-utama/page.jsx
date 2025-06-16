@@ -7,7 +7,6 @@ import withAuth from "/src/app/lib/withAuth";
 import { useRouter } from "next/navigation";
 import SlipGaji from "/components/SlipGaji";
 import Hashids from "hashids";
-//import LoadingFunny from "/components/LoadingFunny.jsx";
 import LoadingRow from "/components/LoadingRow.jsx";
 
 function DaftarGaji() {
@@ -20,99 +19,15 @@ function DaftarGaji() {
   const [modeCatat, setModeCatat] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
   const itemsPerPage = 10;
-  const [allPreviews, setAllPreviews] = useState([]); // untuk semua entri
+  const [allPreviews, setAllPreviews] = useState([]);
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [selectedDate, setSelectedDate] = useState("");
   const [reloadTrigger, setReloadTrigger] = useState(0);
-  //const [loading, setLoading] = useState(false);
   const [isLoading, setLoading] = useState(false);
   const [dataGaji, setDataGaji] = useState([]);
   const [showSlipModal, setShowSlipModal] = useState(false);
 
   const router = useRouter();
-
-  const fetchSalaryDataGabungan = async () => {
-    try {
-      const [previewRes, allRes] = await Promise.all([
-        fetch("https://tpapi.siunjaya.id/api/salary/previews"),
-        fetch("https://tpapi.siunjaya.id/api/salary/all"),
-      ]);
-
-      const previewJson = await previewRes.json();
-      const allJsonRaw = await allRes.json();
-
-      //console.log("Data salary/all:", allJsonRaw); // Cek dulu struktur
-
-      // Misal data yang benar ada di properti `all`
-      const allJson = allJsonRaw.all || allJsonRaw;
-      //console.log("Data salary/all:", allJsonRaw);
-
-      const previews = previewJson.previews.map((item) => ({
-        id: item.id,
-        user_id: item.user_id,
-        nama: item.nama,
-        posisi: item.role,
-        role: item.role,
-        tanggal: item.payment_date,
-        status: item.status,
-      }));
-
-      const formatDate = (dateStr) =>
-        new Date(dateStr).toISOString().slice(0, 10);
-
-      const merged = previews.map((preview) => {
-        const previewDate = formatDate(preview.tanggal);
-        const isMatched =
-          Array.isArray(allJson) &&
-          allJson.some(
-            (s) =>
-              s.user_id === preview.user_id &&
-              s.role.toLowerCase() === preview.role.toLowerCase() &&
-              formatDate(s.payment_date) === previewDate
-          );
-
-        return {
-          ...preview,
-          status: isMatched ? "Sudah" : "Belum",
-        };
-      });
-
-      // Filter unik per user dan tanggal
-      const unique = new Map();
-      merged.forEach((item) => {
-        const dateKey = new Date(item.tanggal).toISOString().slice(0, 10);
-        const key = `${item.user_id}_${dateKey}`;
-        if (!unique.has(key)) {
-          unique.set(key, item);
-        }
-      });
-
-      setAllPreviews([...merged]);
-      setData([...unique.values()]);
-    } catch (error) {
-      console.error("Gagal fetch gabungan:", error);
-    }
-  };
-
-  const fetchSalaryAllData = async () => {
-    try {
-      const res = await fetch("https://tpapi.siunjaya.id/api/salary/all");
-      const json = await res.json();
-      //console.log("Data salary/all diterima:", json);
-
-      const rawData = json.data || json;
-
-      const mappedData = rawData.map((item) => ({
-        ...item,
-        posisi: item.role, // Tambahkan posisi agar bisa difilter
-        tanggal: item.date ?? item.payment_date, // Pastikan ada tanggal
-      }));
-
-      setData(mappedData);
-    } catch (error) {
-      console.error("Gagal fetch salary/all:", error);
-    }
-  };
 
   useEffect(() => {
     const init = async () => {
@@ -207,7 +122,7 @@ function DaftarGaji() {
           localStorage.removeItem("statusUpdated");
         }
       } catch (error) {
-        console.error("❌ Error saat fetch:", error);
+        //console.error("❌ Error saat fetch:", error);
       } finally {
         setLoading(false);
       }
@@ -241,8 +156,9 @@ function DaftarGaji() {
   const filteredData = useMemo(() => {
     return (data || [])
       .filter((item) => {
-        const matchesSearch =
-          item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ;
+        const matchesSearch = item.nama
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
 
         return (
           (positionFilter === "Semua" || item.posisi === positionFilter) &&
@@ -289,13 +205,9 @@ function DaftarGaji() {
     router.push(
       `/dashboard/penggajian/penggajian-utama/catat/${encodedUserId}/${role}?payment_date=${encodedDate}`
     );
-    //router.push(
-    //  `/dashboard/penggajian/penggajian-utama/catat/${user_id}/${role}?payment_date=${encodedDate}`
-    //);
   };
 
   const handleLihat = (user_id, role, payment_date) => {
-    //console.log("Lihat detail:", user_id, role, payment_date);
     const encodedUserId = hashids.encode(user_id);
     let encodedDate = "";
     if (payment_date && !isNaN(new Date(payment_date))) {
@@ -315,13 +227,6 @@ function DaftarGaji() {
     router.push(
       `/dashboard/penggajian/penggajian-utama/catat/${encodedUserId}/${role}?payment_date=${encodedDate}`
     );
-    //router.push(
-    //  `/dashboard/penggajian/penggajian-utama/catat/${user_id}/${role}?payment_date=${encodedDate}`
-    //);
-  };
-
-  const handleCetak = () => {
-    setShowSlipModal(true);
   };
 
   const handleKembaliDariGaji = () => {
@@ -357,37 +262,39 @@ function DaftarGaji() {
     );
   };
 
-  //const handleGenerateGaji = async () => {
-  //  const token = localStorage.getItem("access_token");
+  const handleGenerateGaji = async () => {
+    const token = localStorage.getItem("access_token");
 
-  //  try {
-  //    const headers = {
-  //      Authorization: `Bearer ${token}`,
-  //    };
-  //    const res = await fetch(
-  //      "https://tpapi.siunjaya.id/api/salary/previews/generate",
-  //      {
-  //        headers,
-  //        method: "POST",
-  //      }
-  //    );
+    try {
+      const headers = {
+        Authorization: `Bearer ${token}`,
+      };
 
-  //    if (!res.ok) throw new Error("Gagal generate data gaji");
+      const res = await fetch(
+        "https://tpapi.siunjaya.id/api/salary/previews/generate",
+        {
+          method: "POST",
+          headers,
+        }
+      );
 
-  //    const result = await res.json();
-  //    console.log("✅ Generate sukses:", result);
+      const text = await res.text();
 
-  //    // Trigger reload data dari API setelah generate
-  //    setReloadTrigger((prev) => prev + 1);
-  //  } catch (err) {
-  //    console.error("❌ Gagal generate data gaji:", err);
-  //    alert("Gagal generate data gaji");
-  //  }
-  //};
+      if (!res.ok) {
+        try {
+          const errJson = JSON.parse(text);
+          alert("Error dari server: " + errJson.message || "Tidak diketahui");
+        } catch (e) {
+          alert("Terjadi error di server (500)");
+        }
+        return;
+      }
 
-  //if (loading) {
-  //  return <LoadingFunny />;
-  //}
+      setReloadTrigger((prev) => prev + 1);
+    } catch (err) {
+      alert("Gagal generate data gaji");
+    }
+  };
 
   return (
     <div className="flex">
@@ -419,7 +326,7 @@ function DaftarGaji() {
                   setPositionFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="text-black text-sm border border-gray-700 rounded px-2 py-1"
+                className="text-black text-sm border border-gray-700 rounded px-2 py-1 cursor-pointer"
               >
                 <option value="Semua">Semua</option>
                 <option value="Driver">Driver</option>
@@ -436,7 +343,7 @@ function DaftarGaji() {
                   setStatusFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="text-black text-sm border border-gray-700 rounded px-2 py-1"
+                className="text-black text-sm border border-gray-700 rounded px-2 py-1 cursor-pointer"
               >
                 <option value="Semua">Semua</option>
                 <option value="Belum">Belum</option>
@@ -448,13 +355,12 @@ function DaftarGaji() {
               </label>
               <input
                 type="date"
-                //defaultValue={new Date().toISOString().split("T")[0]}
                 value={selectedDate}
                 onChange={(e) => {
                   setSelectedDate(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="mt-1 block w-40 rounded-md border border-gray-300 bg-white py-2 px-3 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                className="mt-1 block w-40 rounded-md border border-gray-300 bg-white py-2 px-3 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
               />
               <button
                 onClick={() => {
@@ -462,13 +368,20 @@ function DaftarGaji() {
                   setPositionFilter("Semua");
                   setStatusFilter("Semua");
                 }}
-                className="text-sm text-blue-600"
+                className="text-sm text-blue-600 cursor-pointer"
               >
                 Reset Semua Filter
               </button>
             </div>
 
-            <div className="flex justify-end items-center mb-4">
+            <div className="flex justify-between items-center mb-4">
+              <button
+                onClick={handleGenerateGaji}
+                className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-800 text-sm cursor-pointer"
+              >
+                Generate Data Gaji
+              </button>
+
               <SearchInput
                 value={searchQuery}
                 onChange={(e) => {
@@ -531,7 +444,7 @@ function DaftarGaji() {
                                     item.tanggal
                                   );
                                 }}
-                                className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-800 text-sm"
+                                className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-800 text-sm cursor-pointer"
                               >
                                 Pratinjau
                               </button>
@@ -545,7 +458,7 @@ function DaftarGaji() {
                                       item.tanggal
                                     )
                                   }
-                                  className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-800 text-sm"
+                                  className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-800 text-sm cursor-pointer"
                                 >
                                   Lihat
                                 </button>
@@ -582,7 +495,7 @@ function DaftarGaji() {
               <button
                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                 disabled={currentPage === 1}
-                className="px-2 py-1 rounded disabled:opacity-30 hover:bg-gray-200"
+                className="px-2 py-1 rounded disabled:opacity-30 hover:bg-gray-200 cursor-pointer"
               >
                 &lt;
               </button>
@@ -604,7 +517,7 @@ function DaftarGaji() {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 rounded ${
+                      className={`px-3 py-1 rounded cursor-pointer ${
                         currentPage === page
                           ? "bg-[#3D6CB9] text-white"
                           : "hover:bg-gray-200"
@@ -621,7 +534,7 @@ function DaftarGaji() {
                   setCurrentPage((p) => Math.min(p + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className="px-2 py-1 rounded disabled:opacity-30 hover:bg-gray-200"
+                className="px-2 py-1 rounded disabled:opacity-30 hover:bg-gray-200 cursor-pointer"
               >
                 &gt;
               </button>
