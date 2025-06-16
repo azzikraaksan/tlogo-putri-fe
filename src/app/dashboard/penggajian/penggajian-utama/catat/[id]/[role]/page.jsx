@@ -33,19 +33,12 @@ export default function GajiCatatPage() {
     setLoading(true);
     setError(null);
     const token = localStorage.getItem("access_token");
-    console.log("\ud83d\udd50 Memulai fetchGajiDetail:", {
-      id,
-      role,
-      payment_date,
-    });
 
     try {
       const headers = {
         Authorization: `Bearer ${token}`,
       };
 
-      //const normalizeDate = (dateStr) =>
-      //  new Date(dateStr).toISOString().slice(0, 10);
       const normalizeDate = (dateStr) => {
         if (!dateStr || isNaN(new Date(dateStr))) return "";
         return new Date(dateStr).toISOString().slice(0, 10);
@@ -55,9 +48,6 @@ export default function GajiCatatPage() {
 
       const roleForData = decodeURIComponent(role).trim();
       const roleForUrl = roleForData.toLowerCase().replace(/\s+/g, "-");
-
-      console.log("✅ roleForData:", roleForData);
-      console.log("✅ roleForUrl:", roleForUrl);
 
       const resPreview = await fetch(
         "https://tpapi.siunjaya.id/api/salary/previews",
@@ -78,11 +68,16 @@ export default function GajiCatatPage() {
       }
 
       const endpoint = `https://tpapi.siunjaya.id/api/salary/preview/${id}/${roleForUrl}`;
-      console.log("Endpoint yang akan dipanggil:", endpoint);
 
       const resDetail = await fetch(endpoint, { headers });
       const json = await resDetail.json();
-      console.log("API Response:", json);
+      if (!json.data && json.message?.includes("tanggal 1")) {
+        setData([]); 
+        setError(
+          "Gaji Front Office hanya bisa dilihat pada tanggal 1 setiap bulan."
+        );
+        return;
+      }
 
       let filteredData = [];
 
@@ -121,12 +116,6 @@ export default function GajiCatatPage() {
           item.role?.toLowerCase().replace(/\s+/g, "-") === roleForUrl &&
           normalizeDate(item.payment_date) === normalizedPaymentDate
       );
-
-      console.log("🧪 DEBUG: ALL SALARIES", allSalaries);
-      console.log("🧪 DEBUG: Looking for user_id", parseInt(id));
-      console.log("🧪 DEBUG: roleForData", roleForData);
-      console.log("🧪 DEBUG: normalizedPaymentDate", normalizedPaymentDate);
-      console.log("🧪 DEBUG: Ditemukan?", existingSalary);
 
       let total = 0;
 
@@ -252,7 +241,6 @@ export default function GajiCatatPage() {
       return;
     }
 
-    // ✅ GANTI LOGIKA validSalaries DI SINI:
     let validSalaries = [];
 
     if (normalizedRole === "front-office") {
@@ -334,7 +322,6 @@ export default function GajiCatatPage() {
 
       if (response.ok) {
         const responseData = await response.json();
-        console.log("✅ Status berhasil disimpan:", responseData);
 
         setStatus("Sudah");
         const statusKey = `${user_id}-${normalizedRole}-${payment_date}`;
@@ -361,11 +348,18 @@ export default function GajiCatatPage() {
 
   const renderGajiByRole = () => {
     if (loading) return <p>Loading...</p>;
-    if (error) return <p>Error: {error}</p>;
+    //if (error) return <p>Error: {error}</p>;
+    if (error) {
+      return (
+        <div className="bg-yellow-100 text-yellow-800 border-l-4 border-yellow-500 p-4 my-4 rounded">
+          ⚠️ {error}
+        </div>
+      );
+    }
+
     if (!data.length) return <p>Data kosong</p>;
 
     const normalizedRole = decodeURIComponent(role).trim().toLowerCase();
-
     switch (normalizedRole) {
       case "driver":
         return (
@@ -557,29 +551,42 @@ export default function GajiCatatPage() {
               <span className="font-semibold">{decodeURIComponent(role)}</span>
             </div>
             <div>
-              Status: <span className="font-semibold">{status}</span>
+              Status:{" "}
+              <span
+                className={`font-semibold px-2 py-1 rounded ${
+                  status.toLowerCase() === "belum"
+                    ? "bg-red-100 text-red-600"
+                    : "bg-green-100 text-green-600"
+                }`}
+              >
+                {status === "Sudah" ? "Sudah Terbayarkan" : "Belum Terbayarkan"}
+              </span>
             </div>
           </div>
           <div className="border-b-4 border-blue-500 mt-4"></div>
 
           {renderGajiByRole()}
-          <div className="flex justify-end mt-4 gap-4">
+          <div className="flex justify-end mt-4 gap-4 ">
             {isBelum && (
               <button
                 onClick={() => setShowConfirmModal(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded"
+                className="bg-blue-600 text-white px-4 py-2 rounded cursor-pointer"
               >
                 Ubah Status
               </button>
             )}
             <button
               onClick={() => !isBelum && setShowSlipModal(true)}
-              disabled={isBelum}
+              disabled={isBelum || data.length === 0}
               title={
-                isBelum ? "Harap klik tombol 'Terbayarkan' terlebih dahulu" : ""
-              }
-              className={`px-4 py-2 rounded transition-all duration-200 ${
                 isBelum
+                  ? "Harap klik tombol 'Terbayarkan' terlebih dahulu"
+                  : data.length === 0
+                    ? "Tidak bisa cetak. Coba lagi pada tanggal 1."
+                    : ""
+              }
+              className={`px-4 py-2 rounded transition-all duration-200 cursor-pointer ${
+                isBelum || data.length === 0
                   ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                   : "bg-blue-600 text-white hover:bg-blue-700"
               }`}
