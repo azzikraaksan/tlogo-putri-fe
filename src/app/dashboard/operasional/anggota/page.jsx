@@ -124,35 +124,6 @@ const AnggotaPage = () => {
     }
   };
 
-  // const handleHapusUser = async (id) => {
-  //   if (!id) return;
-
-  //   try {
-  //     const token = localStorage.getItem("access_token");
-  //     if (!token) return;
-
-  //     const res = await fetch(
-  //       `https://tpapi.siunjaya.id/api/users/delete/${id}`,
-  //       {
-  //         method: "DELETE",
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-
-  //     if (res.ok) {
-  //       setUsers((prevUsers) => prevUsers.filter((user) => user.id !== id));
-  //     } else {
-  //       console.error("Gagal hapus user");
-  //       alert("Gagal hapus user.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error saat hapus user:", error);
-  //     alert("Terjadi kesalahan saat menghapus.");
-  //   }
-  // };
-
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
@@ -248,7 +219,7 @@ const AnggotaPage = () => {
                 placeholder="Cari"
               />
             </div>
-            <div className="overflow-x-auto bg-white rounded-xl shadow max-h-[470px]">
+            <div className="overflow-x-auto bg-white rounded-xl shadow max-h-[460px]">
               <table className="w-full table-auto">
                 <thead className="bg-[#3D6CB9] text-white sticky top-0">
                   <tr>

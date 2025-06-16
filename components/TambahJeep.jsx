@@ -23,8 +23,28 @@ export default function AddJeepForm({ onKembali }) {
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errors, setErrors] = useState({});
+  const [existingLambung, setExistingLambung] = useState([]);
+  const [existingPlat, setExistingPlat] = useState([]);
 
   useEffect(() => {
+    const fetchExistingData = async () => {
+      try {
+        const token = localStorage.getItem("access_token");
+        const res = await axios.get("https://tpapi.siunjaya.id/api/jeeps/all", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const jeeps = res.data.data;
+        setExistingLambung(jeeps.map((item) => item.no_lambung));
+        setExistingPlat(jeeps.map((item) => item.plat_jeep));
+      } catch (error) {
+        console.error("Gagal fetch data jeep:", error);
+      }
+    };
+
+    fetchExistingData();
     fetchOwnersWithJeepLimit();
     fetchDrivers();
   }, []);
@@ -33,19 +53,33 @@ export default function AddJeepForm({ onKembali }) {
     try {
       const token = localStorage.getItem("access_token");
 
-      const res = await axios.get(
-        "https://tpapi.siunjaya.id/api/users/by-role?role=Owner",
-        {
+      const [resOwners, resJeeps] = await Promise.all([
+        axios.get("https://tpapi.siunjaya.id/api/users/by-role?role=Owner", {
           headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+        }),
+        axios.get("https://tpapi.siunjaya.id/api/jeeps/all", {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
 
-      const allOwners = res.data.data;
+      const allOwners = resOwners.data.data;
+      const allJeeps = resJeeps.data.data;
 
-      const filteredOwners = allOwners.filter((owner) => owner.jumlah_jeep < 2);
+      const filteredOwners = allOwners.filter((owner) => {
+        const jeepsOfOwner = allJeeps.filter(
+          (jeep) => jeep.owner_id === owner.id
+        );
+
+        if (jeepsOfOwner.length === 0) return true;
+
+        const adaYangBelumAdaDriver = jeepsOfOwner.some(
+          (jeep) => !jeep.driver_id
+        );
+
+        return adaYangBelumAdaDriver;
+      });
+
       setOwners(filteredOwners);
-
-      setOwners(filteredOwners.filter(Boolean));
     } catch (err) {
       console.error("Gagal memuat data owner:", err);
     }
@@ -109,56 +143,6 @@ export default function AddJeepForm({ onKembali }) {
 
     setForm((prev) => ({ ...prev, [name]: file }));
   };
-  // const handleSubmit = async (e) => {
-  //   e.preventDefault();
-  //   const token = localStorage.getItem("access_token");
-
-  //   const submitData = {
-  //     ...form,
-  //     users_id: form.owner_id,
-  //   };
-
-  //   const requiredFields = [
-  //     "no_lambung",
-  //     "plat_jeep",
-  //     "merek",
-  //     "tipe",
-  //     "tahun_kendaraan",
-  //     "status",
-  //   ];
-
-  //   const isAnyEmpty = requiredFields.some(
-  //     (field) => String(submitData[field]).trim() === ""
-  //   );
-
-  //   if (isAnyEmpty || !submitData.owner_id) {
-  //     alert("Semua field wajib diisi!");
-  //     return;
-  //   }
-
-  //   try {
-  //     const response = await axios.post(
-  //       "https://tpapi.siunjaya.id/api/jeeps/create",
-  //       submitData,
-  //       {
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       }
-  //     );
-
-  //     if (response.status === 201) {
-  //       onKembali();
-  //     }
-  //   } catch (error) {
-  //     console.error("Gagal tambah jeep:", error.response?.data);
-  //     alert(
-  //       "Gagal menambahkan Jeep: " + error.response?.data?.message ||
-  //         "Terjadi masalah!"
-  //     );
-  //   }
-  // };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -183,9 +167,18 @@ export default function AddJeepForm({ onKembali }) {
     );
 
     if (isAnyEmpty || !submitData.owner_id) {
-      setErrors({
-        form: "Semua field wajib diisi!",
-      });
+      setErrors({ form: "Semua field wajib diisi!" });
+      return;
+    }
+
+    // ✅ Cek duplikasi sebelum kirim ke backend
+    if (existingLambung.includes(submitData.no_lambung)) {
+      setErrors({ no_lambung: "Nomor lambung sudah digunakan." });
+      return;
+    }
+
+    if (existingPlat.includes(submitData.plat_jeep)) {
+      setErrors({ plat_jeep: "Plat jeep sudah digunakan." });
       return;
     }
 
@@ -207,28 +200,10 @@ export default function AddJeepForm({ onKembali }) {
       }
     } catch (error) {
       console.error("Gagal tambah jeep:", error.response?.data);
-
-      if (error.response && error.response.data) {
-        const message = error.response.data.message || "";
-
-        const newErrors = {};
-
-        if (message.includes("no_lambung")) {
-          newErrors.no_lambung = "Nomor lambung sudah digunakan.";
-        }
-
-        if (message.includes("plat_jeep")) {
-          newErrors.plat_jeep = "Plat jeep sudah digunakan.";
-        }
-
-        if (Object.keys(newErrors).length === 0) {
-          newErrors.form = message || "Terjadi masalah!";
-        }
-
-        setErrors(newErrors);
-      }
+      setErrors({ form: "Terjadi kesalahan saat menyimpan data." });
     }
   };
+
   return (
     <div className="flex">
       <div className="flex-1">
@@ -242,7 +217,7 @@ export default function AddJeepForm({ onKembali }) {
         >
           <div>
             <label className="block text-sm font-medium mb-1">
-              Pilih Owner:
+              Pilih Owner: <span className="text-red-500">*</span>
             </label>
             <select
               name="owner_id"
@@ -261,9 +236,10 @@ export default function AddJeepForm({ onKembali }) {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
-              Pilih Driver :
+              Pilih Driver : <span className="text-red-500">*</span>
             </label>
             <select
+              required
               name="driver_id"
               value={form.driver_id}
               onChange={handleChange}
@@ -279,13 +255,11 @@ export default function AddJeepForm({ onKembali }) {
             </select>
           </div>
           <label className="block text-sm font-medium mb-1">
-            Masukan No Lambung :
+            Masukan No Lambung : <span className="text-red-500">*</span>
           </label>
-
           {errors.no_lambung && (
             <p className="text-red-500 text-sm mb-1">{errors.no_lambung}</p>
           )}
-
           <input
             name="no_lambung"
             value={form.no_lambung}
@@ -294,8 +268,8 @@ export default function AddJeepForm({ onKembali }) {
             className="p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
           />
 
-          <label className="block text-sm font-medium mb-1">
-            Masukan No Plat :
+          <label className="block text-sm font-medium mb-1 mt-4">
+            Masukan No Plat : <span className="text-red-500">*</span>
           </label>
           {errors.plat_jeep && (
             <p className="text-red-500 text-sm mb-1">{errors.plat_jeep}</p>
@@ -309,7 +283,7 @@ export default function AddJeepForm({ onKembali }) {
           />
 
           <label className="block text-sm font-medium mb-1">
-            Masukan Merek Jeep :
+            Masukan Merek Jeep : <span className="text-red-500">*</span>
           </label>
           <input
             name="merek"
@@ -320,7 +294,7 @@ export default function AddJeepForm({ onKembali }) {
           />
 
           <label className="block text-sm font-medium mb-1">
-            Masukan Tipe Jeep :
+            Masukan Tipe Jeep : <span className="text-red-500">*</span>
           </label>
           <input
             name="tipe"
@@ -330,7 +304,7 @@ export default function AddJeepForm({ onKembali }) {
             className="p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
           />
           <label className="block text-sm font-medium mb-1">
-            Masukan Tahun Kendaraan :
+            Masukan Tahun Kendaraan : <span className="text-red-500">*</span>
           </label>
           <input
             name="tahun_kendaraan"
@@ -339,28 +313,6 @@ export default function AddJeepForm({ onKembali }) {
             onChange={handleChange}
             className="p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
           />
-          {/* <label className="block text-sm font-bold text-gray-700">
-            Foto Jeep (opsional)
-          </label>
-          <input
-            type="file"
-            name="foto_jeep"
-            accept=".jpeg, .jpg, .png"
-            onChange={handleFileChange}
-            className="p-2 pr-10 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-            style={{ paddingRight: "2.5rem" }} // kasih space kanan buat icon
-          />
-          <Upload
-            size={15}
-            style={{
-              position: "absolute",
-              top: "70%",
-              right: "10px",
-              transform: "translateY(-50%)",
-              pointerEvents: "none",
-              color: "#9CA3AF",
-            }}
-          /> */}
           <div className="flex justify-end">
             <button
               type="submit"
@@ -372,7 +324,7 @@ export default function AddJeepForm({ onKembali }) {
               disabled={drivers.length === 0}
             >
               {drivers.length === 0
-                ? "Tidak Ada Driver Tersedia"
+                ? "Tidak Ada Driver yang Kosong"
                 : "Tambah Jeep"}
             </button>
           </div>

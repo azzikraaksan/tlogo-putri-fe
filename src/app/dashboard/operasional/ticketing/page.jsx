@@ -176,8 +176,7 @@ const TicketingPage = () => {
 
     const rotationId = rotation.id;
     const encodedId = hashids.encode(rotationId);
-    const confirmLink = `http://localhost:3000//confirm/${encodedId}`;
-    // const confirmLink = `https://tlogoputri.siunjaya.id/confirm/${encodedId}`;
+    const confirmLink = `https://tlogoputri.siunjaya.id/confirm/${encodedId}`;
     const phone = item.driver?.telepon.replace(/^0/, "62");
 
     const message = encodeURIComponent(
@@ -477,7 +476,7 @@ const TicketingPage = () => {
           )}
         </div>
 
-        <div className="overflow-x-auto bg-white rounded-xl shadow max-h-[800px]">
+        <div className="overflow-x-auto bg-white rounded-xl shadow max-h-[450px]">
           <table className="w-full table-auto">
             <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10">
               <tr>

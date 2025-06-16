@@ -362,12 +362,12 @@ const DashboardPage = () => {
     <div className="flex bg-gray-50 min-h-screen">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
       <div className="flex-1 p-6 md:p-10 transition-all duration-300 ease-in-out" style={{ marginLeft: isSidebarOpen ? 290 : 70 }}>
-        <div className="mb-8 flex items-center gap-2 mt-8">
+        <div className="mb-8 flex items-center gap-2 mt-4">
           <h1 className="text-2xl md:text-[32px] font-normal text-gray-700">Selamat datang,</h1>
           <p className="text-2xl md:text-[32px] font-bold text-[#3D6CB9]">{userRole}</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
           <StatCard
             title="Daftar Anggota"
             value={jumlahAnggota}
@@ -395,7 +395,7 @@ const DashboardPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="w-full bg-white p-6 rounded-2xl shadow-lg">
             <h3 className="text-lg font-semibold mb-4 text-[#3D6CB9]">Grafik Pemesanan</h3>
-            <div className="h-[350px]">
+            <div className="h-[300px]">
               <Bar data={pemesananChartData} options={{ maintainAspectRatio: false, responsive: true }} />
             </div>
           </div>

@@ -6,7 +6,7 @@ import { CircleArrowLeft, Upload } from "lucide-react";
 const TambahAnggota = ({ onKembali }) => {
   const router = useRouter();
   const [errors, setErrors] = useState({});
-  const today = new Date().toISOString().split("T")[0]; 
+  const today = new Date().toISOString().split("T")[0];
   const [formData, setFormData] = useState({
     name: "",
     username: "",
@@ -33,11 +33,11 @@ const TambahAnggota = ({ onKembali }) => {
 
     const file = files[0];
     const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
-    const maxSize = 3 * 1024 * 1024; 
+    const maxSize = 3 * 1024 * 1024;
 
     if (!allowedTypes.includes(file.type)) {
       alert("Format file tidak valid. Harus jpeg, jpg, atau png.");
-      e.target.value = ""; 
+      e.target.value = "";
       return;
     }
 
@@ -92,9 +92,10 @@ const TambahAnggota = ({ onKembali }) => {
         >
           <div>
             <label className="block text-sm text-gray-700 font-bold">
-              Peran
+              Peran <span className="text-red-500">*</span>
             </label>
             <select
+              required
               name="role"
               value={formData.role}
               onChange={handleChange}
@@ -138,9 +139,10 @@ const TambahAnggota = ({ onKembali }) => {
           ].map(({ label, name, type = "text", placeholder }) => (
             <div key={name}>
               <label className="block text-sm font-bold text-gray-700">
-                {label}
+                {label} <span className="text-red-500">*</span>
               </label>
               <input
+                required
                 type={type}
                 name={name}
                 value={formData[name]}
@@ -155,9 +157,11 @@ const TambahAnggota = ({ onKembali }) => {
             <>
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  No Telepon (wajib diawali 08 atau 628)
+                  No Telepon (wajib diawali 08 atau 628){" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
+                  required
                   type="number"
                   name="telepon"
                   value={formData.telepon}
@@ -169,9 +173,10 @@ const TambahAnggota = ({ onKembali }) => {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  Alamat
+                  Alamat <span className="text-red-500">*</span>
                 </label>
                 <input
+                  required
                   type="text"
                   name="alamat"
                   value={formData.alamat}
@@ -183,9 +188,11 @@ const TambahAnggota = ({ onKembali }) => {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  Jumlah Jeep (Maksimal 2)
+                  Jumlah Jeep (Maksimal 2){" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
+                  required
                   type="number"
                   name="jumlah_jeep"
                   value={formData.jumlah_jeep}
@@ -196,9 +203,10 @@ const TambahAnggota = ({ onKembali }) => {
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  Tanggal Bergabung
+                  Tanggal Bergabung <span className="text-red-500">*</span>
                 </label>
                 <input
+                  required
                   type="date"
                   name="tanggal_bergabung"
                   value={formData.tanggal_bergabung}
@@ -237,9 +245,11 @@ const TambahAnggota = ({ onKembali }) => {
             <>
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  No Telepon (wajib diawali 08 atau 628)
+                  No Telepon (wajib diawali 08 atau 628){" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
+                  required
                   type="number"
                   name="telepon"
                   value={formData.telepon}
@@ -251,9 +261,10 @@ const TambahAnggota = ({ onKembali }) => {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  Alamat
+                  Alamat <span className="text-red-500">*</span>
                 </label>
                 <input
+                  required
                   type="text"
                   name="alamat"
                   value={formData.alamat}
@@ -264,9 +275,10 @@ const TambahAnggota = ({ onKembali }) => {
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  Tanggal Bergabung
+                  Tanggal Bergabung <span className="text-red-500">*</span>
                 </label>
                 <input
+                  required
                   type="date"
                   name="tanggal_bergabung"
                   value={formData.tanggal_bergabung}
@@ -305,9 +317,11 @@ const TambahAnggota = ({ onKembali }) => {
             <>
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  No Telepon (wajib diawali 08 atau 628)
+                  No Telepon (wajib diawali 08 atau 628){" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
+                  required
                   type="number"
                   name="telepon"
                   value={formData.telepon}
@@ -319,9 +333,10 @@ const TambahAnggota = ({ onKembali }) => {
 
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  Alamat
+                  Alamat <span className="text-red-500">*</span>
                 </label>
                 <input
+                  required
                   type="text"
                   name="alamat"
                   value={formData.alamat}
@@ -332,9 +347,10 @@ const TambahAnggota = ({ onKembali }) => {
               </div>
               <div>
                 <label className="block text-sm font-bold text-gray-700">
-                  Tanggal Bergabung
+                  Tanggal Bergabung <span className="text-red-500">*</span>
                 </label>
                 <input
+                  required
                   type="date"
                   name="tanggal_bergabung"
                   value={formData.tanggal_bergabung}

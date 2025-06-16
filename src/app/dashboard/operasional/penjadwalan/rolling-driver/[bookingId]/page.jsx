@@ -2,10 +2,10 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Sidebar from "/components/Sidebar.jsx";
-import LoadingFunny from "/components/LoadingFunny.jsx";
 import SearchInput from "/components/Search.jsx";
 import withAuth from "/src/app/lib/withAuth";
 import { CircleArrowLeft } from "lucide-react";
+import LoadingRow from "/components/LoadingRow.jsx";
 import Hashids from "hashids";
 
 const PenjadwalanPage = () => {
@@ -23,7 +23,7 @@ const PenjadwalanPage = () => {
   const bookingId = params?.bookingId;
   const [rotations, setRotations] = useState([]);
   const [unassignedDrivers, setUnassignedDrivers] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setLoading] = useState(false);
   const hashids = new Hashids(process.env.NEXT_PUBLIC_HASHIDS_SECRET, 20);
   const bookingHash = params?.bookingId;
   const decoded = hashids.decode(bookingHash);
@@ -164,10 +164,10 @@ const PenjadwalanPage = () => {
       // router.push("/dashboard/operasional/ticketing");
       setShowSuccessModal(true);
       setTimeout(() => {
-          setShowSuccessModal(false);
-          router.push("/dashboard/operasional/ticketing");
-        }, 1500);
-        return;
+        setShowSuccessModal(false);
+        router.push("/dashboard/operasional/ticketing");
+      }, 1500);
+      return;
     } catch (error) {
       console.error("Terjadi kesalahan:", error.message);
     }
@@ -191,7 +191,7 @@ const PenjadwalanPage = () => {
       if (!response.ok) throw new Error("Gagal mengambil data jeep");
 
       const data = await response.json();
-      return data.data[0]; 
+      return data.data[0];
     } catch (error) {
       console.error("Error fetch jeep:", error);
       return null;
@@ -269,7 +269,7 @@ const PenjadwalanPage = () => {
 
       console.log("✅ Driver yang bisa dipilih:", unassignedRotations);
 
-      setIsAlreadyRolled(rotationsData.length > 0); 
+      setIsAlreadyRolled(rotationsData.length > 0);
       setRotations(unassignedRotations);
     } catch (err) {
       console.error("Error cek rolling:", err);
@@ -281,9 +281,6 @@ const PenjadwalanPage = () => {
   const handleKembali = () => {
     router.back();
   };
-  if (loading) {
-    return <LoadingFunny />;
-  }
   return (
     <div className="flex">
       <Sidebar isSidebarOpen={isSidebarOpen} setSidebarOpen={setSidebarOpen} />
@@ -314,16 +311,15 @@ const PenjadwalanPage = () => {
             />
           </div>
         </div>
-          <div className="flex justify-between items-center mb-4 px-2">
-            <p className="text-gray-700">
-              <span className="font-semibold">| Tanggal Keberangkatan:</span>{" "}
-              {bookingData?.tour_date || "-"}
-              <span className="font-semibold ml-10">| Nama Pemesan:</span>{" "}
-              {bookingData?.customer_name || "-"}
-            </p>
-          </div>
+        <div className="flex justify-between items-center mb-4 px-2">
+          <p className="text-gray-700">
+            <span className="font-semibold">| Tanggal Keberangkatan:</span>{" "}
+            {bookingData?.tour_date || "-"}
+            <span className="font-semibold ml-10">| Nama Pemesan:</span>{" "}
+            {bookingData?.customer_name || "-"}
+          </p>
+        </div>
         <div className="overflow-x-auto bg-white rounded-xl shadow">
-
           <table className="w-full table-auto">
             <thead className="bg-[#3D6CB9] text-white sticky top-0">
               <tr>
@@ -332,7 +328,11 @@ const PenjadwalanPage = () => {
               </tr>
             </thead>
             <tbody>
-              {rotations.length > 0 ? (
+              {isLoading ? (
+                <>
+                  <LoadingRow colCount={8} />
+                </>
+              ) : rotations.length > 0 ? (
                 rotations
                   .filter((item) => item.assigned !== 1)
                   .map((item) => (

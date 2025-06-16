@@ -1,35 +1,7 @@
-// import React from "react";
-
-// const TicketModal = ({ pemesan, driver, onClose }) => {
-//     return (
-//       <div
-//         className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
-//         onClick={onClose}
-//       >
-//         <div
-//           className="bg-white p-6 rounded shadow-lg"
-//           onClick={(e) => e.stopPropagation()}
-//         >
-//           <h2 className="text-xl font-bold mb-4">Detail Tiket</h2>
-//           <p>Pemesan: {pemesan}</p>
-//           <p>Driver: {driver}</p>
-//           <button
-//             onClick={onClose}
-//             className="mt-4 px-3 py-1 bg-blue-500 text-white rounded"
-//           >
-//             Tutup
-//           </button>
-//         </div>
-//       </div>
-//     );
-//   };
-
-// export default TicketModal;
-
 import React from "react";
 import Image from "next/image";
 import { useState } from "react";
-import jeepBg from "/public/images/tiket2.jpg"; // pastikan file ini ada di public/bg-jeep.jpg
+import jeepBg from "/public/images/tiket2.jpg"; 
 
 const TicketModal = ({
   code_booking,
@@ -49,9 +21,9 @@ const TicketModal = ({
     setTimeout(() => {
       window.print();
       setTimeout(() => {
-        setHideButtons(false); // tampilkan lagi setelah print
+        setHideButtons(false);
       }, 1000);
-    }, 100); // delay kecil biar sempat sembunyi dulu
+    }, 100);  
   };
 
   return (

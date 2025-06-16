@@ -298,7 +298,7 @@ const JeepPage = () => {
                   <h2 className="text-xl font-semibold mb-4">
                     Konfirmasi Hapus
                   </h2>
-                  <p className="mb-6">Yakin ingin menghapus user ini?</p>
+                  <p className="mb-6">Yakin ingin menghapus jeep ini?</p>
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => setIsModalOpen(false)}

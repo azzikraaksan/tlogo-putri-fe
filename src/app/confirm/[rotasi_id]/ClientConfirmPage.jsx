@@ -107,11 +107,11 @@ export default function ClientConfirmPage({ rotasi_id }) {
               }}
               disabled={loading}
               style={{
-                padding: "8px 20px",
+                padding: "4px 8px",
                 backgroundColor: "#22c55e",
                 color: "white",
                 border: "none",
-                borderRadius: 5,
+                borderRadius: 10,
                 cursor: loading ? "not-allowed" : "pointer",
                 fontWeight: "bold",
               }}
@@ -123,11 +123,11 @@ export default function ClientConfirmPage({ rotasi_id }) {
               onClick={() => setShowSkipReason(true)}
               disabled={loading}
               style={{
-                padding: "8px 20px",
+                padding: "4px 8px",
                 backgroundColor: "#ef4444",
                 color: "white",
                 border: "none",
-                borderRadius: 5,
+                borderRadius: 10,
                 cursor: loading ? "not-allowed" : "pointer",
                 fontWeight: "bold",
               }}

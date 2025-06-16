@@ -90,7 +90,7 @@ const ArsipPage = () => {
           />
         </div>
         <div className="bg-white rounded-xl shadow overflow-x-auto">
-          <div className="max-h-[470px]">
+          <div className="max-h-[600px]">
             <table className="w-full table-auto">
               <thead className="bg-[#3D6CB9] text-white sticky top-0">
                 <tr>
