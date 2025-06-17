@@ -129,7 +129,7 @@ export default function Page() {
     isi_konten: item.content || "",
   };
 
-  console.log("Payload yang dikirim:", payload);
+  // console.log("Payload yang dikirim:", payload);
 
   try {
     const res = await fetch("https://tpapi.siunjaya.id/api/content-generate/storecontent", {
