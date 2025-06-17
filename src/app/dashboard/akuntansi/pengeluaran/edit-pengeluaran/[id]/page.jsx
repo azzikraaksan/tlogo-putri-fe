@@ -6,6 +6,8 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Hashids from "hashids";
 
+import NotificationPopup from "/components/akuntansi/NotificationPopup"; 
+
 const HASHIDS_SECRET = process.env.NEXT_PUBLIC_HASHIDS_SECRET || "fallback_secret_salt_pengeluaran_jika_env_tidak_ada";
 const hashids = new Hashids(HASHIDS_SECRET, 20);
 
@@ -52,7 +54,14 @@ const EditPengeluaranPage = () => {
     const [selectedDateForPicker, setSelectedDateForPicker] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [errorFetching, setErrorFetching] = useState(null); // Variabel ini tetap ada, tapi penggunaannya untuk pesan error dikomentari
+    const [errorFetching, setErrorFetching] = useState(null);
+
+    // State for NotificationPopup
+    const [notification, setNotification] = useState({ message: '', type: '' });
+
+    const showNotification = (message, type) => {
+        setNotification({ message, type });
+    };
 
     const expenditureCategories = [
         { value: "", label: "Pilih Kategori" },
@@ -69,22 +78,27 @@ const EditPengeluaranPage = () => {
             const decodedIds = hashids.decode(expenditureIdHash);
             if (decodedIds.length > 0 && !isNaN(Number(decodedIds[0]))) {
                 setNumericExpenditureId(Number(decodedIds[0]));
-                // setErrorFetching(null); // Dikomentari
+                setErrorFetching(null); 
             } else {
-                // setErrorFetching("ID Pengeluaran tidak valid atau tidak dapat didecode."); // Dikomentari
+                setErrorFetching("ID Pengeluaran tidak valid atau tidak dapat didecode.");
                 setNumericExpenditureId(null);
                 setIsLoading(false); 
+                showNotification("ID Pengeluaran tidak valid atau tidak dapat didecode.", 'error');
             }
         } else {
-            // setErrorFetching("ID Pengeluaran tidak ditemukan di URL."); // Dikomentari
+            setErrorFetching("ID Pengeluaran tidak ditemukan di URL.");
             setNumericExpenditureId(null);
             setIsLoading(false); 
+            showNotification("ID Pengeluaran tidak ditemukan di URL.", 'error');
         }
     }, [expenditureIdHash]);
 
     const fetchExpenditureDetail = useCallback(async () => {
         if (!numericExpenditureId) {
-            // if (!errorFetching) setErrorFetching("Gagal mengambil detail: ID tidak tersedia."); // Dikomentari
+            if (!errorFetching) { // Only set if not already set by ID decoding
+                setErrorFetching("Gagal mengambil detail: ID tidak tersedia.");
+                showNotification("Gagal mengambil detail: ID tidak tersedia.", 'error');
+            }
             setIsLoading(false);
             return;
         }
@@ -98,7 +112,6 @@ const EditPengeluaranPage = () => {
                     const json = JSON.parse(errorText);
                     msg += `, Pesan: ${json.message || JSON.stringify(json)}`;
                 } catch { msg += `, Respons: ${errorText.substring(0, 100)}...`; }
-                // console.error("Error fetching expenditure detail:", msg); // Dikomentari
                 throw new Error(msg);
             }
             const result = await response.json();
@@ -122,24 +135,24 @@ const EditPengeluaranPage = () => {
                     other_category_info: initialOtherCategoryInfo,
                 });
                 setSelectedDateForPicker(parseApiDateToDateObject(dataToEdit.issue_date));
-                // setErrorFetching(null); // Dikomentari
+                setErrorFetching(null); 
             } else {
-                // setErrorFetching("Data pengeluaran tidak ditemukan untuk ID ini."); // Dikomentari
+                setErrorFetching("Data pengeluaran tidak ditemukan untuk ID ini.");
+                showNotification("Data pengeluaran tidak ditemukan untuk ID ini.", 'error');
             }
         } catch (error) {
-            // console.error("Error in fetchExpenditureDetail:", error); // Dikomentari
-            // setErrorFetching(`Gagal mengambil data detail: ${error.message}`); // Dikomentari
+            setErrorFetching(`Gagal mengambil data detail: ${error.message}`);
+            showNotification(`Gagal mengambil data detail: ${error.message}`, 'error');
         } finally {
             setIsLoading(false); 
         }
-    }, [numericExpenditureId, /* errorFetching, */ expenditureCategories]); // errorFetching dihapus dari dependency array karena penggunaannya dikomentari
+    }, [numericExpenditureId, errorFetching]); 
 
     useEffect(() => {
-        // if (numericExpenditureId !== null && !errorFetching) { // errorFetching dikomentari dari kondisi
-        if (numericExpenditureId !== null) { 
+        if (numericExpenditureId !== null && !errorFetching) { 
             fetchExpenditureDetail();
         }
-    }, [numericExpenditureId, /* errorFetching, */ fetchExpenditureDetail]); // errorFetching dikomentari dari dependency array
+    }, [numericExpenditureId, errorFetching, fetchExpenditureDetail]);
 
     const handleInputChange = useCallback((e) => {
         const { name, value } = e.target;
@@ -154,20 +167,20 @@ const EditPengeluaranPage = () => {
     const validateForm = useCallback(() => {
         const { amount, information, action, other_category_info } = formData;
         if (!selectedDateForPicker || !amount || !information.trim() || !action) {
-            // alert("Harap isi semua field yang wajib diisi (Tanggal, Jumlah, Keterangan, Kategori)!"); // Dikomentari
+            showNotification("Harap isi semua field yang wajib diisi (Tanggal, Jumlah, Keterangan, Kategori)!", 'error');
             return false;
         }
         if (action === "Lain-Lain" && !other_category_info.trim()) {
-            // alert("Harap isi keterangan untuk kategori 'Lain-lain'."); // Dikomentari
+            showNotification("Harap isi keterangan untuk kategori 'Lain-lain'.", 'error');
             return false;
         }
         const parsedAmount = parseFloat(amount);
         if (isNaN(parsedAmount) || parsedAmount <= 0) {
-            // alert("Jumlah harus berupa angka positif."); // Dikomentari
+            showNotification("Jumlah harus berupa angka positif.", 'error');
             return false;
         }
-        if (parsedAmount.toString().split('.')[1]?.length > 2) {
-            // alert("Jumlah hanya bisa memiliki maksimal 2 angka di belakang koma."); // Dikomentari
+        if (parsedAmount.toString().includes('.') && parsedAmount.toString().split('.')[1]?.length > 2) { // Changed condition
+            showNotification("Jumlah hanya bisa memiliki maksimal 2 angka di belakang koma.", 'error');
             return false;
         }
         return true;
@@ -176,7 +189,7 @@ const EditPengeluaranPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm() || !numericExpenditureId) {
-            // if (!numericExpenditureId) alert("ID Pengeluaran tidak valid untuk update."); // Dikomentari
+            if (!numericExpenditureId) showNotification("ID Pengeluaran tidak valid untuk update.", 'error');
             return;
         }
         setIsSubmitting(true);
@@ -206,15 +219,14 @@ const EditPengeluaranPage = () => {
                         errorMessage += `\nDetail Validasi Backend:\n${validationErrors}`;
                     }
                 } catch { errorMessage += `, Respons Mentah: ${errorText.substring(0, 100)}...`; }
-                // console.error("Error updating expenditure:", errorMessage); // Dikomentari
                 throw new Error(errorMessage);
             }
-            // alert("Data berhasil diperbarui!"); // Dikomentari
+            showNotification("Data berhasil diperbarui!", 'success');
             window.dispatchEvent(new CustomEvent('dataPengeluaranUpdated'));
             router.back();
         } catch (error) {
-            // console.error("Caught error during submission:", error); // Dikomentari
-            // alert(`Gagal memperbarui data pengeluaran: ${error.message}.`); // Dikomentari
+            console.error("Error submitting form:", error);
+            showNotification(`Gagal menyimpan perubahan: ${error.message}`, 'error');
         } finally {
             setIsSubmitting(false);
         }
@@ -234,13 +246,13 @@ const EditPengeluaranPage = () => {
         );
     }
 
-    // Meskipun errorFetching tetap ada, pesan yang ditampilkannya dikomentari
+    // This block previously showed an error message directly.
+    // We'll keep the visual structure but ensure any message is also sent to NotificationPopup
     if (errorFetching || numericExpenditureId === null) { 
         return (
             <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
                 <div className="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-lg text-center">
-                    {/* <p className="text-red-600 mb-4">{errorFetching || "ID Pengeluaran tidak valid atau data tidak ditemukan."}</p> */}
-                    <p className="text-red-600 mb-4">Terjadi masalah saat memuat data. Silakan coba lagi.</p> {/* Pesan generik */}
+                    <p className="text-red-600 mb-4">{errorFetching || "ID Pengeluaran tidak valid atau data tidak ditemukan."}</p>
                     <button
                         onClick={handleCancel}
                         className="mt-6 px-4 py-2 text-sm font-medium text-white bg-[#3D6CB9] rounded-md hover:bg-[#315694] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3D6CB9]"
@@ -248,6 +260,11 @@ const EditPengeluaranPage = () => {
                         Kembali
                     </button>
                 </div>
+                {/* NotificationPopup for these errors as well */}
+                <NotificationPopup
+                    message={notification.message}
+                    type={notification.type}
+                />
             </div>
         );
     }
@@ -368,6 +385,11 @@ const EditPengeluaranPage = () => {
                     </div>
                 </form>
             </div>
+            {/* NotificationPopup is rendered here at the page level */}
+            {/* <NotificationPopup
+                message={notification.message}
+                type={notification.type}
+            /> */}
         </div>
     );
 };

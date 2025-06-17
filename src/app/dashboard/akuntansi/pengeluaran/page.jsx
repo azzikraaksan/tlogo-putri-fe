@@ -4,6 +4,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Sidebar from "/components/Sidebar.jsx";
 import withAuth from "/src/app/lib/withAuth";
 import TambahPengeluaran from "/components/TambahPengeluaran.jsx";
+import ConfirmationPopup from "/components/akuntansi/ConfirmationPopup"; // Import ConfirmationPopup
+import NotificationPopup from "/components/akuntansi/NotificationPopup"; // Import NotificationPopup
 import {
     CalendarDays, FileText, FileSpreadsheet, PlusCircle,
     Edit, Trash2, RotateCcw, Zap
@@ -30,7 +32,7 @@ const formatDateToDisplay = (dateInput) => {
             d = new Date(dateInput);
         } else {
             const parts = dateInput.split('-');
-            if (parts.length === 3 && parts[0].length === 4) { 
+            if (parts.length === 3 && parts[0].length === 4) {
                 d = new Date(Date.UTC(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])));
             } else {
                 d = new Date(dateInput);
@@ -97,6 +99,14 @@ const PengeluaranPage = ({ children }) => {
     const [totalForDisplayedPeriod, setTotalForDisplayedPeriod] = useState(0);
     const [labelForDisplayedPeriod, setLabelForDisplayedPeriod] = useState("Total Bulan Ini:");
 
+    const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+    const [confirmAction, setConfirmAction] = useState(null);
+    const [confirmMessage, setConfirmMessage] = useState("");
+    const [notification, setNotification] = useState({ message: '', type: '' });
+
+    const showNotification = useCallback((message, type) => {
+        setNotification({ message, type });
+    }, []);
 
     const getCurrentMonthDateRange = () => {
         const today = new Date();
@@ -143,44 +153,44 @@ const PengeluaranPage = ({ children }) => {
             setTotalCurrentMonthExpenditure(0);
             return;
         }
-    
+
         let dataToDisplayInTable = [];
-        let expendituresForSumCalculation; 
+        let expendituresForSumCalculation;
         const today = new Date();
-    
-        if (dateFilter) { 
+
+        if (dateFilter) {
             dataToDisplayInTable = filterBySpecificDate(rawData, dateFilter);
-            expendituresForSumCalculation = dataToDisplayInTable; 
-            
+            expendituresForSumCalculation = dataToDisplayInTable;
+
             setLabelForDisplayedPeriod(`Total ${formatDateToDisplay(dateFilter)}:`);
-    
-        } else { 
+
+        } else {
             expendituresForSumCalculation = filterByMonthAndYearHelper(rawData, today);
-            dataToDisplayInTable = expendituresForSumCalculation; 
-            
+            dataToDisplayInTable = expendituresForSumCalculation;
+
             setLabelForDisplayedPeriod("Total Bulan Ini:");
         }
-    
-        dataToDisplayInTable.sort((a, b) => {   
+
+        dataToDisplayInTable.sort((a, b) => {
             const dateA = new Date(a.issue_date);
             const dateB = new Date(b.issue_date);
 
             if (isNaN(dateA.getTime())) return 1;
             if (isNaN(dateB.getTime())) return -1;
-            
+
             return dateB - dateA;
         });
 
         const totalSumForPeriod = expendituresForSumCalculation.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
         setTotalForDisplayedPeriod(totalSumForPeriod);
         setFilteredData(dataToDisplayInTable);
-    
+
         const dataForCurrentMonthReportProcessing = filterByCurrentMonth(rawData);
         setCurrentMonthExpenditures(dataForCurrentMonthReportProcessing);
         const totalForCurrentSystemMonthReport = dataForCurrentMonthReportProcessing.reduce((sum, item) => sum + parseFloat(item.amount || 0), 0);
         setTotalCurrentMonthExpenditure(totalForCurrentSystemMonthReport);
-    
-    }, [filterBySpecificDate, filterByCurrentMonth]); 
+
+    }, [filterBySpecificDate, filterByCurrentMonth]);
 
 
     const fetchExpenditureData = useCallback(async () => {
@@ -200,22 +210,23 @@ const PengeluaranPage = ({ children }) => {
             else if (result && Array.isArray(result.expenditure)) extractedData = result.expenditure;
             else if (result && Array.isArray(result.salaries)) extractedData = result.salaries;
             else extractedData = [];
-            
-            const cleanData = extractedData.filter(item => 
-                item && 
-                typeof item.expenditure_id !== 'undefined' && 
-                !isNaN(Number(item.expenditure_id)) 
+
+            const cleanData = extractedData.filter(item =>
+                item &&
+                typeof item.expenditure_id !== 'undefined' &&
+                !isNaN(Number(item.expenditure_id))
             );
             setDataPengeluaran(cleanData);
             applyFilterToData(cleanData, selectedDateForFilter);
         } catch (error) {
-            // console.error("Error fetching data:", error); // Dikomentari
+            // console.error("Error fetching data:", error); // Baris ini dikomentari
             setDataPengeluaran([]);
-            applyFilterToData([], selectedDateForFilter); 
+            applyFilterToData([], selectedDateForFilter);
+            showNotification(`Gagal memuat data pengeluaran: ${error.message || 'Terjadi kesalahan.'}`, 'error');
         } finally {
             setIsLoading(false);
         }
-    }, [applyFilterToData, selectedDateForFilter]);
+    }, [applyFilterToData, selectedDateForFilter, showNotification]);
 
     const applyDateFilter = () => {
         setSelectedDateForFilter(tempDateForPicker);
@@ -229,18 +240,20 @@ const PengeluaranPage = ({ children }) => {
     }, []);
 
 
-    const handleGenerateReport = async () => {
+    const handleGenerateReport = () => {
         const today = new Date();
         const currentMonthKey = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}`;
         if (reportedMonths[currentMonthKey]) {
-            alert("Laporan untuk bulan ini sudah dibuat.");
+            showNotification("Laporan untuk bulan ini sudah dibuat.", 'info');
             return;
         }
         if (currentMonthExpenditures.length === 0) {
-            alert("Tidak ada pengeluaran (yang belum dilaporkan) untuk bulan ini yang dapat dilaporkan.");
+            showNotification("Tidak ada pengeluaran (yang belum dilaporkan) untuk bulan ini yang dapat dilaporkan.", 'info');
             return;
         }
-        if (confirm(`Apakah Anda yakin ingin membuat laporan pengeluaran untuk bulan ini (Total Pengeluaran: ${formatCurrency(totalCurrentMonthExpenditure)})? Data bulan ini akan ditandai sebagai 'dilaporkan' di tampilan.`)) {
+
+        setConfirmMessage("Apakah Anda yakin ingin membuat laporan pengeluaran?");
+        setConfirmAction(() => async () => {
             try {
                 const reportData = {
                     monthKey: currentMonthKey,
@@ -253,19 +266,28 @@ const PengeluaranPage = ({ children }) => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(reportData)
                 });
-                if (!response.ok) {
+
+                if (response.ok) {
+                    const result = await response.json();
+                    if (result.message && (result.message.includes("sudah ada") || result.message.includes("sudah dibuat") || result.message.includes("latest"))) {
+                        showNotification(`Data laporan sudah terbaru.`, 'info');
+                    } else {
+                        showNotification("Proses pembuatan laporan berhasil dipicu.", 'success');
+                    }
+                    setReportedMonths(prev => ({ ...prev, [currentMonthKey]: true }));
+                    fetchExpenditureData();
+                } else {
                     const errorData = await response.json().catch(() => ({ message: response.statusText }));
                     throw new Error(errorData.message || `Gagal menghubungi server: ${response.status}`);
                 }
-                await response.json();
-                setReportedMonths(prev => ({ ...prev, [currentMonthKey]: true }));
-                alert("Laporan pengeluaran bulanan berhasil dibuat dan dikirim ke server.");
-                fetchExpenditureData();
             } catch (error) {
-                // console.error("Error generating report:", error); // Dikomentari
-                alert(`Gagal membuat laporan: ${error.message}`);
+                // console.error("Error generating report:", error); // Baris ini dikomentari
+                showNotification(`Gagal membuat laporan: ${error.message}`, 'error');
+            } finally {
+                setIsLoading(false);
             }
-        }
+        });
+        setShowConfirmPopup(true);
     };
 
     useEffect(() => {
@@ -297,22 +319,24 @@ const PengeluaranPage = ({ children }) => {
     const handleOpenTambahModal = () => setIsTambahModalOpen(true);
     const handleCloseTambahModal = () => setIsTambahModalOpen(false);
 
-    const handleDeleteAction = async (expenditureIdHash) => {
+    const handleDeleteAction = (expenditureIdHash) => { // Modified to use ConfirmationPopup
         if (!expenditureIdHash) {
-            alert("Gagal menghapus data: ID Hash tidak valid.");
+            showNotification("Gagal menghapus data: ID Hash tidak valid.", 'error');
             return;
         }
         const decodedIds = hashids.decode(expenditureIdHash);
         if (decodedIds.length === 0) {
-            alert("Gagal menghapus data: Gagal decode ID Hash.");
+            showNotification("Gagal menghapus data: Gagal decode ID Hash.", 'error');
             return;
         }
-        const expenditureIdNumeric = Number(decodedIds[0]); 
+        const expenditureIdNumeric = Number(decodedIds[0]);
         if (isNaN(expenditureIdNumeric)) {
-            alert("Gagal menghapus data: Hasil decode ID tidak numerik.");
+            showNotification("Gagal menghapus data: Hasil decode ID tidak numerik.", 'error');
             return;
         }
-        if (confirm("Apakah Anda yakin ingin menghapus data ini?")) {
+
+        setConfirmMessage("Apakah Anda yakin ingin menghapus data ini?"); // Simple message
+        setConfirmAction(() => async () => {
             try {
                 const deleteUrl = `${API_BASE_URL}/expenditures/delete/${expenditureIdNumeric}`;
                 const response = await fetch(deleteUrl, {
@@ -330,13 +354,14 @@ const PengeluaranPage = ({ children }) => {
                     }
                     throw new Error(errorMessage);
                 }
-                alert("Data berhasil dihapus.");
+                showNotification("Data berhasil dihapus.", 'success');
                 window.dispatchEvent(new CustomEvent('dataPengeluaranUpdated'));
             } catch (error) {
-                // console.error("Error deleting data:", error); // Dikomentari
-                alert(`Gagal menghapus data: ${error.message}`);
+                // console.error("Error deleting data:", error); // Baris ini dikomentari
+                showNotification(`Gagal menghapus data: ${error.message}`, 'error');
             }
-        }
+        });
+        setShowConfirmPopup(true);
     };
 
     const getExportFileName = (ext) => {
@@ -358,7 +383,7 @@ const PengeluaranPage = ({ children }) => {
 
     const handleExportExcelAction = () => {
         if (!Array.isArray(filteredData) || filteredData.length === 0) {
-            alert("Tidak ada data untuk diekspor ke Excel (sesuai filter saat ini)!");
+            showNotification("Tidak ada data untuk diekspor ke Excel (sesuai filter saat ini)!", 'info'); // 'info' type
             return;
         }
         try {
@@ -370,8 +395,8 @@ const PengeluaranPage = ({ children }) => {
             }));
             const ws = XLSX.utils.json_to_sheet(dataToExport);
             ws['!cols'] = [{wch:20}, {wch:15, z: '#,##0'}, {wch:40}, {wch:20}];
-            
-            const totalRow = filteredData.length + 2; 
+
+            const totalRow = filteredData.length + 2;
             XLSX.utils.sheet_add_aoa(ws, [
                 [`${labelForDisplayedPeriod}`, totalForDisplayedPeriod]
             ], { origin: `A${totalRow}` });
@@ -381,15 +406,16 @@ const PengeluaranPage = ({ children }) => {
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Pengeluaran");
             XLSX.writeFile(wb, getExportFileName("xlsx"));
+            showNotification("Data berhasil diekspor ke Excel.", 'success');
         } catch (error) {
-            // console.error("Error exporting Excel:", error); // Dikomentari
-            alert("Gagal export Excel!");
+            // console.error("Error exporting Excel:", error); // Baris ini dikomentari
+            showNotification("Gagal export Excel!", 'error');
         }
     };
 
     const handleExportPDFAction = () => {
         if (!Array.isArray(filteredData) || filteredData.length === 0) {
-            alert("Tidak ada data untuk diekspor ke PDF (sesuai filter saat ini)!");
+            showNotification("Tidak ada data untuk diekspor ke PDF (sesuai filter saat ini)!", 'info'); // 'info' type
             return;
         }
         try {
@@ -401,7 +427,7 @@ const PengeluaranPage = ({ children }) => {
                 item.information,
                 item.action,
             ]);
-            
+
             let title = "Laporan Data Pengeluaran";
             if (selectedDateForFilter) {
                 title += ` (${formatDateToDisplay(selectedDateForFilter)})`;
@@ -425,9 +451,10 @@ const PengeluaranPage = ({ children }) => {
             doc.text(`${labelForDisplayedPeriod} ${formatCurrency(totalForDisplayedPeriod)}`, 14, finalY + 10);
 
             doc.save(getExportFileName("pdf"));
+            showNotification("Data berhasil diekspor ke PDF.", 'success');
         } catch (error) {
-            // console.error("Error exporting PDF:", error); // Dikomentari
-            alert("Gagal export PDF!");
+            // console.error("Error exporting PDF:", error); // Baris ini dikomentari
+            showNotification("Gagal export PDF!", 'error');
         }
     };
 
@@ -443,6 +470,21 @@ const PengeluaranPage = ({ children }) => {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    const handleConfirm = () => {
+        if (confirmAction) {
+            confirmAction();
+        }
+        setShowConfirmPopup(false);
+        setConfirmAction(null);
+        setConfirmMessage(""); // Clear message after action
+    };
+
+    const handleCancel = () => {
+        setShowConfirmPopup(false);
+        setConfirmAction(null);
+        setConfirmMessage(""); // Clear message after cancel
+    };
 
     const isDataAvailableForExport = !isLoading && Array.isArray(filteredData) && filteredData.length > 0;
     const [isSidebarOpen, setSidebarOpen] = useState(true);
@@ -515,7 +557,7 @@ const PengeluaranPage = ({ children }) => {
                                 <PlusCircle size={20} /> <span>Tambah</span>
                             </button>
                             <button
-                                onClick={handleGenerateReport}
+                                onClick={handleGenerateReport} // Call handleGenerateReport directly to set confirmation
                                 className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
                                 title={reportedMonths[`${new Date().getFullYear()}-${(new Date().getMonth() + 1).toString().padStart(2, '0')}`] ? "Laporan bulan ini sudah dibuat" : (totalCurrentMonthExpenditure === 0 ? "Tidak ada data (unreported) untuk dilaporkan bulan ini" : "Buat laporan untuk bulan ini")}
                             >
@@ -568,9 +610,9 @@ const PengeluaranPage = ({ children }) => {
                                         {filteredData.length === 0 ? (
                                             <tr>
                                                 <td colSpan={5} className="text-center p-4 text-gray-500 font-medium">
-                                                    Data Tidak Ditemukan 
-                                                    {selectedDateForFilter ? 
-                                                        ` untuk tanggal ${formatDateToDisplay(selectedDateForFilter)}` : 
+                                                    Data Tidak Ditemukan
+                                                    {selectedDateForFilter ?
+                                                        ` untuk tanggal ${formatDateToDisplay(selectedDateForFilter)}` :
                                                         ` untuk bulan ${new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' }).format(new Date())}`
                                                     }
                                                 </td>
@@ -583,7 +625,7 @@ const PengeluaranPage = ({ children }) => {
 
                                                 if (!isNaN(expenditureIdNumeric)) {
                                                     encodedIdForLink = hashids.encode(expenditureIdNumeric);
-                                                    encodedIdForDelete = hashids.encode(expenditureIdNumeric); 
+                                                    encodedIdForDelete = hashids.encode(expenditureIdNumeric);
                                                 }
 
                                                 return (
@@ -608,10 +650,10 @@ const PengeluaranPage = ({ children }) => {
                                                                     </span>
                                                                 )}
                                                                 <button
-                                                                    onClick={() => handleDeleteAction(encodedIdForDelete)} 
+                                                                    onClick={() => handleDeleteAction(encodedIdForDelete)}
                                                                     className="text-red-600 hover:text-red-800"
                                                                     title="Hapus"
-                                                                    disabled={!encodedIdForDelete} 
+                                                                    disabled={!encodedIdForDelete}
                                                                 >
                                                                     <Trash2 size={18} />
                                                                 </button>
@@ -639,6 +681,19 @@ const PengeluaranPage = ({ children }) => {
                     onClose={handleCloseTambahModal}
                     onAddData={() => window.dispatchEvent(new CustomEvent('dataPengeluaranUpdated'))}
                     initialDate={selectedDateForFilter || new Date()}
+                    onShowNotification={showNotification}
+                />
+
+                <ConfirmationPopup
+                    isOpen={showConfirmPopup}
+                    message={confirmMessage}
+                    onConfirm={handleConfirm}
+                    onCancel={handleCancel}
+                />
+
+                <NotificationPopup
+                    message={notification.message}
+                    type={notification.type}
                 />
                 {children}
             </div>

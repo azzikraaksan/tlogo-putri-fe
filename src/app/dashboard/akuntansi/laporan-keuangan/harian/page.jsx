@@ -3,13 +3,14 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Sidebar from "/components/Sidebar.jsx";
 import withAuth from "/src/app/lib/withAuth";
-import { useRouter } from 'next/navigation';
+import ConfirmationPopup from "/components/akuntansi/ConfirmationPopup"; // Import ConfirmationPopup
+// import NotificationPopup from "/components/akuntansi/NotificationPopup"; // DIKOMENTARI/DIHAPUS
 import {
     CalendarDays,
     FileText,
     FileSpreadsheet,
     RotateCcw,
-    ArrowLeft,
+    CircleArrowLeft,
     Zap
 } from "lucide-react";
 import DatePicker from "react-datepicker";
@@ -17,6 +18,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useRouter } from 'next/navigation';
 
 // const API_BASE_URL = "http://localhost:8000/api";
 const API_BASE_URL = "https://tpapi.siunjaya.id/api";
@@ -25,7 +27,7 @@ const formatDateToDisplay = (dateString) => {
     if (!dateString) return "";
     const d = new Date(dateString);
     if (isNaN(d.getTime())) {
-        return dateString; 
+        return dateString;
     }
     const day = d.getDate().toString().padStart(2, "0");
     const month = (d.getMonth() + 1).toString().padStart(2, "0");
@@ -57,7 +59,7 @@ const formatRupiah = (number) => {
         style: 'currency',
         currency: 'IDR',
         minimumFractionDigits: 0,
-        maximumFractionDigits: 2, 
+        maximumFractionDigits: 2,
     });
     return formatter.format(number).replace(/,00$/, '').replace(/,/g, '.').replace('Rp', 'Rp.');
 };
@@ -72,6 +74,32 @@ const HarianPage = () => {
     const calendarRef = useRef(null);
     const router = useRouter();
 
+    const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+    const [confirmAction, setConfirmAction] = useState(null);
+    const [confirmMessage, setConfirmMessage] = useState("");
+    // const [notification, setNotification] = useState({ message: '', type: '' }); // DIKOMENTARI/DIHAPUS
+
+    // Fungsi showNotification dikosongkan agar tidak menampilkan notifikasi
+    const showNotification = useCallback((message, type) => {
+        // Biarkan fungsi ini kosong agar tidak ada notifikasi yang muncul
+        // Jika ingin mengaktifkannya kembali, uncomment baris: setNotification({ message, type });
+    }, []);
+
+    const handleConfirm = useCallback(() => {
+        if (confirmAction) {
+            confirmAction();
+        }
+        setShowConfirmPopup(false);
+        setConfirmAction(null);
+        setConfirmMessage("");
+    }, [confirmAction]);
+
+    const handleCancel = useCallback(() => {
+        setShowConfirmPopup(false);
+        setConfirmAction(null);
+        setConfirmMessage("");
+    }, []);
+
     const handleGoBack = () => {
         router.push("/dashboard/akuntansi/laporan-keuangan");
     };
@@ -81,36 +109,30 @@ const HarianPage = () => {
         try {
             let apiUrl = `${API_BASE_URL}/dailyreports/alldaily`;
             if (selectedDateForFilter) {
-                const formattedDateForAPI = formatToISODate_Local(selectedDateForFilter); 
+                const formattedDateForAPI = formatToISODate_Local(selectedDateForFilter);
                 if (formattedDateForAPI) {
                     apiUrl = `${API_BASE_URL}/dailyreports/alldaily?tanggal=${formattedDateForAPI}`;
                 }
             }
             
-            const response = await fetch(apiUrl); 
+            const response = await fetch(apiUrl);
             const responseDataText = await response.text();
 
             if (!response.ok) {
-                // let errorMessage = `HTTP error! Status: ${response.status}.`; // Dikomentari
-                // try {
-                //     const errorJson = JSON.parse(responseDataText);
-                //     errorMessage += ` Pesan: ${errorJson.message || response.statusText}.`;
-                // } catch (e) {
-                //     errorMessage += ` Detail: ${response.statusText || 'Gagal mengambil data.'}`;
-                // }
-                // throw new Error(errorMessage); // Dikomentari
-                // Jika Anda ingin mengabaikan error fetch, cukup return atau set data kosong
+                // Di sini, kita sudah mengabaikan throw new Error dan console.error
+                // sehingga error dari fetch tidak akan muncul di konsol.
+                // Notifikasi juga dinonaktifkan via `showNotification` yang kosong.
                 setDataHarian([]);
                 setFilteredData([]);
                 setIsLoading(false);
                 return;
             }
             
-            const data = JSON.parse(responseDataText); 
-            const fetchedRawData = data.data || []; 
+            const data = JSON.parse(responseDataText);
+            const fetchedRawData = data.data || [];
 
             if (!Array.isArray(fetchedRawData)) {
-                // throw new Error("Format data dari backend tidak valid."); // Dikomentari
+                // throw new Error("Format data dari backend tidak valid."); // DIKOMENTARI/DIHAPUS
                 setDataHarian([]);
                 setFilteredData([]);
                 setIsLoading(false);
@@ -139,7 +161,7 @@ const HarianPage = () => {
                 updatedAt: item.updated_at,
             }));
 
-            setDataHarian(formattedData); 
+            setDataHarian(formattedData);
 
             if (selectedDateForFilter) {
                 const localDateToFilter = formatToISODate_Local(selectedDateForFilter);
@@ -151,16 +173,17 @@ const HarianPage = () => {
                 );
                 setFilteredData(clientFiltered);
             } else {
-                setFilteredData(formattedData); 
+                setFilteredData(formattedData);
             }
         } catch (error) {
-            // console.error("Gagal memuat data dari backend:", error); // Dikomentari
+            // console.error("Gagal memuat data dari backend:", error); // DIKOMENTARI/DIHAPUS
+            // showNotification(`Gagal memuat data: ${error.message || 'Terjadi kesalahan.'}`, 'error'); // showNotification sudah kosong
             setDataHarian([]);
             setFilteredData([]);
         } finally {
             setIsLoading(false);
         }
-    }, [selectedDateForFilter]); 
+    }, [selectedDateForFilter, showNotification]);
 
     useEffect(() => {
         loadAndFilterData();
@@ -172,44 +195,48 @@ const HarianPage = () => {
     };
 
     const resetFilter = () => {
-        setSelectedDateForFilter(null); 
+        setSelectedDateForFilter(null);
         setTempDateForPicker(null);
         setIsDatePickerOpen(false);
+        // showNotification("Filter tanggal diatur ulang.", 'info'); // showNotification sudah kosong
     };
 
-    const handleGenerateDailyReport = async () => {
-        // if (!confirm("Apakah Anda yakin ingin memicu perhitungan laporan harian otomatis dari backend? Proses ini mungkin memerlukan waktu.")) { // Dikomentari
-        //     return;
-        // }
-        setIsLoading(true);
-        try {
-            const response = await fetch(`${API_BASE_URL}/dailyreports/generate-report`, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
+    const handleGenerateDailyReport = () => {
+        setConfirmMessage("Konfirmasi pembuatan laporan harian.");
+        setConfirmAction(() => async () => {
+            setIsLoading(true);
+            try {
+                const response = await fetch(`${API_BASE_URL}/dailyreports/generate-report`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                });
 
-            if (!response.ok) {
-                // const errorData = await response.json().catch(() => response.text()); // Dikomentari
-                // let errorMessage = `Gagal memicu generate laporan harian: ${response.status} ${response.statusText}`; // Dikomentari
-                // if (typeof errorData === 'object' && errorData !== null && errorData.message) { // Dikomentari
-                //     errorMessage += `. Detail Backend: ${errorData.message}`; // Dikomentari
-                // } else if (typeof errorData === 'string' && errorData.length < 200) { // Dikomentari
-                //     errorMessage += `. Detail: ${errorData}`; // Dikomentari
+                // const result = await response.json(); // Dikomentari jika tidak digunakan setelah ini
+                if (!response.ok) {
+                    // throw new Error(errorMessage); // DIKOMENTARI/DIHAPUS
+                    // Notifikasi juga dinonaktifkan via `showNotification` yang kosong.
+                    // alert("Proses pembuatan laporan gagal."); // DIKOMENTARI/DIHAPUS
+                }
+                
+                // if (result.message && (result.message.toLowerCase().includes("sudah terbaru") || result.message.toLowerCase().includes("tidak ada data baru"))) {
+                //     showNotification(`Data laporan harian sudah terbaru.`, 'info'); // showNotification sudah kosong
+                // } else {
+                //     showNotification(result.message || 'Laporan berhasil dibuat.', 'success'); // showNotification sudah kosong
                 // }
-                // throw new Error(errorMessage); // Dikomentari
-                // alert("Proses pembuatan laporan gagal."); // Dikomentari
+                
+                await loadAndFilterData();
+            } catch (error) {
+                // console.error("Error generating daily report:", error); // DIKOMENTARI/DIHAPUS
+                // alert(`Error: ${error.message}`); // DIKOMENTARI/DIHAPUS
+                // showNotification(`Gagal membuat laporan: ${error.message}`, 'error'); // showNotification sudah kosong
+            } finally {
+                setIsLoading(false);
             }
-            // const result = await response.json(); // Dikomentari jika tidak digunakan setelah ini
-            // alert(`Proses perhitungan laporan harian berhasil dipicu di backend. ${result.message || 'Memuat data terbaru...'}`); // Dikomentari
-            await loadAndFilterData(); 
-        } catch (error) {
-            // alert(`Error: ${error.message}`); // Dikomentari
-        } finally {
-            setIsLoading(false);
-        }
+        });
+        setShowConfirmPopup(true);
     };
 
     const getExportFileName = (ext) => {
@@ -219,7 +246,8 @@ const HarianPage = () => {
 
     const handleExportExcelAction = () => {
         if (filteredData.length === 0) {
-            // alert("Data kosong, tidak bisa export Excel!"); // Dikomentari
+            // alert("Data kosong, tidak bisa export Excel!"); // DIKOMENTARI/DIHAPUS
+            // showNotification("Data kosong.", 'info'); // showNotification sudah kosong
             return;
         }
         try {
@@ -252,14 +280,18 @@ const HarianPage = () => {
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Laporan Harian");
             XLSX.writeFile(wb, getExportFileName("xlsx"));
+            // showNotification("Ekspor Excel berhasil.", 'success'); // showNotification sudah kosong
         } catch (error) {
-            // alert("Gagal export Excel!"); // Dikomentari
+            // console.error("Gagal export Excel:", error); // DIKOMENTARI/DIHAPUS
+            // alert("Gagal export Excel!"); // DIKOMENTARI/DIHAPUS
+            // showNotification("Ekspor Excel gagal.", 'error'); // showNotification sudah kosong
         }
     };
 
     const handleExportPDFAction = () => {
         if (filteredData.length === 0) {
-            // alert("Data kosong, tidak bisa export PDF!"); // Dikomentari
+            // alert("Data kosong, tidak bisa export PDF!"); // DIKOMENTARI/DIHAPUS
+            // showNotification("Data kosong.", 'info'); // showNotification sudah kosong
             return;
         }
         try {
@@ -298,8 +330,8 @@ const HarianPage = () => {
                 styles: {
                     fontSize: 7,
                     cellPadding: 2,
-                    overflow: 'ellipsize', 
-                    halign: 'center', 
+                    overflow: 'ellipsize',
+                    halign: 'center',
                     valign: 'middle'
                 },
                 headStyles: {
@@ -307,7 +339,7 @@ const HarianPage = () => {
                     textColor: [255, 255, 255],
                     fontSize: 8,
                     fontStyle: 'bold',
-                    halign: 'center', 
+                    halign: 'center',
                 },
                 didDrawPage: function (data) {
                     let str = "Halaman " + doc.internal.getNumberOfPages();
@@ -317,8 +349,11 @@ const HarianPage = () => {
                 }
             });
             doc.save(getExportFileName("pdf"));
+            // showNotification("Ekspor PDF berhasil.", 'success'); // showNotification sudah kosong
         } catch (error) {
-            // alert("Gagal export PDF!"); // Dikomentari
+            // console.error("Gagal export PDF:", error); // DIKOMENTARI/DIHAPUS
+            // alert("Gagal export PDF!"); // DIKOMENTARI/DIHAPUS
+            // showNotification("Ekspor PDF gagal.", 'error'); // showNotification sudah kosong
         }
     };
 
@@ -347,7 +382,7 @@ const HarianPage = () => {
             <div
                 className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
                 style={{
-                    marginLeft: isSidebarOpen ? 290 : 70, 
+                    marginLeft: isSidebarOpen ? 290 : 70,
                 }}
             >
                 <div className="flex-1 p-4 md:p-6 relative overflow-y-auto">
@@ -355,7 +390,7 @@ const HarianPage = () => {
                         className="text-[28px] md:text-[32px] font-semibold text-black flex items-center gap-3 cursor-pointer hover:text-[#3D6CB9] transition-colors mb-6"
                         onClick={handleGoBack}
                     >
-                        <ArrowLeft size={28} />
+                        <CircleArrowLeft size={28} />
                         Laporan Harian
                     </h1>
 
@@ -456,7 +491,7 @@ const HarianPage = () => {
                         </div>
                     ) : (
                         <div className="overflow-x-auto rounded-lg shadow-md bg-white">
-                            <div className="max-h-[calc(100vh-300px)] overflow-y-auto"> 
+                            <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
                                 <table className="min-w-full table-auto text-sm">
                                     <thead className="bg-[#3D6CB9] text-white sticky top-0 z-10 shadow-sm">
                                         <tr>
@@ -477,7 +512,7 @@ const HarianPage = () => {
                                                     colSpan={tableDisplayHeaders.length}
                                                     className="text-center p-6 text-gray-500 font-medium"
                                                 >
-                                                    Data Tidak Ditemukan
+                                                    Data tidak ditemukan.
                                                 </td>
                                             </tr>
                                         ) : (
@@ -510,6 +545,16 @@ const HarianPage = () => {
                     )}
                 </div>
             </div>
+
+            {/* Confirmation Popup */}
+            <ConfirmationPopup
+                isOpen={showConfirmPopup}
+                message={confirmMessage}
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+            />
+
+            {/* Notification Popup sudah dihapus */}
         </div>
     );
 };

@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Sidebar from "/components/Sidebar.jsx";
 import withAuth from "/src/app/lib/withAuth";
+import ConfirmationPopup from "/components/akuntansi/ConfirmationPopup";
 import {
     FileText,
     FileSpreadsheet,
-    ArrowLeft,
+    CircleArrowLeft,
     Zap
 } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -30,6 +31,16 @@ const formatRupiah = (number) => {
     return formatter.format(number).replace(/,/g, '.').replace('Rp', 'Rp.');
 };
 
+const getMonthName = (monthNumber) => {
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    return monthNames[monthNumber - 1] || "";
+};
+
+const formatMonthYearForDisplay = (month, year) => {
+    if (!month || !year) return "-";
+    return `${getMonthName(month)} ${year}`;
+};
+
 const formatDateFull = (dateString) => {
     if (!dateString) return "-";
     const d = new Date(dateString);
@@ -50,6 +61,30 @@ const BulananPage = ({ children }) => {
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const router = useRouter();
 
+    const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+    const [confirmAction, setConfirmAction] = useState(null);
+    const [confirmMessage, setConfirmMessage] = useState("");
+
+    // Fungsi showNotification dikosongkan agar tidak menampilkan notifikasi
+    const showNotification = useCallback((message, type) => {
+        // Biarkan fungsi ini kosong
+    }, []);
+
+    const handleConfirm = useCallback(() => {
+        if (confirmAction) {
+            confirmAction();
+        }
+        setShowConfirmPopup(false);
+        setConfirmAction(null);
+        setConfirmMessage("");
+    }, [confirmAction]);
+
+    const handleCancel = useCallback(() => {
+        setShowConfirmPopup(false);
+        setConfirmAction(null);
+        setConfirmMessage("");
+    }, []);
+
     const loadDataFromBackend = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -60,12 +95,17 @@ const BulananPage = ({ children }) => {
             const result = await response.json();
 
             if (!response.ok) {
-                if(response.status === 404 || result.status === 'not_found') {
-                    setDataBulanan([]);
-                    return; 
+                let errorMessage = result.message || `Gagal memuat data: Status ${response.status}.`;
+                let notificationType = 'error';
+
+                if(response.status === 404 || result.status === 'not_found' || (result.message && result.message.toLowerCase().includes('tidak ditemukan'))) {
+                    notificationType = 'info';
+                    errorMessage = `Data tidak ditemukan untuk bulan ${new Date(selectedYear, selectedMonth - 1).toLocaleString('id-ID', { month: 'long', year: 'numeric' })}.`;
                 }
-                // throw new Error(result.message || 'Gagal memuat data'); // Dikomentari
-                // Anda bisa memilih untuk tidak melakukan apa-apa atau mencatat ke sistem logging internal
+                
+                showNotification(errorMessage, notificationType);
+                setDataBulanan([]);
+                return;
             }
 
             const fetchedData = result.data || [];
@@ -86,12 +126,13 @@ const BulananPage = ({ children }) => {
 
             setDataBulanan(formattedData);
         } catch (error) {
-            // console.error("Gagal memuat data dari backend:", error); // Dikomentari
+            // console.error("Gagal memuat data dari backend:", error); // DIKOMENTARI/DIHAPUS
+            showNotification(`Gagal memuat data: ${error.message || 'Terjadi kesalahan.'}`, 'error');
             setDataBulanan([]);
         } finally {
             setIsLoading(false);
         }
-    }, [selectedMonth, selectedYear]);
+    }, [selectedMonth, selectedYear, showNotification]);
 
     useEffect(() => {
         loadDataFromBackend();
@@ -101,30 +142,40 @@ const BulananPage = ({ children }) => {
         if (dataBulanan.length > 0) {
             return dataBulanan[0].netCash;
         }
-        return 0; 
+        return 0;
     }, [dataBulanan]);
 
-    const handleGenerateReport = async () => {
-        // if (!confirm("Apakah Anda yakin ingin memicu pembuatan laporan bulanan otomatis dari backend untuk bulan/tahun saat ini?")) { // Dikomentari
-        //     return;
-        // }
-        setIsLoading(true);
-        try {
-            const response = await fetch(`${API_BASE_URL}/reports/generate`, {
-                method: 'POST',
-                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
-            });
-            if (!response.ok) {
-                // throw new Error(`Gagal memicu generate laporan: ${response.statusText || 'Unknown Error'}`); // Dikomentari
-                // alert("Proses pembuatan laporan gagal."); // Dikomentari
+    const handleGenerateReport = () => {
+        setConfirmMessage("Konfirmasi pembuatan laporan bulanan.");
+
+        setConfirmAction(() => async () => {
+            setIsLoading(true);
+            try {
+                const response = await fetch(`${API_BASE_URL}/reports/generate`, {
+                    method: 'POST',
+                    headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    let errorMessage = result.message || `Gagal memicu generate laporan: Status ${response.status}.`;
+                    throw new Error(errorMessage);
+                }
+                
+                if (result.message && (result.message.toLowerCase().includes("sudah ada") || result.message.toLowerCase().includes("sudah dibuat") || result.message.toLowerCase().includes("latest") || result.message.toLowerCase().includes("no new data"))) {
+                    showNotification(`Data laporan bulanan sudah terbaru.`, 'info');
+                } else {
+                    showNotification(result.message || 'Laporan berhasil dibuat.', 'success');
+                }
+                
+                await loadDataFromBackend();
+            } catch (error) {
+                // console.error("Error generating report:", error); // DIKOMENTARI/DIHAPUS
+                showNotification(`Gagal membuat laporan: ${error.message}`, 'error');
+            } finally {
+                setIsLoading(false);
             }
-            // alert("Proses pembuatan laporan berhasil dipicu di backend. Memuat data terbaru untuk bulan/tahun saat ini..."); // Dikomentari
-            await loadDataFromBackend();
-        } catch (error) {
-            // alert(`Error: ${error.message}`); // Dikomentari
-        } finally {
-            setIsLoading(false);
-        }
+        });
+        setShowConfirmPopup(true);
     };
 
     const getExportFileName = (ext) => {
@@ -134,7 +185,7 @@ const BulananPage = ({ children }) => {
 
     const handleExportExcelAction = () => {
         if (dataBulanan.length === 0) {
-            // alert("Data kosong, tidak bisa export Excel!"); // Dikomentari
+            showNotification("Tidak ada data untuk diekspor.", 'info');
             return;
         }
         try {
@@ -151,14 +202,16 @@ const BulananPage = ({ children }) => {
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Laporan Bulanan");
             XLSX.writeFile(wb, getExportFileName("xlsx"));
+            showNotification("Ekspor Excel berhasil.", 'success');
         } catch (error) {
-            // alert("Gagal export Excel!"); // Dikomentari
+            // console.error("Error exporting Excel:", error); // DIKOMENTARI/DIHAPUS
+            showNotification("Ekspor Excel gagal.", 'error');
         }
     };
 
     const handleExportPDFAction = () => {
         if (dataBulanan.length === 0) {
-            // alert("Data kosong, tidak bisa export PDF!"); // Dikomentari
+            showNotification("Tidak ada data untuk diekspor.", 'info');
             return;
         }
         try {
@@ -185,8 +238,10 @@ const BulananPage = ({ children }) => {
                 }
             });
             doc.save(getExportFileName("pdf"));
+            showNotification("Ekspor PDF berhasil.", 'success');
         } catch (error) {
-            // alert("Gagal export PDF!"); // Dikomentari
+            // console.error("Gagal export PDF:", error); // DIKOMENTARI/DIHAPUS
+            showNotification("Ekspor PDF gagal.", 'error');
         }
     };
 
@@ -215,7 +270,7 @@ const BulananPage = ({ children }) => {
             <div className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden" style={{ marginLeft: isSidebarOpen ? 290 : 70 }}>
                 <div className="flex-1 p-4 md:p-6 relative overflow-y-auto">
                     <h1 className="text-[28px] md:text-[32px] font-semibold text-black flex items-center gap-3 cursor-pointer hover:text-[#3D6CB9] transition-colors mb-6" onClick={handleGoBack}>
-                        <ArrowLeft size={28} /> Laporan Bulanan
+                        <CircleArrowLeft size={28} /> Laporan Bulanan
                     </h1>
 
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
@@ -285,7 +340,6 @@ const BulananPage = ({ children }) => {
 
                     {!isLoading && dataBulanan.length > 0 && (
                        <div className="fixed bottom-4 right-4 bg-white text-black px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-20">
-                               {/* PERUBAHAN: Mengubah label */}
                                <span className="font-bold text-lg">Kas Bersih Terakhir Bulan Ini:</span>
                                <span className="text-lg font-semibold text-[#3D6CB9]">{formatRupiah(totalNetCashBulanan)}</span>
                        </div>
@@ -293,6 +347,16 @@ const BulananPage = ({ children }) => {
                 </div>
                 {children}
             </div>
+
+            {/* Confirmation Popup */}
+            <ConfirmationPopup
+                isOpen={showConfirmPopup}
+                message={confirmMessage}
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+            />
+
+            {/* Notification Popup sudah dihapus */}
         </div>
     );
 };

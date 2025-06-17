@@ -129,11 +129,11 @@ const TambahAnggota = ({ onKembali }) => {
               placeholder: "Masukkan Email",
             },
             {
-              label: "Password",
+              label: "Password (Minimal 8 Karakter)",
               className: "font-bold",
               name: "password",
               type: "password",
-              placeholder: "Masukkan Password",
+              placeholder: "Masukkan Password (Minimal 8 Karakter)",
             },
           ].map(({ label, name, type = "text", placeholder }) => (
             <div key={name}>
