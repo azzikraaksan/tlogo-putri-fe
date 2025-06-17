@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
 import Sidebar from "/components/Sidebar.jsx";
 import withAuth from "/src/app/lib/withAuth";
 import { FileText, FileSpreadsheet, ArrowLeft } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useRouter } from 'next/navigation';
 
 // const API_BASE_URL = "http://localhost:8000/api";
 const API_BASE_URL = "https://tpapi.siunjaya.id/api";
@@ -61,8 +61,12 @@ const TriwulanPage = ({ children }) => {
                     setDataTriwulan([]);
                     return;
                 }
-                const errorText = await response.text();
-                throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+                // const errorText = await response.text(); // Dikomentari
+                // throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`); // Dikomentari
+                // Jika Anda ingin mengabaikan error fetch, cukup return atau set data kosong
+                setDataTriwulan([]);
+                setIsLoading(false);
+                return;
             }
             const rawData = await response.json();
             const fetchedData = Array.isArray(rawData) ? rawData : (rawData.data || []);
@@ -82,6 +86,7 @@ const TriwulanPage = ({ children }) => {
             }));
             setDataTriwulan(formattedData);
         } catch (error) {
+            // console.error("Error fetching quarterly data:", error); // Dikomentari
             setDataTriwulan([]);
         } finally {
             setIsLoading(false);
@@ -106,7 +111,7 @@ const TriwulanPage = ({ children }) => {
 
     const handleExportExcelAction = () => {
         if (dataTriwulan.length === 0) {
-            alert("Data kosong, tidak bisa export Excel!");
+            // alert("Data kosong, tidak bisa export Excel!"); // Dikomentari
             return;
         }
         try {
@@ -128,13 +133,14 @@ const TriwulanPage = ({ children }) => {
             XLSX.utils.book_append_sheet(wb, ws, `Triwulan ${selectedQuarter} ${selectedYear}`);
             XLSX.writeFile(wb, getExportFileName("xlsx"));
         } catch (error) {
-            alert("Gagal export Excel!");
+            // console.error("Error exporting Excel:", error); // Dikomentari
+            // alert("Gagal export Excel!"); // Dikomentari
         }
     };
 
     const handleExportPDFAction = () => {
         if (dataTriwulan.length === 0) {
-            alert("Data kosong, tidak bisa export PDF!");
+            // alert("Data kosong, tidak bisa export PDF!"); // Dikomentari
             return;
         }
         try {
@@ -171,7 +177,8 @@ const TriwulanPage = ({ children }) => {
             });
             doc.save(getExportFileName("pdf"));
         } catch (error) {
-            alert("Gagal export PDF!");
+            // console.error("Error exporting PDF:", error); // Dikomentari
+            // alert("Gagal export PDF!"); // Dikomentari
         }
     };
 

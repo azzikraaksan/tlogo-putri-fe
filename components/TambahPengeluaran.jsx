@@ -70,29 +70,24 @@ const TambahPengeluaran = ({ isOpen, onClose, onAddData, initialDate }) => {
         const { amount, information, action, other_category_info } = formData;
 
         if (!amount || !information || !selectedDateForPicker || !action) {
-            alert("Harap isi semua field yang wajib diisi (Tanggal, Jumlah, Keterangan, Kategori)!");
+            // alert("Harap isi semua field yang wajib diisi (Tanggal, Jumlah, Keterangan, Kategori)!"); // Dikomentari
             return false;
         }
 
         if (action === "lain_lain" && !other_category_info.trim()) {
-            alert("Harap isi keterangan untuk kategori 'Lain-lain'.");
+            // alert("Harap isi keterangan untuk kategori 'Lain-lain'."); // Dikomentari
             return false;
         }
 
         const parsedAmount = parseFloat(amount);
         if (isNaN(parsedAmount) || parsedAmount <= 0) {
-            alert("Jumlah harus berupa angka positif.");
+            // alert("Jumlah harus berupa angka positif."); // Dikomentari
             return false;
         }
         
-        // Pastikan jumlah tidak memiliki terlalu banyak desimal jika DB hanya DECIMAL(X,2)
-        // Atau jika Anda menggunakan BIGINT di DB, pastikan tidak ada desimal sama sekali di sini.
-        // Contoh: Jika DB DECIMAL(15,2), dan user input 123.456, ini akan dipotong menjadi 123.45
-        // Jika DB BIGINT, dan user input 123.45, ini akan dibulatkan atau error.
-        // Asumsi DB Anda sekarang DECIMAL(15, 2)
         if (parsedAmount.toString().split('.')[1]?.length > 2) {
-             alert("Jumlah hanya bisa memiliki maksimal 2 angka di belakang koma.");
-             return false;
+            // alert("Jumlah hanya bisa memiliki maksimal 2 angka di belakang koma."); // Dikomentari
+            return false;
         }
 
         return true;
@@ -107,21 +102,20 @@ const TambahPengeluaran = ({ isOpen, onClose, onAddData, initialDate }) => {
         try {
             const payload = {
                 issue_date: formatDateForAPI(selectedDateForPicker),
-                // Pastikan amount dikirim sebagai float jika backend mengharapkan numerik/decimal
-                // Ini sudah dilakukan dengan parseFloat(formData.amount)
                 amount: parseFloat(formData.amount),
                 information: formData.information,
                 action: formData.action === "lain_lain" ? formData.other_category_info : formData.action,
             };
 
-            // Log payload di konsol browser untuk debugging
+            // console.log("Payload yang dikirim:", payload); // Dikomentari
+            // console.log("URL API:", `${API_BASE_URL}/expenditures/create`); // Dikomentari
 
 
             const response = await fetch(`${API_BASE_URL}/expenditures/create`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json', // Tambahkan header Accept
+                    'Accept': 'application/json',
                 },
                 body: JSON.stringify(payload),
             });
@@ -135,15 +129,17 @@ const TambahPengeluaran = ({ isOpen, onClose, onAddData, initialDate }) => {
                 } catch {
                     errorMessage += `Respons mentah: ${errorText.substring(0, 200)}...`;
                 }
+                // console.error("Error response from server:", errorMessage); // Dikomentari
                 throw new Error(errorMessage);
             }
 
             window.dispatchEvent(new CustomEvent('dataPengeluaranUpdated'));
 
-            alert("Data pengeluaran berhasil ditambahkan!");
+            // alert("Data pengeluaran berhasil ditambahkan!"); // Dikomentari
             onClose();
         } catch (error) {
-            alert(`Gagal menambahkan data pengeluaran: ${error.message}.`);
+            // console.error("Error adding data:", error); // Dikomentari
+            // alert(`Gagal menambahkan data pengeluaran: ${error.message}.`); // Dikomentari
         } finally {
             setIsSubmitting(false);
         }

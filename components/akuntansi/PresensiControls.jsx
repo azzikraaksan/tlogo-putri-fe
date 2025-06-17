@@ -35,7 +35,7 @@ const PresensiControls = ({
       </h1>
 
       {/* Kontrol */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         {/* Kiri: Filter tanggal & Buat laporan */}
         <div className="flex flex-wrap gap-4 items-center">
           <div className="relative" ref={calendarRef}>

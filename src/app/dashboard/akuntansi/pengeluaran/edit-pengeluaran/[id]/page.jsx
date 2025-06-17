@@ -52,7 +52,7 @@ const EditPengeluaranPage = () => {
     const [selectedDateForPicker, setSelectedDateForPicker] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [errorFetching, setErrorFetching] = useState(null);
+    const [errorFetching, setErrorFetching] = useState(null); // Variabel ini tetap ada, tapi penggunaannya untuk pesan error dikomentari
 
     const expenditureCategories = [
         { value: "", label: "Pilih Kategori" },
@@ -69,14 +69,14 @@ const EditPengeluaranPage = () => {
             const decodedIds = hashids.decode(expenditureIdHash);
             if (decodedIds.length > 0 && !isNaN(Number(decodedIds[0]))) {
                 setNumericExpenditureId(Number(decodedIds[0]));
-                setErrorFetching(null); 
+                // setErrorFetching(null); // Dikomentari
             } else {
-                setErrorFetching("ID Pengeluaran tidak valid atau tidak dapat didecode.");
+                // setErrorFetching("ID Pengeluaran tidak valid atau tidak dapat didecode."); // Dikomentari
                 setNumericExpenditureId(null);
                 setIsLoading(false); 
             }
         } else {
-            setErrorFetching("ID Pengeluaran tidak ditemukan di URL.");
+            // setErrorFetching("ID Pengeluaran tidak ditemukan di URL."); // Dikomentari
             setNumericExpenditureId(null);
             setIsLoading(false); 
         }
@@ -84,7 +84,7 @@ const EditPengeluaranPage = () => {
 
     const fetchExpenditureDetail = useCallback(async () => {
         if (!numericExpenditureId) {
-            if (!errorFetching) setErrorFetching("Gagal mengambil detail: ID tidak tersedia.");
+            // if (!errorFetching) setErrorFetching("Gagal mengambil detail: ID tidak tersedia."); // Dikomentari
             setIsLoading(false);
             return;
         }
@@ -98,6 +98,7 @@ const EditPengeluaranPage = () => {
                     const json = JSON.parse(errorText);
                     msg += `, Pesan: ${json.message || JSON.stringify(json)}`;
                 } catch { msg += `, Respons: ${errorText.substring(0, 100)}...`; }
+                // console.error("Error fetching expenditure detail:", msg); // Dikomentari
                 throw new Error(msg);
             }
             const result = await response.json();
@@ -121,22 +122,24 @@ const EditPengeluaranPage = () => {
                     other_category_info: initialOtherCategoryInfo,
                 });
                 setSelectedDateForPicker(parseApiDateToDateObject(dataToEdit.issue_date));
-                setErrorFetching(null); 
+                // setErrorFetching(null); // Dikomentari
             } else {
-                setErrorFetching("Data pengeluaran tidak ditemukan untuk ID ini.");
+                // setErrorFetching("Data pengeluaran tidak ditemukan untuk ID ini."); // Dikomentari
             }
         } catch (error) {
-            setErrorFetching(`Gagal mengambil data detail: ${error.message}`);
+            // console.error("Error in fetchExpenditureDetail:", error); // Dikomentari
+            // setErrorFetching(`Gagal mengambil data detail: ${error.message}`); // Dikomentari
         } finally {
             setIsLoading(false); 
         }
-    }, [numericExpenditureId, errorFetching]); 
+    }, [numericExpenditureId, /* errorFetching, */ expenditureCategories]); // errorFetching dihapus dari dependency array karena penggunaannya dikomentari
 
     useEffect(() => {
-        if (numericExpenditureId !== null && !errorFetching) { 
+        // if (numericExpenditureId !== null && !errorFetching) { // errorFetching dikomentari dari kondisi
+        if (numericExpenditureId !== null) { 
             fetchExpenditureDetail();
         }
-    }, [numericExpenditureId, errorFetching, fetchExpenditureDetail]);
+    }, [numericExpenditureId, /* errorFetching, */ fetchExpenditureDetail]); // errorFetching dikomentari dari dependency array
 
     const handleInputChange = useCallback((e) => {
         const { name, value } = e.target;
@@ -151,20 +154,20 @@ const EditPengeluaranPage = () => {
     const validateForm = useCallback(() => {
         const { amount, information, action, other_category_info } = formData;
         if (!selectedDateForPicker || !amount || !information.trim() || !action) {
-            alert("Harap isi semua field yang wajib diisi (Tanggal, Jumlah, Keterangan, Kategori)!");
+            // alert("Harap isi semua field yang wajib diisi (Tanggal, Jumlah, Keterangan, Kategori)!"); // Dikomentari
             return false;
         }
         if (action === "Lain-Lain" && !other_category_info.trim()) {
-            alert("Harap isi keterangan untuk kategori 'Lain-lain'.");
+            // alert("Harap isi keterangan untuk kategori 'Lain-lain'."); // Dikomentari
             return false;
         }
         const parsedAmount = parseFloat(amount);
         if (isNaN(parsedAmount) || parsedAmount <= 0) {
-            alert("Jumlah harus berupa angka positif.");
+            // alert("Jumlah harus berupa angka positif."); // Dikomentari
             return false;
         }
         if (parsedAmount.toString().split('.')[1]?.length > 2) {
-            alert("Jumlah hanya bisa memiliki maksimal 2 angka di belakang koma.");
+            // alert("Jumlah hanya bisa memiliki maksimal 2 angka di belakang koma."); // Dikomentari
             return false;
         }
         return true;
@@ -173,7 +176,7 @@ const EditPengeluaranPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validateForm() || !numericExpenditureId) {
-            if (!numericExpenditureId) alert("ID Pengeluaran tidak valid untuk update.");
+            // if (!numericExpenditureId) alert("ID Pengeluaran tidak valid untuk update."); // Dikomentari
             return;
         }
         setIsSubmitting(true);
@@ -203,12 +206,15 @@ const EditPengeluaranPage = () => {
                         errorMessage += `\nDetail Validasi Backend:\n${validationErrors}`;
                     }
                 } catch { errorMessage += `, Respons Mentah: ${errorText.substring(0, 100)}...`; }
+                // console.error("Error updating expenditure:", errorMessage); // Dikomentari
                 throw new Error(errorMessage);
             }
-            alert("Data berhasil diperbarui!");
+            // alert("Data berhasil diperbarui!"); // Dikomentari
             window.dispatchEvent(new CustomEvent('dataPengeluaranUpdated'));
             router.back();
         } catch (error) {
+            // console.error("Caught error during submission:", error); // Dikomentari
+            // alert(`Gagal memperbarui data pengeluaran: ${error.message}.`); // Dikomentari
         } finally {
             setIsSubmitting(false);
         }
@@ -228,11 +234,13 @@ const EditPengeluaranPage = () => {
         );
     }
 
+    // Meskipun errorFetching tetap ada, pesan yang ditampilkannya dikomentari
     if (errorFetching || numericExpenditureId === null) { 
         return (
             <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
                 <div className="bg-white p-6 md:p-8 rounded-lg shadow-xl w-full max-w-lg text-center">
-                    <p className="text-red-600 mb-4">{errorFetching || "ID Pengeluaran tidak valid atau data tidak ditemukan."}</p>
+                    {/* <p className="text-red-600 mb-4">{errorFetching || "ID Pengeluaran tidak valid atau data tidak ditemukan."}</p> */}
+                    <p className="text-red-600 mb-4">Terjadi masalah saat memuat data. Silakan coba lagi.</p> {/* Pesan generik */}
                     <button
                         onClick={handleCancel}
                         className="mt-6 px-4 py-2 text-sm font-medium text-white bg-[#3D6CB9] rounded-md hover:bg-[#315694] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#3D6CB9]"
