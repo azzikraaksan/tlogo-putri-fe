@@ -8,6 +8,7 @@ import { FiEdit, FiRotateCcw, FiTrash2 } from 'react-icons/fi';
 import DOMPurify from 'dompurify';
 import Sidebar from "/components/Sidebar";
 import Hashids from 'hashids';
+import Modal from '../components/ModalConfirm'
 
 function stripHtmlTags(html) {
   if (typeof window === 'undefined') return html;
@@ -49,6 +50,41 @@ export default function Artikel() {
   const decodedIds = selectedIdHash ? hashids.decode(selectedIdHash) : [];
   const selectedId = decodedIds.length > 0 ? decodedIds[0] : null;
   const selectedArticle = data.find((item) => item.id === selectedId);
+
+
+  const [modal, setModal] = useState({
+  isOpen: false,
+  message: '',
+  title: '',
+  isConfirm: false,
+  onConfirm: null,
+  onCancel: null
+});
+
+
+function showMessage(message, title = 'Info') {
+  setModal({
+    isOpen: true,
+    message,
+    title,
+    isConfirm: false,
+    onConfirm: () => setModal({ ...modal, isOpen: false }),
+  });
+}
+
+function showConfirm(message, onConfirm, title = 'Konfirmasi') {
+  setModal({
+    isOpen: true,
+    message,
+    title,
+    isConfirm: true,
+    onConfirm: () => {
+      setModal((prev) => ({ ...prev, isOpen: false }));
+      onConfirm();
+    },
+    onCancel: () => setModal((prev) => ({ ...prev, isOpen: false })),
+  });
+}
 
 
   const tabs = [
@@ -112,56 +148,57 @@ export default function Artikel() {
   });
 
   const handleSave = async (updatedArticle, publish = false) => {
-    try {
-      const bodyData = {
-        ...updatedArticle,
-        status: publish ? 'terbit' : updatedArticle.status || 'konsep',
-        // thumbnail: typeof updatedArticle.thumbnail === 'string' ? updatedArticle.thumbnail : '',
-      };
+  try {
+    const bodyData = {
+      ...updatedArticle,
+      status: publish ? 'terbit' : updatedArticle.status || 'konsep',
+    };
 
-      const res = await fetch(
-        `https://tpapi.siunjaya.id/api/content-generate/articleupdate/${updatedArticle.id}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(bodyData),
-        }
-      );
-      if (!res.ok) throw new Error('Gagal menyimpan data');
+    const res = await fetch(
+      `https://tpapi.siunjaya.id/api/content-generate/articleupdate/${updatedArticle.id}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyData),
+      }
+    );
+    if (!res.ok) throw new Error('Gagal menyimpan data');
 
-      alert(publish ? 'Artikel berhasil diterbitkan' : 'Artikel berhasil disimpan');
+    showMessage(publish ? 'Artikel berhasil diterbitkan' : 'Artikel berhasil disimpan');
+    await fetchData();
+    router.push('/dashboard/ai-generate/draft');
+  } catch (err) {
+    showMessage(err.message, 'Error');
+  }
+};
 
-      await fetchData();
-      router.push('/dashboard/ai-generate/draft');
-    } catch (err) {
-      alert(err.message);
-    }
-  };
 
   const handlePublish = (article) => {
     handleSave(article, true);
   };
 
-  const handleDelete = async (id) => {
-    if (!confirm('Yakin ingin menghapus artikel ini?')) return;
+  const handleDelete = (id) => {
+  showConfirm('Yakin ingin menghapus artikel ini?', async () => {
     try {
       const res = await fetch(
         `https://tpapi.siunjaya.id/api/content-generate/articledelete/${id}`,
         { method: 'POST' }
       );
       if (!res.ok) throw new Error('Gagal menghapus data');
-      alert('Artikel berhasil dihapus');
+      showMessage('Artikel berhasil dihapus');
       await fetchData();
       if (selectedId && parseInt(selectedId) === id) {
         router.push('/dashboard/ai-generate/draft');
       }
     } catch (err) {
-      alert(err.message);
+      showMessage(err.message, 'Error');
     }
-  };
+  });
+};
 
-  const handleRestore = async (id) => {
-    if (!confirm('Yakin ingin memulihkan artikel ini?')) return;
+
+ const handleRestore = (id) => {
+  showConfirm('Yakin ingin memulihkan artikel ini?', async () => {
     try {
       const res = await fetch(
         `https://tpapi.siunjaya.id/api/content-generate/articleupdate/${id}`,
@@ -172,12 +209,14 @@ export default function Artikel() {
         }
       );
       if (!res.ok) throw new Error('Gagal memulihkan artikel');
-      alert('Artikel berhasil dipulihkan ke Konsep');
+      showMessage('Artikel berhasil dipulihkan ke Konsep');
       await fetchData();
     } catch (err) {
-      alert(err.message);
+      showMessage(err.message, 'Error');
     }
-  };
+  });
+};
+
 
   const onBack = () => {
     router.push('/dashboard/ai-generate/draft');
@@ -308,7 +347,7 @@ export default function Artikel() {
         }}
       ></div>
 
-      <main className="md:px-10 py-6 space-y-6">
+      <main className="md:px-10 py-6 space-y-6 relative">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-semibold text-black">Daftar Artikel</h1>
         </div>
@@ -333,7 +372,7 @@ export default function Artikel() {
             onClear={() => setSearchTerm("")} />
         </div>
 
-        <div className="overflow-x-auto rounded-md shadow-md max-h-139">
+        <div className="overflow-x-auto rounded-md shadow-md max-h-139 -mb-10">
           <table className="min-w-full text-sm text-left text-gray-600">
             <thead className="bg-[#3D6CB9] text-white">
               <tr>
@@ -439,6 +478,16 @@ export default function Artikel() {
             </tbody>
           </table>
         </div>
+
+        <Modal
+        isOpen={modal.isOpen}
+        title={modal.title}
+        message={modal.message}
+        isConfirm={modal.isConfirm}
+        onConfirm={modal.onConfirm}
+        onCancel={modal.onCancel}
+      />
+
       </main>
     </div>
   );
