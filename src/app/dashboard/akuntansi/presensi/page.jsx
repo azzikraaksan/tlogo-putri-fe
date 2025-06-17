@@ -113,13 +113,13 @@ const PresensiPage = ({ children }) => {
         try {
             const response = await fetch(`${API_BASE_URL}/rekap-presensi/all`);
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP error! Status: ${response.status}. Detail: ${errorText || 'Tidak ada detail error.'}`);
+                // const errorText = await response.text();
+                // throw new Error(`HTTP error! Status: ${response.status}. Detail: ${errorText || 'Tidak ada detail error.'}`);
             }
             const result = await response.json();
             const fetchedRawData = Array.isArray(result) ? result : result.data || [];
             if (!Array.isArray(fetchedRawData)) {
-                throw new Error("Format data dari backend tidak valid.");
+                // throw new Error("Format data dari backend tidak valid.");
             }
             setDataPresensi(fetchedRawData);
 
@@ -267,8 +267,8 @@ const PresensiPage = ({ children }) => {
                 body: JSON.stringify(payload),
             });
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({ message: response.statusText }));
-                throw new Error(`Gagal memicu rekap presensi: ${response.status}. ${errorData.message || ''}`);
+                // const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                // throw new Error(`Gagal memicu rekap presensi: ${response.status}. ${errorData.message || ''}`);
             }
             const result = await response.json();
             alert(`Proses rekapitulasi presensi berhasil dipicu di backend. ${result.message || 'Memuat data terbaru...'}`);
@@ -303,11 +303,11 @@ const PresensiPage = ({ children }) => {
           className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
           style={{
             marginLeft: isSidebarOpen ? 290 : 70,
-            paddingLeft : 20,
-            paddingRight: 20
+            // paddingLeft : 20,
+            // paddingRight: 20
           }}
         >
-            <div className="flex flex-col justify-between mb-12 gap-6 relative">
+            <div className="flex flex-col justify-between gap-6 relative">
               <PresensiControls
                 calendarRef={calendarRef}
                 isDatePickerOpen={isDatePickerOpen}

@@ -91,21 +91,30 @@ const HarianPage = () => {
             const responseDataText = await response.text();
 
             if (!response.ok) {
-                let errorMessage = `HTTP error! Status: ${response.status}.`;
-                try {
-                    const errorJson = JSON.parse(responseDataText);
-                    errorMessage += ` Pesan: ${errorJson.message || response.statusText}.`;
-                } catch (e) {
-                    errorMessage += ` Detail: ${response.statusText || 'Gagal mengambil data.'}`;
-                }
-                throw new Error(errorMessage);
+                // let errorMessage = `HTTP error! Status: ${response.status}.`; // Dikomentari
+                // try {
+                //     const errorJson = JSON.parse(responseDataText);
+                //     errorMessage += ` Pesan: ${errorJson.message || response.statusText}.`;
+                // } catch (e) {
+                //     errorMessage += ` Detail: ${response.statusText || 'Gagal mengambil data.'}`;
+                // }
+                // throw new Error(errorMessage); // Dikomentari
+                // Jika Anda ingin mengabaikan error fetch, cukup return atau set data kosong
+                setDataHarian([]);
+                setFilteredData([]);
+                setIsLoading(false);
+                return;
             }
             
             const data = JSON.parse(responseDataText); 
             const fetchedRawData = data.data || []; 
 
             if (!Array.isArray(fetchedRawData)) {
-                throw new Error("Format data dari backend tidak valid.");
+                // throw new Error("Format data dari backend tidak valid."); // Dikomentari
+                setDataHarian([]);
+                setFilteredData([]);
+                setIsLoading(false);
+                return;
             }
 
             const formattedData = fetchedRawData.map(item => ({
@@ -145,6 +154,7 @@ const HarianPage = () => {
                 setFilteredData(formattedData); 
             }
         } catch (error) {
+            // console.error("Gagal memuat data dari backend:", error); // Dikomentari
             setDataHarian([]);
             setFilteredData([]);
         } finally {
@@ -168,9 +178,9 @@ const HarianPage = () => {
     };
 
     const handleGenerateDailyReport = async () => {
-        if (!confirm("Apakah Anda yakin ingin memicu perhitungan laporan harian otomatis dari backend? Proses ini mungkin memerlukan waktu.")) {
-            return;
-        }
+        // if (!confirm("Apakah Anda yakin ingin memicu perhitungan laporan harian otomatis dari backend? Proses ini mungkin memerlukan waktu.")) { // Dikomentari
+        //     return;
+        // }
         setIsLoading(true);
         try {
             const response = await fetch(`${API_BASE_URL}/dailyreports/generate-report`, {
@@ -182,19 +192,21 @@ const HarianPage = () => {
             });
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => response.text());
-                let errorMessage = `Gagal memicu generate laporan harian: ${response.status} ${response.statusText}`;
-                if (typeof errorData === 'object' && errorData !== null && errorData.message) {
-                    errorMessage += `. Detail Backend: ${errorData.message}`;
-                } else if (typeof errorData === 'string' && errorData.length < 200) { 
-                    errorMessage += `. Detail: ${errorData}`;
-                }
-                throw new Error(errorMessage);
+                // const errorData = await response.json().catch(() => response.text()); // Dikomentari
+                // let errorMessage = `Gagal memicu generate laporan harian: ${response.status} ${response.statusText}`; // Dikomentari
+                // if (typeof errorData === 'object' && errorData !== null && errorData.message) { // Dikomentari
+                //     errorMessage += `. Detail Backend: ${errorData.message}`; // Dikomentari
+                // } else if (typeof errorData === 'string' && errorData.length < 200) { // Dikomentari
+                //     errorMessage += `. Detail: ${errorData}`; // Dikomentari
+                // }
+                // throw new Error(errorMessage); // Dikomentari
+                // alert("Proses pembuatan laporan gagal."); // Dikomentari
             }
-            const result = await response.json();
-            alert(`Proses perhitungan laporan harian berhasil dipicu di backend. ${result.message || 'Memuat data terbaru...'}`);
+            // const result = await response.json(); // Dikomentari jika tidak digunakan setelah ini
+            // alert(`Proses perhitungan laporan harian berhasil dipicu di backend. ${result.message || 'Memuat data terbaru...'}`); // Dikomentari
             await loadAndFilterData(); 
         } catch (error) {
+            // alert(`Error: ${error.message}`); // Dikomentari
         } finally {
             setIsLoading(false);
         }
@@ -207,7 +219,7 @@ const HarianPage = () => {
 
     const handleExportExcelAction = () => {
         if (filteredData.length === 0) {
-            alert("Data kosong, tidak bisa export Excel!");
+            // alert("Data kosong, tidak bisa export Excel!"); // Dikomentari
             return;
         }
         try {
@@ -241,13 +253,13 @@ const HarianPage = () => {
             XLSX.utils.book_append_sheet(wb, ws, "Laporan Harian");
             XLSX.writeFile(wb, getExportFileName("xlsx"));
         } catch (error) {
-            alert("Gagal export Excel!");
+            // alert("Gagal export Excel!"); // Dikomentari
         }
     };
 
     const handleExportPDFAction = () => {
         if (filteredData.length === 0) {
-            alert("Data kosong, tidak bisa export PDF!");
+            // alert("Data kosong, tidak bisa export PDF!"); // Dikomentari
             return;
         }
         try {
@@ -306,7 +318,7 @@ const HarianPage = () => {
             });
             doc.save(getExportFileName("pdf"));
         } catch (error) {
-            alert("Gagal export PDF!");
+            // alert("Gagal export PDF!"); // Dikomentari
         }
     };
 
@@ -396,19 +408,19 @@ const HarianPage = () => {
                                     </div>
                                 </div>
                             )}
-                        </div>
-                            <button
-                                onClick={handleGenerateDailyReport}
-                                disabled={isLoading}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow transition-colors ${
-                                    isLoading
-                                        ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                        : "bg-[#3D6CB9] text-white hover:bg-[#B8D4F9] hover:text-black"
-                                }`}
-                            >
-                                <Zap size={20} color={isLoading ? "gray" : "white"} />
-                                <span>Buat Laporan</span>
-                            </button>
+                            </div>
+                                <button
+                                    onClick={handleGenerateDailyReport}
+                                    disabled={isLoading}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow transition-colors ${
+                                        isLoading
+                                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                            : "bg-[#3D6CB9] text-white hover:bg-[#B8D4F9] hover:text-black"
+                                    }`}
+                                >
+                                    <Zap size={20} color={isLoading ? "gray" : "white"} />
+                                    <span>Buat Laporan</span>
+                                </button>
                         </div>
                         <div className="flex flex-wrap gap-4">
                             <button

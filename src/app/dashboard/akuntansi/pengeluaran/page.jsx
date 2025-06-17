@@ -189,7 +189,8 @@ const PengeluaranPage = ({ children }) => {
             const url = `${API_BASE_URL}/expenditures/all`;
             const response = await fetch(url);
             if (!response.ok) {
-                throw new Error(`Gagal mengambil data pengeluaran: ${response.statusText || 'Kesalahan Server'}`);
+                // throw new Error(`Gagal mengambil data pengeluaran: ${response.statusText || 'Kesalahan Server'}`); // Dikomentari
+                // alert(`Gagal mengambil data pengeluaran: ${response.statusText || 'Kesalahan Server'}`); // Anda bisa memilih untuk tetap menampilkan alert ke user
             }
             const result = await response.json();
             let extractedData = [];
@@ -208,6 +209,7 @@ const PengeluaranPage = ({ children }) => {
             setDataPengeluaran(cleanData);
             applyFilterToData(cleanData, selectedDateForFilter);
         } catch (error) {
+            // console.error("Error fetching data:", error); // Dikomentari
             setDataPengeluaran([]);
             applyFilterToData([], selectedDateForFilter); 
         } finally {
@@ -260,6 +262,7 @@ const PengeluaranPage = ({ children }) => {
                 alert("Laporan pengeluaran bulanan berhasil dibuat dan dikirim ke server.");
                 fetchExpenditureData();
             } catch (error) {
+                // console.error("Error generating report:", error); // Dikomentari
                 alert(`Gagal membuat laporan: ${error.message}`);
             }
         }
@@ -282,6 +285,7 @@ const PengeluaranPage = ({ children }) => {
                 const currentSystemDateObject = new Date(currentSystemYear, currentSystemMonth, 1);
                 if (selectedDateObject < currentSystemDateObject &&
                     (selectedDateForFilter.getMonth() !== currentSystemMonth || selectedDateForFilter.getFullYear() !== currentSystemYear)) {
+                    // console.log("Old date selected, not auto-updating."); // Dikomentari
                 }
             }
         };
@@ -329,6 +333,7 @@ const PengeluaranPage = ({ children }) => {
                 alert("Data berhasil dihapus.");
                 window.dispatchEvent(new CustomEvent('dataPengeluaranUpdated'));
             } catch (error) {
+                // console.error("Error deleting data:", error); // Dikomentari
                 alert(`Gagal menghapus data: ${error.message}`);
             }
         }
@@ -377,6 +382,7 @@ const PengeluaranPage = ({ children }) => {
             XLSX.utils.book_append_sheet(wb, ws, "Pengeluaran");
             XLSX.writeFile(wb, getExportFileName("xlsx"));
         } catch (error) {
+            // console.error("Error exporting Excel:", error); // Dikomentari
             alert("Gagal export Excel!");
         }
     };
@@ -420,6 +426,7 @@ const PengeluaranPage = ({ children }) => {
 
             doc.save(getExportFileName("pdf"));
         } catch (error) {
+            // console.error("Error exporting PDF:", error); // Dikomentari
             alert("Gagal export PDF!");
         }
     };

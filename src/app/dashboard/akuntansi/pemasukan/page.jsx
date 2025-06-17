@@ -59,7 +59,7 @@ const formatToLocalDateString = (dateObject) => {
     if (!dateObject) return null;
     const d = dateObject instanceof Date ? dateObject : new Date(dateObject);
     if (isNaN(d.getTime())) {
-        console.error("Invalid date passed to formatToLocalDateString:", dateObject);
+        // console.error("Invalid date passed to formatToLocalDateString:", dateObject); // Dikomentari
         return null;
     }
     const year = d.getFullYear();
@@ -104,7 +104,7 @@ const PemasukanPage = () => {
             if (!response.ok) {
                 const errorMessage = rawData.message || `HTTP error! Status: ${response.status}.`;
                 if (rawData.status === 'not_found') {
-                    console.warn(errorMessage);
+                    // console.warn(errorMessage); // Dikomentari
                     setFilteredData([]);
                     setDataPemasukan([]);
                 } else {
@@ -113,7 +113,7 @@ const PemasukanPage = () => {
             } else { 
                 const fetchedRawData = rawData.income || [];
                 if (!Array.isArray(fetchedRawData)) {
-                    console.error("Properti 'income' dari backend bukan array:", fetchedRawData);
+                    // console.error("Properti 'income' dari backend bukan array:", fetchedRawData); // Dikomentari
                     throw new Error("Format data dari backend (properti 'income') tidak valid.");
                 }
 
@@ -166,7 +166,7 @@ const PemasukanPage = () => {
             }
         } catch (error) {
             if (!error.message.toLowerCase().includes("data tidak ditemukan")) {
-                //  alert(`Terjadi kesalahan: ${error.message}.`);
+                // alert(`Terjadi kesalahan: ${error.message}.`); // Alert ini tidak terkait console.log, tapi saya sertakan untuk konteks
             }
             setDataPemasukan([]);
             setFilteredData([]);
@@ -212,7 +212,7 @@ const PemasukanPage = () => {
                 if (currentFilterDateStringRef.current === autoUpdateTargetDateStringRef.current &&
                     newTodayString !== autoUpdateTargetDateStringRef.current) {
                     
-                    console.log(`Auto-updating filter dari ${autoUpdateTargetDateStringRef.current} ke 'hari ini' yang baru: ${newTodayString}`);
+                    // console.log(`Auto-updating filter dari ${autoUpdateTargetDateStringRef.current} ke 'hari ini' yang baru: ${newTodayString}`); // Dikomentari
                     
                     setSelectedDateForFilter(now); 
                     setTempDateForPicker(now);     
@@ -224,7 +224,6 @@ const PemasukanPage = () => {
         return () => clearInterval(intervalId); 
     }, []); 
     
-
 
     const calculateTotalKas = () => {
         const total = filteredData.reduce((sum, item) => sum + (typeof item.cash === 'number' && !isNaN(item.cash) ? item.cash : 0), 0);
@@ -253,7 +252,7 @@ const PemasukanPage = () => {
             XLSX.utils.book_append_sheet(wb, ws, "Pemasukan");
             XLSX.writeFile(wb, getExportFileName("xlsx"));
         } catch (error) {
-            console.error("Gagal export Excel:", error);
+            // console.error("Gagal export Excel:", error); // Dikomentari
             alert("Gagal export Excel!");
         }
     };
@@ -292,7 +291,7 @@ const PemasukanPage = () => {
             });
             doc.save(getExportFileName("pdf"));
         } catch (error) {
-            console.error("Gagal export PDF:", error);
+            // console.error("Gagal export PDF:", error); // Dikomentari
             alert("Gagal export PDF!");
         }
     };
