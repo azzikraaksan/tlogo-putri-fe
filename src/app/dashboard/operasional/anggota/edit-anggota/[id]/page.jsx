@@ -10,6 +10,7 @@ import Hashids from "hashids";
 const EditAnggota = () => {
   const router = useRouter();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [errorTelepon, setErrorTelepon] = useState("");
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -108,11 +109,19 @@ const EditAnggota = () => {
       const result = await res.json();
       if (res.ok) {
         router.back();
+      } else if (res.status === 422) {
+        const errors = result.errors;
+        const teleponError = errors?.telepon?.[0] || "";
+
+        if (teleponError === "The telepon has already been taken.") {
+          setErrorTelepon("Nomor telepon sudah digunakan.");
+        } else {
+          setErrorTelepon(teleponError);
+        }
       } else {
         alert("Gagal update: " + (result.message || "Terjadi kesalahan."));
       }
-    } catch (error) {
-    }
+    } catch (error) {}
   };
 
   return (
@@ -141,12 +150,13 @@ const EditAnggota = () => {
               onSubmit={handleSubmit}
               className="w-[650px] mx-auto mt-8 p-6 bg-white shadow-md rounded-xl space-y-4"
             >
-              <div className="text-[16px] font-semibold text-[#1C7AC8]">
+              <div className="text-[16px] font-semibold text-[#1C7AC8] mb-2">
                 Role : {formData.role || "-"}
               </div>
-              <div className="text-[16px] font-semibold text-[#1C7AC8]">
+              <div className="text-[16px] font-semibold text-[#1C7AC8] mb-2">
                 Username : {formData.username || "-"}
               </div>
+              <label className="block text-sm text-gray-700 font-semibold mb-1 mt-1">Nama : </label>
               <input
                 name="name"
                 value={formData.name || ""}
@@ -154,6 +164,7 @@ const EditAnggota = () => {
                 className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                 placeholder="Nama"
               />
+              <label className="block text-sm text-gray-700 font-semibold mb-1 mt-1">Email : </label>
               <input
                 name="email"
                 value={formData.email || ""}
@@ -163,18 +174,30 @@ const EditAnggota = () => {
               />
               {formData.role === "Owner" && (
                 <>
-                  <input
-                    name="telepon"
-                    type="number"
-                    value={formData.telepon || ""}
-                    onChange={handleChange}
-                    className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                    placeholder="No Telepon"
-                    style={{
-                      appearance: "textfield",
-                      MozAppearance: "textfield",
-                    }}
-                  />
+                  <div>
+                    {errorTelepon && (
+                      <p className="text-red-500 text-sm mb-1">
+                        {errorTelepon}
+                      </p>
+                    )}
+                    <label className="block text-sm text-gray-700 font-semibold mb-1 mt-1">
+                      No Telepon (wajib diawali 08 atau 628){" "}
+                      <span className="text-red-500">*</span>
+                     : </label>
+                    <input
+                      required
+                      type="number"
+                      name="telepon"
+                      value={formData.telepon}
+                      onChange={(e) => {
+                        handleChange(e);
+                        setErrorTelepon(""); // reset error saat user mengedit
+                      }}
+                      placeholder="Masukkan No Telepon"
+                      className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                    />
+                  </div>
+                  <label className="block text-sm text-gray-700 font-semibold mb-1 mt-1">Alamat : </label>
                   <input
                     name="alamat"
                     value={formData.alamat || ""}
@@ -182,6 +205,9 @@ const EditAnggota = () => {
                     className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                     placeholder="Alamat"
                   />
+                  <label className="block text-sm text-gray-700 font-semibold mb-1 mt-1">
+                    Jumlah Jeep
+                   : </label>
                   <input
                     name="jumlah_jeep"
                     value={formData.jumlah_jeep || ""}
@@ -190,9 +216,9 @@ const EditAnggota = () => {
                     placeholder="Jumlah Jeep"
                   />
                   <div>
-                    <label className="block text-sm text-gray-700">
+                    <label className="block text-sm text-gray-700 font-semibold mb-1 mt-1">
                       Status
-                    </label>
+                     : </label>
                     <select
                       name="status"
                       value={formData.status}
@@ -204,9 +230,9 @@ const EditAnggota = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-700">
+                    <label className="block text-sm text-gray-700 font-semibold mb-1 mt-1">
                       Foto Profil (opsional)
-                    </label>
+                     : </label>
                     <input
                       type="file"
                       name="foto_profil"
@@ -219,6 +245,7 @@ const EditAnggota = () => {
 
               {formData.role === "Driver" && (
                 <>
+                  <label className="block text-sm text-gray-700 font-semibold mb-1 mt-1">Alamat : </label>
                   <input
                     name="alamat"
                     value={formData.alamat || ""}
@@ -226,22 +253,34 @@ const EditAnggota = () => {
                     className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
                     placeholder="Alamat"
                   />
-                  <input
-                    name="telepon"
-                    type="number"
-                    value={formData.telepon || ""}
-                    onChange={handleChange}
-                    className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                    placeholder="No Telepon"
-                    style={{
-                      appearance: "textfield",
-                      MozAppearance: "textfield",
-                    }}
-                  />
                   <div>
-                    <label className="block text-sm text-gray-700">
+                    {errorTelepon && (
+                      <p className="text-red-500 text-sm mb-1">
+                        {errorTelepon}
+                      </p>
+                    )}
+                    <label className="block text-sm text-gray-700 font-semibold mb-1 mt-1">
+                      No Telepon (wajib diawali 08 atau 628){" "}
+                      <span className="text-red-500">*</span>
+                     : </label>
+                    <input
+                      required
+                      type="number"
+                      name="telepon"
+                      value={formData.telepon}
+                      onChange={(e) => {
+                        handleChange(e);
+                        setErrorTelepon(""); // reset error saat user mengedit
+                      }}
+                      placeholder="Masukkan No Telepon"
+                      className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-700 font-semibold mb-1 mt-1">
                       Status
-                    </label>
+                     : </label>
                     <select
                       name="status"
                       value={formData.status}
@@ -253,9 +292,9 @@ const EditAnggota = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-700">
+                    <label className="block text-sm text-gray-700 font-semibold mb-1 mt-1">
                       Foto Profil (opsional)
-                    </label>
+                     : </label>
                     <input
                       type="file"
                       name="foto_profil"
@@ -268,18 +307,30 @@ const EditAnggota = () => {
 
               {formData.role === "Pengurus" && (
                 <>
-                  <input
-                    name="telepon"
-                    type="number"
-                    value={formData.telepon || ""}
-                    onChange={handleChange}
-                    className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
-                    placeholder="No Telepon"
-                    style={{
-                      appearance: "textfield",
-                      MozAppearance: "textfield",
-                    }}
-                  />
+                  <div>
+                    {errorTelepon && (
+                      <p className="text-red-500 text-sm mb-1">
+                        {errorTelepon}
+                      </p>
+                    )}
+                    <label className="block text-sm text-gray-700 font-semibold mb-1 mt-1">
+                      No Telepon (wajib diawali 08 atau 628){" "}
+                      <span className="text-red-500">*</span>
+                     : </label>
+                    <input
+                      required
+                      type="number"
+                      name="telepon"
+                      value={formData.telepon}
+                      onChange={(e) => {
+                        handleChange(e);
+                        setErrorTelepon("");
+                      }}
+                      placeholder="Masukkan No Telepon"
+                      className="mt-2 p-2 block w-full border border-[#E5E7EB] rounded-[14px] focus:outline-none focus:ring-1 focus:ring-gray-400 text-[14px]"
+                    />
+                  </div>
+                  <label className="block text-sm text-gray-700 font-semibold mb-1 mt-1">Alamat : </label>
                   <input
                     name="alamat"
                     value={formData.alamat || ""}
@@ -288,9 +339,9 @@ const EditAnggota = () => {
                     placeholder="Alamat"
                   />
                   <div>
-                    <label className="block text-sm text-gray-700">
+                    <label className="block text-sm text-gray-700 font-semibold mb-1 mt-1">
                       Foto Profil (opsional)
-                    </label>
+                     : </label>
                     <input
                       type="file"
                       name="foto_profil"
@@ -299,9 +350,9 @@ const EditAnggota = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-700">
+                    <label className="block text-sm text-gray-700 font-semibold mb-1 mt-1">
                       Status
-                    </label>
+                     : </label>
                     <select
                       name="status"
                       value={formData.status}
