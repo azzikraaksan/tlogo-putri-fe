@@ -40,11 +40,14 @@ export const generateSlipPDFBlob = async (
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.text(
-    "Alamat: Wisata Tlogo Putri, Kaliurang, Hargobinangun, Kec. Pakem, Kabupaten Sleman, Daerah Istimewa Yogyakarta",
+    "Alamat: Wisata Tlogo Putri, Kaliurang, Hargobinangun, ",
     pageWidth / 2,
     20,
     { align: "center" }
   );
+  doc.text("Kec. Pakem, Kabupaten Sleman, Daerah Istimewa Yogyakarta",  pageWidth / 2,
+    22,
+    { align: "center" })
   doc.text("Telp: 0812-2697-9553", pageWidth / 2, 25, { align: "center" });
   doc.line(10, 40, pageWidth - 10, 40);
   doc.setFont("helvetica", "bold");
