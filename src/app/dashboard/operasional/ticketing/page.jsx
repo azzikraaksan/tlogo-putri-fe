@@ -73,7 +73,6 @@ const TicketingPage = () => {
 
       const response = await fetch("https://tpapi.siunjaya.id/api/ticketings/all");
       const ticketingData = await response.json();
-      console.log("✅ Data ticketing:", ticketingData);
 
       const token = localStorage.getItem("access_token");
       const besok = new Date();
@@ -110,12 +109,8 @@ const TicketingPage = () => {
                 }
               );
               if (res.ok) {
-                console.log(
-                  `🗑️ Tiket ${tiket.id} dihapus karena skip_reason untuk driver_id ${rotasi.driver_id}`
-                );
               }
             } catch (error) {
-              console.error("❌ Error saat menghapus tiket:", error);
             }
           }
         }
@@ -156,7 +151,6 @@ const TicketingPage = () => {
 
       setData(merged);
     } catch (error) {
-      console.error("❌ Error fetch ticketing/rotasi:", error);
     } finally {
       setLoading(false);
     }
@@ -280,7 +274,6 @@ const TicketingPage = () => {
       await checkRollingStatus();
       await fetchTicketings();
     } catch (error) {
-      console.error("Error saat assign driver:", error);
       alert("Terjadi kesalahan saat penugasan driver.");
     } finally {
       setLoadingDrivers((prev) => ({ ...prev, [item.driver_id]: false }));
@@ -340,7 +333,6 @@ const TicketingPage = () => {
       await checkRollingStatus();
       await fetchTicketings();
     } catch (error) {
-      console.error("Error saat membatalkan driver:", error);
       alert("Terjadi kesalahan saat membatalkan penugasan driver.");
     }
   };
@@ -372,7 +364,6 @@ const TicketingPage = () => {
       setIsAlreadyRolled(unassignedDrivers.length > 0);
       setRotations(unassignedDrivers);
     } catch (err) {
-      console.error("❌ Error cek rolling:", err);
     }
   };
 

@@ -21,7 +21,6 @@ const DetailJeep = () => {
       const decoded = hashids.decode(id);
 
       if (decoded.length === 0) {
-        console.error("ID tidak valid atau gagal didecode.");
         return;
       }
 
@@ -58,7 +57,6 @@ const DetailJeep = () => {
 
           setJeepDetails(combinedData);
         } catch (error) {
-          console.error("Gagal mengambil data:", error);
         } finally {
           setLoading(false);
         }

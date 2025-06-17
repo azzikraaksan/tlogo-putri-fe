@@ -29,7 +29,6 @@ const UserNavbar = () => {
           setUserRole(data.data.role);
         }
       } catch (error) {
-        console.error("Gagal ambil profil user:", error);
       } finally {
         // 2. Set loading ke false setelah proses fetch selesai
         setLoading(false);

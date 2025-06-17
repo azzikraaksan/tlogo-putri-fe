@@ -43,7 +43,6 @@ const AnggotaPage = () => {
       const data = await res.json();
       setUsers(data);
     } catch (err) {
-      console.error("Gagal ambil data users:", err);
     } finally {
       setLoading(false);
     }
@@ -112,11 +111,9 @@ const AnggotaPage = () => {
           prevUsers.filter((user) => user.id !== selectedUserId)
         );
       } else {
-        console.error("Gagal hapus user");
         alert("Gagal hapus user.");
       }
     } catch (error) {
-      console.error("Error saat hapus user:", error);
       alert("Terjadi kesalahan saat menghapus.");
     } finally {
       setIsModalOpen(false);
@@ -329,7 +326,7 @@ const AnggotaPage = () => {
               </table>
             </div>
             {isModalOpen && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+              <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm bg-opacity-50 z-50">
                 <div className="bg-white p-6 rounded-lg shadow-lg w-[350px]">
                   <h2 className="text-xl font-semibold mb-4">
                     Konfirmasi Hapus

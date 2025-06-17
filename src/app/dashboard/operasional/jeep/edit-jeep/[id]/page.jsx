@@ -43,7 +43,6 @@ export default function AddJeepForm({ onKembali }) {
         );
         setForm(res.data.data); 
       } catch (err) {
-        console.error("Gagal ambil data Jeep:", err);
       } finally {
         setLoading(false);
       }
@@ -77,7 +76,6 @@ export default function AddJeepForm({ onKembali }) {
         router.back(); 
       }
     } catch (error) {
-      console.error("Gagal update jeep:", error);
       alert(
         "Gagal memperbarui Jeep: " +
           (error.response?.data?.message ||

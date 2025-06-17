@@ -36,9 +36,7 @@ const PenjadwalanPage = () => {
         const jeeps = jeepsData.data || [];
 
         const mergedData = jeeps.map((jeep) => {
-          console.log("jeep driver_id:", jeep.driver_id);
           const driver = drivers.find((d) => d.id === jeep.driver_id);
-          console.log("matched driver:", driver);
 
           return {
             jeep_id: jeep.jeep_id,
@@ -59,11 +57,7 @@ const PenjadwalanPage = () => {
         });
 
         setData(mergedData);
-        console.log("driversData:", driversData);
-        console.log("jeepsData:", jeepsData);
-        console.log("Merged Data:", mergedData);
       } catch (error) {
-        console.error("Gagal mengambil data driver dan jeep:", error);
       } finally {
         setLoading(false);
       }
@@ -123,7 +117,6 @@ const PenjadwalanPage = () => {
   });
 
   const handleStatusUpdate = async (item, statusBaru) => {
-    console.log("Item diterima:", item);
     const token = localStorage.getItem("access_token");
     if (!token) {
       alert("Token tidak ditemukan");
@@ -156,7 +149,6 @@ const PenjadwalanPage = () => {
 
       setData(reordered);
     } catch (error) {
-      console.error("Error:", error);
       alert("Gagal mengubah status Jeep.");
     }
   };

@@ -60,7 +60,6 @@ const DetailAnggota = () => {
 
       setDriverName(driverNames.length > 0 ? driverNames.join(", ") : "-");
     } catch (error) {
-      console.error("Gagal ambil data:", error);
     } finally {
       setLoading(false);
     }

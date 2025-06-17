@@ -70,7 +70,6 @@ const JeepPage = () => {
 
       setJeepData(mergedData);
     } catch (error) {
-      console.error("Gagal mengambil data driver dan jeep:", error);
     } finally {
       setLoading(false);
     }
@@ -116,11 +115,9 @@ const JeepPage = () => {
           prevJeep.filter((jeep) => jeep.jeep_id !== selectedUserId)
         );
       } else {
-        console.error("Gagal hapus jeep");
         alert("Gagal hapus jeep.");
       }
     } catch (error) {
-      console.error("Error saat hapus jeep:", error);
       alert("Terjadi kesalahan saat menghapus.");
     } finally {
       setIsModalOpen(false);
@@ -293,7 +290,7 @@ const JeepPage = () => {
               </table>
             </div>
             {isModalOpen && (
-              <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+              <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm bg-opacity-50 z-50">
                 <div className="bg-white p-6 rounded-lg shadow-lg w-[350px]">
                   <h2 className="text-xl font-semibold mb-4">
                     Konfirmasi Hapus

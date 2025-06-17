@@ -26,7 +26,6 @@ const UserMenu = () => {
           setUserRole(data.data.role);
         }
       } catch (error) {
-        console.error("Gagal ambil profil user:", error);
       }
     };
 

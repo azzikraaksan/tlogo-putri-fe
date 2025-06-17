@@ -39,7 +39,6 @@ const LoginForm = () => {
       });
 
       const data = await res.json();
-      console.log("Login response:", data);
 
       if (res.ok) {
         const token = data.access_token;
@@ -51,18 +50,17 @@ const LoginForm = () => {
         localStorage.setItem("token_exp", expireTime);
         localStorage.setItem("user_role", role);
 
-        if (role === "Front Office" || role === "Admin" || role === "Driver") {
+        if (role === "Front Office") {
           router.push("/dashboard");
-        } else if (role === "Owner") {
-          router.push("/dashboard/penggajian/penggajian-utama");
         } else {
-          router.push("/dashboard2");
+          alert("Akses ditolak.");
+          localStorage.removeItem("access_token");
+          router.push("/login");
         }
       } else {
         setError(data.message || "Email atau password Anda salah");
       }
     } catch (error) {
-      console.error("Login error:", error);
       setError("Terjadi kesalahan. Silakan coba lagi.");
     } finally {
       setLoading(false);
@@ -116,18 +114,18 @@ const LoginForm = () => {
               </span>
             </div>
             <div className="mb-10">
-            <button
-              type="submit"
-              className="mb-5 bg-[#03A9F4] text-white py-2 rounded-[7px] mt-6 w-[300px] h-[40px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading}
-            >
-              {loading ? "Logging In..." : "Masuk"}
-            </button>
-          {error && (
-            <div className="bg-red-100 text-red-700 px-4 py-2 rounded-md mb-4 text-sm w-[300px] text-center">
-              {error}
-            </div>
-          )}
+              <button
+                type="submit"
+                className="mb-5 bg-[#03A9F4] text-white py-2 rounded-[7px] mt-6 w-[300px] h-[40px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
+              >
+                {loading ? "Logging In..." : "Masuk"}
+              </button>
+              {error && (
+                <div className="bg-red-100 text-red-700 px-4 py-2 rounded-md mb-4 text-sm w-[300px] text-center">
+                  {error}
+                </div>
+              )}
             </div>
           </form>
         </div>
