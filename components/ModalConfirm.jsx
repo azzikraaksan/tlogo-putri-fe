@@ -19,7 +19,7 @@ export default function Modal({
         <div className="relative bg-white border border-[#3D6CB9] text-[#3D6CB9] px-4 py-3 rounded-md shadow-md w-[280px] text-sm">
           <button
             onClick={onConfirm}
-            className="absolute top-2 right-2 text-[#3D6CB9] hover:text-blue-700"
+            className="absolute top-2 right-2 text-[#3D6CB9] hover:text-blue-700 cursor-pointer"
             aria-label="Close"
           >
             <FiX size={14} />
@@ -39,13 +39,13 @@ export default function Modal({
         <div className="flex justify-center gap-4">
           <button
             onClick={onCancel}
-            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm text-gray-700"
+            className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-sm text-gray-700 cursor-pointer"
           >
             {cancelText}
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 bg-[#3D6CB9] text-white rounded hover:bg-[#335da3] text-sm"
+            className="px-4 py-2 bg-[#3D6CB9] text-white rounded hover:bg-[#335da3] text-sm cursor-pointer"
           >
             {confirmText}
           </button>

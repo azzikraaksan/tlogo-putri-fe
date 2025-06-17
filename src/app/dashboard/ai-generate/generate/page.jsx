@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Sidebar from "/components/Sidebar";
-import Modal from "../../../../../components/ModalConfirm"; // atau sesuaikan path-nya
+import Modal from "../../../../../components/ModalConfirm"; 
 
 
 export default function Page() {
@@ -50,7 +50,7 @@ export default function Page() {
           role: "bot",
           title: data.title,
           content: data.content,
-          category: data.category || "Umum", // Jika ada kategori dari API
+          category: data.category || "Umum", 
         },
       ]);
 
