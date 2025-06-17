@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback } from "react"; // Added useRef
 import Sidebar from "/components/Sidebar.jsx";
 import withAuth from "/src/app/lib/withAuth";
+import ConfirmationPopup from "/components/akuntansi/ConfirmationPopup"; // Import ConfirmationPopup
+// import NotificationPopup from "/components/akuntansi/NotificationPopup"; // DIKOMENTARI/DIHAPUS
 import {
     CalendarDays,
     FileText,
@@ -47,7 +49,7 @@ const formatDateToDisplay = (dateString) => {
                 return `${day}-${month}-${year}`;
             }
         }
-        return typeof dateString === 'string' ? dateString : "-"; 
+        return typeof dateString === 'string' ? dateString : "-";
     }
     const day = date.getDate().toString().padStart(2, "0");
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -59,7 +61,7 @@ const formatToLocalDateString = (dateObject) => {
     if (!dateObject) return null;
     const d = dateObject instanceof Date ? dateObject : new Date(dateObject);
     if (isNaN(d.getTime())) {
-        // console.error("Invalid date passed to formatToLocalDateString:", dateObject); // Dikomentari
+        // console.error("Invalid date passed to formatToLocalDateString:", dateObject); // DIKOMENTARI/DIHAPUS
         return null;
     }
     const year = d.getFullYear();
@@ -77,11 +79,22 @@ const PemasukanPage = () => {
     const [selectedDateForFilter, setSelectedDateForFilter] = useState(null);
     const [tempDateForPicker, setTempDateForPicker] = useState(new Date());
     
-    const calendarRef = useRef(null); 
-    const datePickerDropdownRef = useRef(null); 
+    const calendarRef = useRef(null);
+    const datePickerDropdownRef = useRef(null);
 
     const autoUpdateTargetDateStringRef = useRef(formatToLocalDateString(new Date()));
-    const currentFilterDateStringRef = useRef(formatToLocalDateString(new Date()));
+    const currentFilterDateStringRef = useRef(selectedDateForFilter ? formatToLocalDateString(selectedDateForFilter) : null); // Inisialisasi awal
+
+    // State for custom pop-ups
+    const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+    const [confirmAction, setConfirmAction] = useState(null);
+    const [confirmMessage, setConfirmMessage] = useState(""); // State for confirmation message
+    // const [notification, setNotification] = useState({ message: '', type: '' }); // DIKOMENTARI/DIHAPUS
+
+    const showNotification = useCallback((message, type) => { // useCallback for showNotification
+        // Biarkan fungsi ini kosong agar tidak ada notifikasi yang muncul
+        // Jika ingin mengaktifkannya kembali, uncomment baris: setNotification({ message, type });
+    }, []);
 
     useEffect(() => {
         currentFilterDateStringRef.current = selectedDateForFilter ? formatToLocalDateString(selectedDateForFilter) : null;
@@ -91,7 +104,7 @@ const PemasukanPage = () => {
         setIsLoading(true);
         try {
             let apiUrl = `${API_BASE_URL}/income/all`;
-            if (selectedDateForFilter) { 
+            if (selectedDateForFilter) {
                 const formattedFilterLocalDate = formatToLocalDateString(selectedDateForFilter);
                 if (formattedFilterLocalDate) {
                     apiUrl = `${API_BASE_URL}/income/all?tanggal=${formattedFilterLocalDate}`;
@@ -102,19 +115,28 @@ const PemasukanPage = () => {
             const rawData = await response.json();
 
             if (!response.ok) {
-                const errorMessage = rawData.message || `HTTP error! Status: ${response.status}.`;
-                if (rawData.status === 'not_found') {
-                    // console.warn(errorMessage); // Dikomentari
-                    setFilteredData([]);
-                    setDataPemasukan([]);
-                } else {
-                    throw new Error(errorMessage);
-                }
-            } else { 
+                // Notifikasi dan error handling di sini dinonaktifkan dari console dan UI
+                // const errorMessage = rawData.message || `HTTP error! Status: ${response.status}.`;
+                // if (rawData.status === 'not_found') {
+                //     showNotification("Data tidak ditemukan.", 'info'); // showNotification kosong
+                //     setFilteredData([]);
+                //     setDataPemasukan([]);
+                // } else {
+                //     throw new Error(errorMessage);
+                // }
+                setFilteredData([]);
+                setDataPemasukan([]);
+                setIsLoading(false);
+                return;
+            } else {
                 const fetchedRawData = rawData.income || [];
                 if (!Array.isArray(fetchedRawData)) {
-                    // console.error("Properti 'income' dari backend bukan array:", fetchedRawData); // Dikomentari
-                    throw new Error("Format data dari backend (properti 'income') tidak valid.");
+                    // console.error("Properti 'income' dari backend bukan array:", fetchedRawData); // DIKOMENTARI/DIHAPUS
+                    // throw new Error("Format data dari backend (properti 'income') tidak valid."); // Error ini juga tidak akan terlihat
+                    setFilteredData([]);
+                    setDataPemasukan([]);
+                    setIsLoading(false);
+                    return;
                 }
 
                 const parseDateString = (dateString) => {
@@ -140,18 +162,18 @@ const PemasukanPage = () => {
                     if (dateA === null) return 1;
                     if (dateB === null) return -1;
 
-                    return dateB - dateA; 
+                    return dateB - dateA;
                 });
                 
                 setDataPemasukan(cleanedData);
                 
-                if (selectedDateForFilter) { 
+                if (selectedDateForFilter) {
                     const formattedFilterLocalDate = formatToLocalDateString(selectedDateForFilter);
                     setFilteredData(
                         cleanedData.filter(
                             (item) => {
                                 if (!item.booking_date || item.booking_date === '-') return false;
-                                const dateParts = item.booking_date.split('-'); 
+                                const dateParts = item.booking_date.split('-');
                                 if (dateParts.length === 3) {
                                     const itemLocalDateString = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
                                     return itemLocalDateString === formattedFilterLocalDate;
@@ -160,27 +182,29 @@ const PemasukanPage = () => {
                             }
                         )
                     );
-                } else { 
-                    setFilteredData(cleanedData); 
+                } else {
+                    setFilteredData(cleanedData);
                 }
             }
         } catch (error) {
-            if (!error.message.toLowerCase().includes("data tidak ditemukan")) {
-                // alert(`Terjadi kesalahan: ${error.message}.`); // Alert ini tidak terkait console.log, tapi saya sertakan untuk konteks
-            }
+            // console.error("Error fetching data:", error); // DIKOMENTARI/DIHAPUS
+            // showNotification(`Gagal memuat data: ${error.message || 'Terjadi kesalahan.'}`, 'error'); // showNotification kosong
             setDataPemasukan([]);
             setFilteredData([]);
         } finally {
             setIsLoading(false);
         }
-    }, [selectedDateForFilter]);
+    }, [selectedDateForFilter, showNotification]); // Added showNotification to deps
 
     useEffect(() => {
         fetchAndFilterIncomeData();
     }, [fetchAndFilterIncomeData]);
 
     const applyDateFilter = () => {
-        if (!tempDateForPicker) return; 
+        if (!tempDateForPicker) {
+            // showNotification("Pilih tanggal dulu.", 'info'); // showNotification kosong
+            return;
+        }
 
         setSelectedDateForFilter(tempDateForPicker);
 
@@ -188,18 +212,18 @@ const PemasukanPage = () => {
         const pickedDateString = formatToLocalDateString(tempDateForPicker);
 
         if (pickedDateString === todayString) {
-            autoUpdateTargetDateStringRef.current = todayString; 
+            autoUpdateTargetDateStringRef.current = todayString;
         } else {
-            autoUpdateTargetDateStringRef.current = null; 
+            autoUpdateTargetDateStringRef.current = null;
         }
         setIsDatePickerOpen(false);
     };
 
-    const resetFilter = () => { 
+    const resetFilter = () => {
         setSelectedDateForFilter(null);
-        setTempDateForPicker(null); 
+        setTempDateForPicker(null);
         
-        autoUpdateTargetDateStringRef.current = null; 
+        autoUpdateTargetDateStringRef.current = null;
         setIsDatePickerOpen(false);
     };
 
@@ -208,21 +232,21 @@ const PemasukanPage = () => {
             const now = new Date();
             const newTodayString = formatToLocalDateString(now);
 
-            if (autoUpdateTargetDateStringRef.current) { 
+            if (autoUpdateTargetDateStringRef.current) {
                 if (currentFilterDateStringRef.current === autoUpdateTargetDateStringRef.current &&
                     newTodayString !== autoUpdateTargetDateStringRef.current) {
                     
-                    // console.log(`Auto-updating filter dari ${autoUpdateTargetDateStringRef.current} ke 'hari ini' yang baru: ${newTodayString}`); // Dikomentari
+                    // console.log(`Auto-updating filter dari ${autoUpdateTargetDateStringRef.current} ke 'hari ini' yang baru: ${newTodayString}`); // DIKOMENTARI/DIHAPUS
                     
-                    setSelectedDateForFilter(now); 
-                    setTempDateForPicker(now);     
-                    autoUpdateTargetDateStringRef.current = newTodayString; 
+                    setSelectedDateForFilter(now);
+                    setTempDateForPicker(now);
+                    autoUpdateTargetDateStringRef.current = newTodayString;
                 }
             }
-        }, 60000); 
+        }, 60000);
 
-        return () => clearInterval(intervalId); 
-    }, []); 
+        return () => clearInterval(intervalId);
+    }, []);
     
 
     const calculateTotalKas = () => {
@@ -237,7 +261,7 @@ const PemasukanPage = () => {
 
     const handleExportExcel = () => {
         if (filteredData.length === 0) {
-            alert("Data kosong, tidak bisa export Excel!");
+            // showNotification("Data kosong.", 'info'); // showNotification kosong
             return;
         }
         try {
@@ -251,15 +275,16 @@ const PemasukanPage = () => {
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Pemasukan");
             XLSX.writeFile(wb, getExportFileName("xlsx"));
+            // showNotification("Ekspor Excel berhasil.", 'success'); // showNotification kosong
         } catch (error) {
-            // console.error("Gagal export Excel:", error); // Dikomentari
-            alert("Gagal export Excel!");
+            // console.error("Gagal export Excel:", error); // DIKOMENTARI/DIHAPUS
+            // showNotification("Ekspor Excel gagal.", 'error'); // showNotification kosong
         }
     };
 
     const handleExportPDF = () => {
         if (filteredData.length === 0) {
-            alert("Data kosong, tidak bisa export PDF!");
+            // showNotification("Data kosong.", 'info'); // showNotification kosong
             return;
         }
         try {
@@ -290,36 +315,45 @@ const PemasukanPage = () => {
                 }
             });
             doc.save(getExportFileName("pdf"));
+            // showNotification("Ekspor PDF berhasil.", 'success'); // showNotification kosong
         } catch (error) {
-            // console.error("Gagal export PDF:", error); // Dikomentari
-            alert("Gagal export PDF!");
+            // console.error("Gagal export PDF:", error); // DIKOMENTARI/DIHAPUS
+            // showNotification("Ekspor PDF gagal.", 'error'); // showNotification kosong
         }
     };
 
-    const handleGenerateIncomeReport = async () => {
-        if (!confirm("Apakah Anda yakin ingin memicu perhitungan laporan pemasukan dari data harian? Proses ini akan menyimpan data baru jika belum ada.")) {
-            return;
-        }
-        setIsLoading(true);
-        try {
-            const response = await fetch(`${API_BASE_URL}/income/create`, { 
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
-            const result = await response.json();
-            if (!response.ok) {
-                throw new Error(result.message || `Gagal memicu generate laporan: Status ${response.status}`);
+    const handleGenerateIncomeReport = () => { // Modified to use ConfirmationPopup
+        setConfirmMessage("Konfirmasi pembuatan laporan pemasukan."); // Simplified message
+        setConfirmAction(() => async () => {
+            setIsLoading(true); // Start loading here, inside confirm action
+            try {
+                const response = await fetch(`${API_BASE_URL}/income/create`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    // throw new Error(result.message || `Gagal memicu generate laporan: Status ${response.status}`); // DIKOMENTARI/DIHAPUS
+                    // Notifikasi dan error handling dinonaktifkan
+                }
+                // Check for "already updated" type message from backend
+                // if (result.message && (result.message.toLowerCase().includes("sudah ada") || result.message.toLowerCase().includes("sudah dibuat") || result.message.toLowerCase().includes("latest") || result.message.toLowerCase().includes("no new data"))) {
+                //     showNotification(`Data sudah terbaru.`, 'info'); // showNotification kosong
+                // } else {
+                //     showNotification("Laporan berhasil dibuat.", 'success'); // showNotification kosong
+                // }
+                await fetchAndFilterIncomeData();
+            } catch (error) {
+                // console.error("Error generating report:", error); // DIKOMENTARI/DIHAPUS
+                // showNotification(`Gagal membuat laporan: ${error.message}`, 'error'); // showNotification kosong
+            } finally {
+                setIsLoading(false); // Ensure loading is off
             }
-            alert(result.message || 'Proses perhitungan laporan pemasukan berhasil dipicu.');
-            await fetchAndFilterIncomeData();
-        } catch (error) {
-            alert(`Gagal memicu generate laporan: ${error.message}`);
-        } finally {
-            setIsLoading(false);
-        }
+        });
+        setShowConfirmPopup(true); // Show confirmation popup
     };
 
     useEffect(() => {
@@ -330,7 +364,23 @@ const PemasukanPage = () => {
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [isDatePickerOpen]); 
+    }, [isDatePickerOpen]);
+    
+    const handleConfirm = () => {
+        if (confirmAction) {
+            confirmAction();
+        }
+        setShowConfirmPopup(false);
+        setConfirmAction(null);
+        setConfirmMessage(""); // Clear message after action
+    };
+
+    const handleCancel = () => {
+        setShowConfirmPopup(false);
+        setConfirmAction(null);
+        setConfirmMessage(""); // Clear message after cancel
+    };
+
     const tableDisplayHeaders = ["Tanggal Pemesanan", "Pemasukan", "Pengeluaran", "Kas"];
     const [isSidebarOpen, setSidebarOpen] = useState(true);
 
@@ -348,11 +398,11 @@ const PemasukanPage = () => {
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
                         <div className="flex gap-4">
                             {/* calendarRef membungkus tombol dan dropdown */}
-                            <div className="relative" ref={calendarRef}> 
+                            <div className="relative" ref={calendarRef}>
                                 {!selectedDateForFilter ? (
                                     <button
                                         onClick={() => {
-                                            setTempDateForPicker(new Date()); 
+                                            setTempDateForPicker(new Date());
                                             setIsDatePickerOpen(!isDatePickerOpen);
                                         }}
                                         className="flex items-center gap-2 bg-[#3D6CB9] hover:bg-[#B8D4F9] px-4 py-2 rounded-lg shadow text-white hover:text-black"
@@ -369,7 +419,7 @@ const PemasukanPage = () => {
                                 )}
                                 {isDatePickerOpen && (
                                     <div
-                                        ref={datePickerDropdownRef} 
+                                        ref={datePickerDropdownRef}
                                         className="absolute z-[1000] mt-2 bg-white border rounded-lg shadow-lg p-4 top-full left-0 min-w-[280px]"
                                     >
                                         <DatePicker
@@ -400,7 +450,7 @@ const PemasukanPage = () => {
                                 )}
                             </div>
                             <button
-                                onClick={handleGenerateIncomeReport}
+                                onClick={handleGenerateIncomeReport} // Call handleGenerateIncomeReport directly to set confirmation
                                 disabled={isLoading}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg shadow ${isLoading ? "bg-gray-200 text-gray-500 cursor-not-allowed" : "bg-[#3D6CB9] text-white hover:bg-[#B8D4F9] hover:text-black cursor-pointer"}`}
                             >
@@ -454,7 +504,7 @@ const PemasukanPage = () => {
                                         {filteredData.length === 0 ? (
                                             <tr>
                                                 <td colSpan={tableDisplayHeaders.length} className="text-center p-4 text-gray-500 font-medium">
-                                                    {isLoading ? "Memuat..." : (selectedDateForFilter ? "Data tidak ditemukan untuk tanggal yang dipilih." : "Belum ada data pemasukan.")}
+                                                    {isLoading ? "Memuat..." : (selectedDateForFilter ? "Data tidak ditemukan." : "Belum ada data pemasukan.")}
                                                 </td>
                                             </tr>
                                         ) : (
@@ -478,6 +528,22 @@ const PemasukanPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Confirmation Popup */}
+            <ConfirmationPopup
+                isOpen={showConfirmPopup}
+                message={confirmMessage}
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+            />
+
+            {/* Notification Popup (sudah dihapus/dikomentari) */}
+            {/*
+            <NotificationPopup
+                message={notification.message}
+                type={notification.type}
+            />
+            */}
         </div>
     );
 };

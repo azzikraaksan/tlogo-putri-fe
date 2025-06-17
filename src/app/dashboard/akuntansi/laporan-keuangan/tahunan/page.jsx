@@ -3,7 +3,9 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Sidebar from "/components/Sidebar.jsx";
 import withAuth from "/src/app/lib/withAuth";
-import { FileText, FileSpreadsheet, ArrowLeft } from "lucide-react";
+import ConfirmationPopup from "/components/akuntansi/ConfirmationPopup"; // Import ConfirmationPopup
+// import NotificationPopup from "/components/akuntansi/NotificationPopup"; // DIKOMENTARI/DIHAPUS
+import { FileText, FileSpreadsheet, CircleArrowLeft } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -43,6 +45,18 @@ const TahunanPage = ({ children }) => {
 
     const router = useRouter();
 
+    // State for custom pop-ups
+    const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+    const [confirmAction, setConfirmAction] = useState(null);
+    const [confirmMessage, setConfirmMessage] = useState("");
+    // const [notification, setNotification] = useState({ message: '', type: '' }); // DIKOMENTARI/DIHAPUS
+
+    // Fungsi showNotification dikosongkan agar tidak menampilkan notifikasi
+    const showNotification = useCallback((message, type) => {
+        // Biarkan fungsi ini kosong agar tidak ada notifikasi yang muncul
+        // Jika ingin mengaktifkannya kembali, uncomment baris: setNotification({ message, type });
+    }, []);
+
     const handleGoBack = () => {
         router.push("/dashboard/akuntansi/laporan-keuangan");
     };
@@ -51,21 +65,28 @@ const TahunanPage = ({ children }) => {
         setIsLoading(true);
         setDataTahunan([]);
         try {
-            // PERUBAHAN 1: Parameter diubah dari 'year' menjadi 'tahun'
             const response = await fetch(
                 `${API_BASE_URL}/reports/tahun?tahun=${selectedYear}`
             );
             if (!response.ok) {
-                if (response.status === 404) {
-                    setDataTahunan([]);
-                    return;
-                }
-                // const errorText = await response.text(); // Dikomentari
-                // throw new Error(`HTTP error! status: ${response.status}. Detail: ${errorText}`); // Dikomentari
-                // Jika Anda ingin mengabaikan error fetch, cukup return atau set data kosong
-                setDataTahunan([]);
+                // Notifikasi dan error handling di sini dinonaktifkan dari console dan UI
+                // const errorText = await response.text(); // Tidak perlu parsing jika tidak digunakan
+                // let errorMessage = `Gagal memuat data: Status ${response.status}.`;
+                // try {
+                //     const errorJson = JSON.parse(errorText);
+                //     errorMessage = errorJson.message || errorMessage;
+                // } catch { /* ignore parse error */ }
+
+                // if (response.status === 404) {
+                //     showNotification(`Data tidak ditemukan untuk Tahun ${selectedYear}.`, 'info'); // showNotification kosong
+                //     setDataTahunan([]);
+                //     return;
+                // } else {
+                //     throw new Error(errorMessage); // Throw error ini juga tidak akan terlihat di console jika tidak ada catch
+                // }
+                setDataTahunan([]); // Tetap set data kosong
                 setIsLoading(false);
-                return;
+                return; // Langsung keluar dari fungsi
             }
             const rawData = await response.json();
             const fetchedData = Array.isArray(rawData) ? rawData : rawData.data || [];
@@ -78,26 +99,25 @@ const TahunanPage = ({ children }) => {
                 total_cash: parseFloat(item.total_cash || 0),
                 total_operational: parseFloat(item.total_operational || 0),
                 total_expenditure: parseFloat(item.total_expenditure || 0),
-                // PERUBAHAN 2: Membaca properti 'net_cash' dari API (sebelumnya 'total_net_cash')
                 total_net_cash: parseFloat(item.net_cash || 0),
                 total_clean_operations: parseFloat(item.total_clean_operations || 0),
                 total_jeep_amount: parseInt(item.total_jeep_amount || 0),
             }));
             setDataTahunan(formattedData);
         } catch (error) {
-            // console.error("Error fetching annual data:", error); // Dikomentari
+            // console.error("Error fetching annual data:", error); // DIKOMENTARI/DIHAPUS
+            // showNotification(`Gagal memuat data: ${error.message}`, 'error'); // showNotification kosong
             setDataTahunan([]);
         } finally {
             setIsLoading(false);
         }
-    }, [selectedYear]);
+    }, [selectedYear, showNotification]);
 
     useEffect(() => {
         loadDataFromBackend();
     }, [loadDataFromBackend]);
 
     const totalNetCashTahunan = useMemo(() => {
-        // Kalkulasi ini sekarang berfungsi karena pemetaan data di atas sudah benar
         return dataTahunan.reduce((sum, item) => sum + (item.total_net_cash || 0), 0);
     }, [dataTahunan]);
 
@@ -107,7 +127,7 @@ const TahunanPage = ({ children }) => {
 
     const handleExportExcelAction = () => {
         if (dataTahunan.length === 0) {
-            // alert("Data kosong, tidak bisa export Excel!"); // Dikomentari
+            // showNotification("Tidak ada data untuk diekspor.", 'info'); // showNotification kosong
             return;
         }
         try {
@@ -127,15 +147,16 @@ const TahunanPage = ({ children }) => {
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, `Laporan Tahunan ${selectedYear}`);
             XLSX.writeFile(wb, getExportFileName("xlsx"));
+            // showNotification("Ekspor Excel berhasil.", 'success'); // showNotification kosong
         } catch (error) {
-            // console.error("Error exporting Excel:", error); // Dikomentari
-            // alert("Gagal export Excel!"); // Dikomentari
+            // console.error("Error exporting Excel:", error); // DIKOMENTARI/DIHAPUS
+            // showNotification("Ekspor Excel gagal.", 'error'); // showNotification kosong
         }
     };
 
     const handleExportPDFAction = () => {
         if (dataTahunan.length === 0) {
-            // alert("Data kosong, tidak bisa export PDF!"); // Dikomentari
+            // showNotification("Tidak ada data untuk diekspor.", 'info'); // showNotification kosong
             return;
         }
         try {
@@ -171,13 +192,28 @@ const TahunanPage = ({ children }) => {
                 }
             });
             doc.save(getExportFileName("pdf"));
+            // showNotification("Ekspor PDF berhasil.", 'success'); // showNotification kosong
         } catch (error) {
-            // console.error("Error exporting PDF:", error); // Dikomentari
-            // alert("Gagal export PDF!"); // Dikomentari
+            // console.error("Error exporting PDF:", error); // DIKOMENTARI/DIHAPUS
+            // showNotification("Ekspor PDF gagal.", 'error'); // showNotification kosong
         }
     };
 
-    // PERUBAHAN 3: Teks header tabel diubah sesuai permintaan
+    const handleConfirm = () => {
+        if (confirmAction) {
+            confirmAction();
+        }
+        setShowConfirmPopup(false);
+        setConfirmAction(null);
+        setConfirmMessage("");
+    };
+
+    const handleCancel = () => {
+        setShowConfirmPopup(false);
+        setConfirmAction(null);
+        setConfirmMessage("");
+    };
+
     const tableHeaders = [
         "Periode Laporan Bulan", "Total Kas", "Total Operasional",
         "Total Pengeluaran", "Total Operasional Bersih", "Total Kas Bersih", "Total Jeep"
@@ -186,12 +222,13 @@ const TahunanPage = ({ children }) => {
     const currentYearCtx = new Date().getFullYear();
     const years = useMemo(() => {
         const yearsArray = [];
-        const startYear = 2015;
-        const endYear = currentYearCtx + 5;
+        const startYear = 2015; // Start from a fixed earlier year or currentYear - X
+        const endYear = currentYearCtx + 5; // Go to current year + Y
         for (let i = startYear; i <= endYear; i++) {
             yearsArray.push(i);
         }
-        return yearsArray.sort((a, b) => b - a);
+        // Changed sorting order: Ascending (older year to newer year)
+        return yearsArray.sort((a, b) => a - b);
     }, [currentYearCtx]);
 
     return (
@@ -206,7 +243,7 @@ const TahunanPage = ({ children }) => {
                         className="text-[28px] md:text-[32px] font-semibold text-black flex items-center gap-3 cursor-pointer hover:text-[#3D6CB9] transition-colors mb-6"
                         onClick={handleGoBack}
                     >
-                        <ArrowLeft size={28} />
+                        <CircleArrowLeft size={28} />
                         Laporan Tahunan
                     </h1>
 
@@ -275,7 +312,7 @@ const TahunanPage = ({ children }) => {
                                                     colSpan={tableHeaders.length}
                                                     className="text-center p-6 text-gray-500 font-medium"
                                                 >
-                                                    Data Tidak Ditemukan untuk Tahun {selectedYear}
+                                                    Data tidak ditemukan.
                                                 </td>
                                             </tr>
                                         ) : (
@@ -306,6 +343,22 @@ const TahunanPage = ({ children }) => {
                 </div>
                 {children}
             </div>
+
+            {/* Confirmation Popup */}
+            <ConfirmationPopup
+                isOpen={showConfirmPopup}
+                message={confirmMessage}
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+            />
+
+            {/* Notification Popup (sudah dihapus/dikomentari) */}
+            {/*
+            <NotificationPopup
+                message={notification.message}
+                type={notification.type}
+            />
+            */}
         </div>
     );
 };

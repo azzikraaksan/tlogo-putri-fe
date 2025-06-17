@@ -3,8 +3,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Sidebar from "/components/Sidebar.jsx";
 import withAuth from "/src/app/lib/withAuth";
-import PresensiTable from "../../../../../components/akuntansi/PresensiTable";
-import PresensiControls from "../../../../../components/akuntansi/PresensiControls";
+import PresensiTable from "/components/akuntansi/PresensiTable";
+import PresensiControls from "/components/akuntansi/PresensiControls";
+import ConfirmationPopup from "/components/akuntansi/ConfirmationPopup";
+import NotificationPopup from "/components/akuntansi/NotificationPopup";
 import {
     CalendarDays,
     FileText,
@@ -108,18 +110,26 @@ const PresensiPage = ({ children }) => {
     const [tempDateForPicker, setTempDateForPicker] = useState(null);
     const calendarRef = useRef(null);
 
+    const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+    const [confirmAction, setConfirmAction] = useState(null);
+    const [notification, setNotification] = useState({ message: '', type: '' });
+
+    const showNotification = (message, type) => {
+        setNotification({ message, type });
+    };
+
     const fetchAndFilterPresensiData = useCallback(async () => {
         setIsLoading(true);
         try {
             const response = await fetch(`${API_BASE_URL}/rekap-presensi/all`);
             if (!response.ok) {
-                // const errorText = await response.text();
-                // throw new Error(`HTTP error! Status: ${response.status}. Detail: ${errorText || 'Tidak ada detail error.'}`);
+                const errorText = await response.text();
+                throw new Error(`HTTP error! Status: ${response.status}. Detail: ${errorText || 'Tidak ada detail error.'}`);
             }
             const result = await response.json();
             const fetchedRawData = Array.isArray(result) ? result : result.data || [];
             if (!Array.isArray(fetchedRawData)) {
-                // throw new Error("Format data dari backend tidak valid.");
+                throw new Error("Format data dari backend tidak valid.");
             }
             setDataPresensi(fetchedRawData);
 
@@ -136,8 +146,10 @@ const PresensiPage = ({ children }) => {
                 setFilteredData(fetchedRawData);
             }
         } catch (error) {
+            // console.error("Error fetching presensi data:", error); // Baris ini dikomentari
             setDataPresensi([]);
             setFilteredData([]);
+            showNotification(`Gagal memuat data: ${error.message || 'Terjadi kesalahan.'}`, 'error');
         } finally {
             setIsLoading(false);
         }
@@ -171,7 +183,7 @@ const PresensiPage = ({ children }) => {
 
     const handleExportExcel = () => {
         if (filteredData.length === 0) {
-            alert("Data kosong, tidak bisa export Excel!");
+            showNotification("Data kosong, tidak bisa export Excel!", 'error');
             return;
         }
         try {
@@ -188,14 +200,16 @@ const PresensiPage = ({ children }) => {
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Rekap Presensi");
             XLSX.writeFile(wb, getExportFileName("xlsx"));
+            showNotification("Data berhasil diexport ke Excel!", 'success');
         } catch (error) {
-            alert("Gagal export Excel!");
+            // console.error("Error exporting Excel:", error); // Baris ini dikomentari
+            showNotification("Gagal export Excel!", 'error');
         }
     };
 
     const handleExportPDF = () => {
         if (filteredData.length === 0) {
-            alert("Data kosong, tidak bisa export PDF!");
+            showNotification("Data kosong, tidak bisa export PDF!", 'error');
             return;
         }
         try {
@@ -234,48 +248,65 @@ const PresensiPage = ({ children }) => {
                 }
             });
             doc.save(getExportFileName("pdf"));
+            showNotification("Data berhasil diexport ke PDF!", 'success');
         } catch (error) {
-            alert("Gagal export PDF!");
+            // console.error("Error exporting PDF:", error); // Baris ini dikomentari
+            showNotification("Gagal export PDF!", 'error');
         }
     };
 
-    const handleGeneratePresensiReport = async () => {
-        if (!confirm("Apakah Anda yakin ingin memicu rekapitulasi laporan presensi dari backend?")) {
-            return;
-        }
-        const originalIsLoading = isLoading;
-        setIsLoading(true);
-        try {
-            let payload = {};
-            if (selectedDateForFilter) {
-                const month = (selectedDateForFilter.getUTCMonth() + 1).toString();
-                const year = selectedDateForFilter.getUTCFullYear().toString();
-                payload = { bulan: month, tahun: year };
-            } else {
-                const now = new Date();
-                payload = {
-                    bulan: (now.getUTCMonth() + 1).toString(),
-                    tahun: now.getUTCFullYear().toString()
-                };
+    const confirmGenerateReport = () => {
+        setConfirmAction(() => async () => {
+            const originalIsLoading = isLoading;
+            setIsLoading(true);
+            try {
+                let payload = {};
+                if (selectedDateForFilter) {
+                    const month = (selectedDateForFilter.getUTCMonth() + 1).toString();
+                    const year = selectedDateForFilter.getUTCFullYear().toString();
+                    payload = { bulan: month, tahun: year };
+                } else {
+                    const now = new Date();
+                    payload = {
+                        bulan: (now.getUTCMonth() + 1).toString(),
+                        tahun: now.getUTCFullYear().toString()
+                    };
+                }
+                const response = await fetch(`${API_BASE_URL}/rekap-presensi/rekap`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                    throw new Error(`Gagal memicu rekap presensi: ${response.status}. ${errorData.message || ''}`);
+                }
+                const result = await response.json();
+                showNotification(`Proses rekapitulasi presensi berhasil dipicu.`, 'success');
+                await fetchAndFilterPresensiData();
+            } catch (error) {
+                setIsLoading(originalIsLoading);
+                // console.error("Error generating presensi report:", error); // Baris ini dikomentari
+                showNotification(`Gagal memicu rekapitulasi: ${error.message || 'Terjadi kesalahan.'}`, 'error');
             }
-            const response = await fetch(`${API_BASE_URL}/rekap-presensi/rekap`, {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            });
-            if (!response.ok) {
-                // const errorData = await response.json().catch(() => ({ message: response.statusText }));
-                // throw new Error(`Gagal memicu rekap presensi: ${response.status}. ${errorData.message || ''}`);
-            }
-            const result = await response.json();
-            alert(`Proses rekapitulasi presensi berhasil dipicu di backend. ${result.message || 'Memuat data terbaru...'}`);
-            await fetchAndFilterPresensiData();
-        } catch (error) {
-            setIsLoading(originalIsLoading);
+        });
+        setShowConfirmPopup(true);
+    };
+
+    const handleConfirm = () => {
+        if (confirmAction) {
+            confirmAction();
         }
+        setShowConfirmPopup(false);
+        setConfirmAction(null);
+    };
+
+    const handleCancel = () => {
+        setShowConfirmPopup(false);
+        setConfirmAction(null);
     };
 
     useEffect(() => {
@@ -294,52 +325,61 @@ const PresensiPage = ({ children }) => {
     const [isSidebarOpen, setSidebarOpen] = useState(true);
 
     return (
-      <div className="flex h-screen">
-        <Sidebar
-          isSidebarOpen={isSidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-        />
-        <div
-          className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
-          style={{
-            marginLeft: isSidebarOpen ? 290 : 70,
-            // paddingLeft : 20,
-            // paddingRight: 20
-          }}
-        >
-            <div className="flex flex-col justify-between gap-6 relative">
-              <PresensiControls
-                calendarRef={calendarRef}
-                isDatePickerOpen={isDatePickerOpen}
-                setIsDatePickerOpen={setIsDatePickerOpen}
-                selectedDateForFilter={selectedDateForFilter}
-                tempDateForPicker={tempDateForPicker}
-                setTempDateForPicker={setTempDateForPicker}
-                applyDateFilter={applyDateFilter}
-                resetFilter={resetFilter}
-                handleGeneratePresensiReport={handleGeneratePresensiReport}
-                handleExportExcel={handleExportExcel}
-                handleExportPDF={handleExportPDF}
-                filteredData={filteredData}
-                isLoading={isLoading}
-              />
+        <div className="flex h-screen">
+            <Sidebar
+                isSidebarOpen={isSidebarOpen}
+                setSidebarOpen={setSidebarOpen}
+            />
+            <div
+                className="flex-1 flex flex-col transition-all duration-300 ease-in-out overflow-hidden"
+                style={{
+                    marginLeft: isSidebarOpen ? 290 : 70,
+                }}
+            >
+                <div className="flex flex-col justify-between gap-6 relative">
+                    <PresensiControls
+                        calendarRef={calendarRef}
+                        isDatePickerOpen={isDatePickerOpen}
+                        setIsDatePickerOpen={setIsDatePickerOpen}
+                        selectedDateForFilter={selectedDateForFilter}
+                        tempDateForPicker={tempDateForPicker}
+                        setTempDateForPicker={setTempDateForPicker}
+                        applyDateFilter={applyDateFilter}
+                        resetFilter={resetFilter}
+                        handleGeneratePresensiReport={confirmGenerateReport}
+                        handleExportExcel={handleExportExcel}
+                        handleExportPDF={handleExportPDF}
+                        filteredData={filteredData}
+                        isLoading={isLoading}
+                    />
+                </div>
+                {isLoading && !isDatePickerOpen ? (
+                    <div className="text-center p-10 text-lg font-medium text-gray-700">
+                        Memuat data rekap presensi, mohon tunggu...
+                    </div>
+                ) : (
+                    <PresensiTable
+                        tableDisplayHeaders={tableDisplayHeaders}
+                        filteredData={filteredData}
+                        formatDateToDayOnly={formatDateToDayOnly}
+                        getMonthName={getMonthName}
+                    />
+                )}
+                {children}
             </div>
-            {isLoading && !isDatePickerOpen ? (
-              <div className="text-center p-10 text-lg font-medium text-gray-700">
-                Memuat data rekap presensi, mohon tunggu...
-              </div>
-            ) : (
-              <PresensiTable
-                tableDisplayHeaders={tableDisplayHeaders}
-                filteredData={filteredData}
-                formatDateToDayOnly={formatDateToDayOnly}
-                getMonthName={getMonthName}
-              />
-            )}
-            {children}
-          </div>
 
-      </div>
+            <ConfirmationPopup
+                isOpen={showConfirmPopup}
+                message="Apakah Anda yakin ingin memicu rekapitulasi laporan presensi?"
+                onConfirm={handleConfirm}
+                onCancel={handleCancel}
+            />
+
+            <NotificationPopup
+                message={notification.message}
+                type={notification.type}
+            />
+        </div>
     );
 };
 
