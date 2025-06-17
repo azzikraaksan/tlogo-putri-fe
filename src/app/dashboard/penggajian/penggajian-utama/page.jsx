@@ -53,14 +53,13 @@ function DaftarGaji() {
           if (!dateStr) return "";
           const d = new Date(dateStr);
           if (isNaN(d.getTime())) {
-            console.warn("❌ Invalid date:", dateStr);
             return "";
           }
           return d.toISOString().slice(0, 10);
         };
 
         const previews = (previewJson.previews || [])
-          .filter((item) => item.payment_date) // skip kalau gak ada tanggal
+          .filter((item) => item.payment_date)
           .map((item) => ({
             id: item.id,
             user_id: item.user_id,
@@ -122,7 +121,6 @@ function DaftarGaji() {
           localStorage.removeItem("statusUpdated");
         }
       } catch (error) {
-        //console.error("❌ Error saat fetch:", error);
       } finally {
         setLoading(false);
       }
@@ -135,7 +133,6 @@ function DaftarGaji() {
     const handleStorageChange = () => {
       const updated = localStorage.getItem("statusUpdated");
       if (updated) {
-        //console.log("📦 Triggered via storage event:", updated);
         setReloadTrigger((prev) => prev + 1); // ⬅️ ini akan memicu ulang useEffect utama
       }
     };
@@ -192,7 +189,6 @@ function DaftarGaji() {
   };
 
   const handleCatat = (user_id, role, payment_date) => {
-    //console.log("Diterima payment_date:", payment_date); // debug
     const encodedUserId = hashids.encode(user_id);
     let encodedDate = "";
     if (payment_date && !isNaN(new Date(payment_date))) {
@@ -200,7 +196,6 @@ function DaftarGaji() {
         new Date(payment_date).toISOString().slice(0, 10)
       );
     } else {
-      console.warn("Tanggal tidak valid, default ke kosong.");
     }
     router.push(
       `/dashboard/penggajian/penggajian-utama/catat/${encodedUserId}/${role}?payment_date=${encodedDate}`
@@ -215,10 +210,8 @@ function DaftarGaji() {
         new Date(payment_date).toISOString().slice(0, 10)
       );
     } else {
-      console.warn("Tanggal tidak valid, default ke kosong.");
     }
 
-    // ⬅️ Simpan status agar halaman utama tahu mana yang perlu diupdate nanti
     localStorage.setItem(
       "statusUpdated",
       `${encodedUserId}-${role}-${encodedDate}`

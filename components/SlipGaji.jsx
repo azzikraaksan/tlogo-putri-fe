@@ -40,12 +40,12 @@ export const generateSlipPDFBlob = async (
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.text(
-    "Alamat: Jl. Kaliurang Km 20, Sleman, Yogyakarta",
+    "Alamat: Wisata Tlogo Putri, Kaliurang, Hargobinangun, Kec. Pakem, Kabupaten Sleman, Daerah Istimewa Yogyakarta",
     pageWidth / 2,
     20,
     { align: "center" }
   );
-  doc.text("Telp: 0812-3456-7890", pageWidth / 2, 25, { align: "center" });
+  doc.text("Telp: 0812-2697-9553", pageWidth / 2, 25, { align: "center" });
   doc.line(10, 40, pageWidth - 10, 40);
   doc.setFont("helvetica", "bold");
   doc.text("SLIP GAJI", pageWidth / 2, 45, { align: "center" });
@@ -230,28 +230,27 @@ export const generateSlipPDFBlob = async (
   doc.text("Total Jumlah Gaji:", 70, y + 10);
   doc.text(formatRupiah(totalGaji || 0), 140, y + 10, null, null, "right");
 
-// Titik awal tanda tangan di kanan bawah
-const footerStartY = y + 40;
-const rightX = 150;
+  // Titik awal tanda tangan di kanan bawah
+  const footerStartY = y + 40;
+  const rightX = 150;
 
-doc.setFontSize(10);
-doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
 
-// 1. Lokasi dan tanggal
-doc.text(`Yogyakarta, ${formatTanggal(tanggal)}`, rightX, footerStartY, { align: "center" });
+  // 1. Lokasi dan tanggal
+  doc.text(`Yogyakarta, ${formatTanggal(tanggal)}`, rightX, footerStartY, {
+    align: "center",
+  });
 
-// 2. Spasi kosong untuk tanda tangan (3 baris)
-doc.text(" ", rightX, footerStartY + 8);  // spasi kosong
-doc.text(" ", rightX, footerStartY + 14); // spasi kosong
+  // 2. Spasi kosong untuk tanda tangan (3 baris)
+  doc.text(" ", rightX, footerStartY + 8); // spasi kosong
+  doc.text(" ", rightX, footerStartY + 14); // spasi kosong
 
-// 3. Nama
-doc.setFont("helvetica", "bold");
-doc.text("Inuk", rightX, footerStartY + 24, { align: "center" });
-
-// 4. Jabatan
-doc.setFont("helvetica", "normal");
-doc.text("Ketua Pengurus Jeep Tlogo Putri", rightX, footerStartY + 30, { align: "center" });
-
+  // 4. Jabatan
+  doc.setFont("helvetica", "normal");
+  doc.text("Ketua Pengurus Jeep Tlogo Putri", rightX, footerStartY + 30, {
+    align: "center",
+  });
 
   const blob = doc.output("blob");
   return URL.createObjectURL(blob);

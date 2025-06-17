@@ -72,7 +72,7 @@ export default function GajiCatatPage() {
       const resDetail = await fetch(endpoint, { headers });
       const json = await resDetail.json();
       if (!json.data && json.message?.includes("tanggal 1")) {
-        setData([]); 
+        setData([]);
         setError(
           "Gaji Front Office hanya bisa dilihat pada tanggal 1 setiap bulan."
         );
@@ -93,7 +93,6 @@ export default function GajiCatatPage() {
           },
         ];
       } else {
-        console.warn("Format data tidak dikenali:", json);
       }
 
       if (filteredData.length > 0) {
@@ -149,8 +148,6 @@ export default function GajiCatatPage() {
         setTotalGaji(total);
       }
     } catch (err) {
-      console.error(err);
-      setError(err.message || "Terjadi kesalahan");
     } finally {
       setLoading(false);
     }
@@ -209,7 +206,6 @@ export default function GajiCatatPage() {
 
     const selected = data?.[0];
     if (!selected) {
-      console.error("Data tidak ditemukan:", selected);
       setLoading(false);
       return;
     }
@@ -231,12 +227,10 @@ export default function GajiCatatPage() {
         user_id = selected.user_id;
         break;
       default:
-        console.error("Role tidak valid:", normalizedRole);
         break;
     }
 
     if (!user_id) {
-      console.error("user_id tidak ditemukan untuk role:", role);
       setLoading(false);
       return;
     }
@@ -333,10 +327,8 @@ export default function GajiCatatPage() {
         }, 800);
       } else {
         const errorText = await response.text();
-        console.error("❌ Gagal update status:", errorText);
       }
     } catch (error) {
-      console.error("❌ Error saat simpan:", error);
     } finally {
       setLoading(false);
     }
@@ -348,7 +340,6 @@ export default function GajiCatatPage() {
 
   const renderGajiByRole = () => {
     if (loading) return <p>Loading...</p>;
-    //if (error) return <p>Error: {error}</p>;
     if (error) {
       return (
         <div className="bg-yellow-100 text-yellow-800 border-l-4 border-yellow-500 p-4 my-4 rounded">
@@ -554,12 +545,14 @@ export default function GajiCatatPage() {
               Status:{" "}
               <span
                 className={`font-semibold px-2 py-1 rounded ${
-                  status.toLowerCase() === "belum"
-                    ? "bg-red-100 text-red-600"
-                    : "bg-green-100 text-green-600"
+                  status === "Sudah" || status === "Sudah Terbayarkan"
+                    ? "bg-green-100 text-green-600"
+                    : "bg-red-100 text-red-600"
                 }`}
               >
-                {status === "Sudah" ? "Sudah Terbayarkan" : "Belum Terbayarkan"}
+                {status === "Sudah" || status === "Sudah Terbayarkan"
+                  ? "Sudah Terbayarkan"
+                  : "Belum Terbayarkan"}
               </span>
             </div>
           </div>
