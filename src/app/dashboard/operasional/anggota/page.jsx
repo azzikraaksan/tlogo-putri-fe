@@ -255,24 +255,28 @@ const AnggotaPage = () => {
                         </td>
                         <td className="p-2 text-center">
                           <span
-                            className={`inline-flex items-center gap-2 px-2 py-1 text-[14px] font-semibold rounded-full ${
-                              item.status === "Aktif"
-                                ? "bg-green-100 text-green-600"
-                                : item.status === "Tidak Aktif"
-                                  ? "bg-red-100 text-red-600"
-                                  : "text-gray-750"
-                            }`}
+                            className={`inline-flex items-center gap-2 px-2 py-1 text-[14px] font-semibold rounded-full
+    ${
+      item?.status === "Aktif"
+        ? "bg-green-100 text-green-600"
+        : item?.status === "Tidak Aktif"
+          ? "bg-red-100 text-red-600"
+          : "bg-green-100 text-green-600"
+    }
+  `}
                           >
                             <span
-                              className={`w-2 h-2 rounded-full ${
-                                item.status === "Aktif"
-                                  ? "bg-green-600"
-                                  : item.status === "Tidak Aktif"
-                                    ? "bg-red-600"
-                                    : "bg-gray-400"
-                              }`}
+                              className={`w-2 h-2 rounded-full
+      ${
+        item?.status === "Aktif"
+          ? "bg-green-600"
+          : item?.status === "Tidak Aktif"
+            ? "bg-red-600"
+            : "bg-green-600"
+      }
+    `}
                             ></span>
-                            {item?.status || "-"}
+                            {item?.status || "Aktif"}
                           </span>
                         </td>
                         <td className="p-2 text-center">

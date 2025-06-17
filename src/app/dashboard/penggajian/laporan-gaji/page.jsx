@@ -61,7 +61,7 @@ function Page() {
 
         setAllData(allData);
       } catch (err) {
-        console.error("Gagal mengambil data:", err.message);
+        // console.error("Gagal mengambil data:", err.message);
       } finally {
         setLoading(false); // Set loading ke false setelah fetch data selesai (berhasil atau gagal)
       }
@@ -108,15 +108,17 @@ function Page() {
     logoImg.src = "/images/logo.png";
 
     logoImg.onload = () => {
-      doc.addImage(logoImg, "PNG", 10, 10, 30, 30);
+      doc.addImage(logoImg, "PNG", 10, 10, 23, 23);
       doc.setFontSize(12);
       doc.setFont("helvetica", "bold");
       doc.text("Jeep Tlogo Putri", pageWidth / 2, 15, { align: "center" });
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
-      doc.text("Alamat: Wisata Tlogo Putri, Kaliurang, Hargobinangun, Kec. Pakem, Kabupaten Sleman, Daerah Istimewa Yogyakarta", pageWidth / 2, 20, { align: "center" });
-      doc.text("Telp. 081226979553", pageWidth / 2, 25, { align: "center" });
-      doc.line(10, 40, pageWidth - 10, 40);
+      // doc.text("Alamat: Wisata Tlogo Putri, Kaliurang, Hargobinangun, Kec. Pakem, Kabupaten Sleman, Daerah Istimewa Yogyakarta", pageWidth / 2, 20, { align: "center" });
+      doc.text("Alamat: Wisata Tlogo Putri, Kaliurang, Hargobinangun,", pageWidth / 2, 22, { align: "center" });
+      doc.text("Kec. Pakem, Kab. Sleman, D.I. Yogyakarta", pageWidth / 2, 26, { align: "center" });
+      doc.text("Telp. 081226979553", pageWidth / 2, 30, { align: "center" });
+      doc.line(10, 36, pageWidth - 10, 36);
 
       doc.setFont("helvetica", "bold");
       doc.text("LAPORAN GAJI KARYAWAN", pageWidth / 2, 45, { align: "center" });

@@ -118,6 +118,9 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
 
       localStorage.removeItem("access_token");
       localStorage.removeItem("token_exp");
+      localStorage.removeItem("archivedOrders");
+      localStorage.removeItem("lastRollingDate");
+      localStorage.removeItem("user_role");
       router.push("/");
     } catch (error) {
     } finally {

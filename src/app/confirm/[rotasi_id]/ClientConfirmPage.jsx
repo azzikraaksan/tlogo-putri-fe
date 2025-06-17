@@ -164,7 +164,7 @@ export default function ClientConfirmPage({ rotasi_id }) {
                 onClick={() => handleConfirm(false)}
                 disabled={loading || !skipReason.trim()}
                 style={{
-                  padding: "8px 20px",
+                  padding: "4px 8px",
                   backgroundColor: "#ef4444",
                   color: "white",
                   border: "none",
