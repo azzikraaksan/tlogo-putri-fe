@@ -6,6 +6,8 @@ import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Sidebar from "/components/Sidebar";
+import Modal from "../../../../../components/ModalConfirm"; 
+
 
 export default function Page() {
   const [inputValue, setInputValue] = useState("");
@@ -17,6 +19,10 @@ export default function Page() {
   const [customOptimizeDone, setCustomOptimizeDone] = useState(false); // track apakah optimize/custom optimize sudah selesai
   const [statusMessage, setStatusMessage] = useState(""); // feedback sukses/gagal
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+
+
+
 
   const sendPrompt = async () => {
     if (!inputValue.trim()) return;
@@ -27,7 +33,6 @@ export default function Page() {
     setError(null);
 
     try {
-      // const res = await fetch("http://localhost:8000/api/content-generate/generate", {
       const res = await fetch("https://tpapi.siunjaya.id/api/content-generate/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -45,7 +50,7 @@ export default function Page() {
           role: "bot",
           title: data.title,
           content: data.content,
-          category: data.category || "Umum", // Jika ada kategori dari API
+          category: data.category || "Umum", 
         },
       ]);
 
@@ -129,7 +134,7 @@ export default function Page() {
     isi_konten: item.content || "",
   };
 
-  console.log("Payload yang dikirim:", payload);
+  // console.log("Payload yang dikirim:", payload);
 
   try {
     const res = await fetch("https://tpapi.siunjaya.id/api/content-generate/storecontent", {
@@ -154,11 +159,13 @@ export default function Page() {
       }
     }
 
-    const responseData = await res.json();
-    alert("✅ Konten berhasil disimpan!\nID: " + responseData.data.id);
+    setStatusMessage("Konten berhasil disimpan!");
+    setShowModal(true);
+
   } catch (err) {
-    console.error("❌ Gagal menyimpan:", err.message);
-    alert(`❌ Gagal menyimpan konten: ${err.message}`);
+    setStatusMessage(`Gagal menyimpan konten`);
+    setShowModal(true);
+
   }
 };
 
@@ -412,6 +419,16 @@ export default function Page() {
             </div>
           )}
         </div>
+
+          <Modal
+          isOpen={showModal}
+          message={statusMessage}
+          onConfirm={() => {
+            setShowModal(false);
+            setStatusMessage("");
+          }}
+          isConfirm={false}
+        />
       </main>
     </div>
   );

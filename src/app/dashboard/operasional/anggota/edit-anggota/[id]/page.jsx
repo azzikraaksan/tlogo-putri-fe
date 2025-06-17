@@ -50,7 +50,6 @@ const EditAnggota = () => {
           alert("User tidak ditemukan!");
         }
       } catch (error) {
-        console.error("Gagal ambil data:", error);
       } finally {
         setLoading(false);
       }
@@ -113,7 +112,6 @@ const EditAnggota = () => {
         alert("Gagal update: " + (result.message || "Terjadi kesalahan."));
       }
     } catch (error) {
-      console.error("Update error:", error);
     }
   };
 

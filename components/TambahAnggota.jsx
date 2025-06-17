@@ -74,7 +74,6 @@ const TambahAnggota = ({ onKembali }) => {
         alert("Gagal menambahkan anggota: " + err.message);
       }
     } catch (err) {
-      console.error(err);
       alert("Terjadi kesalahan saat menyimpan data");
     }
   };

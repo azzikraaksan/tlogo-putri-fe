@@ -120,7 +120,6 @@ const Sidebar = ({ isSidebarOpen, setSidebarOpen }) => {
       localStorage.removeItem("token_exp");
       router.push("/");
     } catch (error) {
-      console.error("Gagal logout:", error);
     } finally {
       setLoading(false);
     }

@@ -116,7 +116,6 @@ const PenjadwalanPage = () => {
 
       setOrders(filteredOrders);
     } catch (error) {
-      console.error("Error saat mengambil data:", error.message);
     } finally {
       setLoading(false);
     }
@@ -276,7 +275,6 @@ const PenjadwalanPage = () => {
         return;
       }
     } catch (error) {
-      console.error("Gagal cetak tiket:", error.message);
       alert("Terjadi kesalahan saat cetak tiket.");
     } finally {
       setLoading(false);
@@ -333,7 +331,6 @@ const PenjadwalanPage = () => {
 
       setAvailableDriversCount(count);
     } catch (error) {
-      console.error("❌ Error fetchAvailableDriversCount:", error);
     } finally {
       setLoading(false);
     }
@@ -388,7 +385,6 @@ const PenjadwalanPage = () => {
       await fetchOrders();
       await fetchAvailableDriversCount();
     } catch (error) {
-      console.error("Error saat rolling driver:", error.message);
       alert("Terjadi kesalahan saat rolling driver.");
     } finally {
       setLoadingRotation(false);
@@ -415,12 +411,9 @@ const PenjadwalanPage = () => {
         (r) => r.assigned === 0 && (!r.skip_reason || r.skip_reason === "")
       );
 
-      console.log("✅ Driver yang bisa dipilih:", unassignedRotations);
-
       setIsAlreadyRolled(rotationsData.length > 0);
       setRotations(unassignedRotations);
     } catch (err) {
-      console.error("Error cek rolling:", err);
     }
   };
 

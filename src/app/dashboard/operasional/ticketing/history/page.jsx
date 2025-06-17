@@ -28,10 +28,8 @@ const ArsipPage = () => {
         "https://tpapi.siunjaya.id/api/ticketings/all"
       );
       const ticketingData = await response.json();
-      console.log("✅ Data ticketing:", ticketingData);
       setData(ticketingData);
     } catch (error) {
-      console.error("❌ Error fetch ticketing/rotasi:", error);
     } finally {
       setLoading(false);
     }

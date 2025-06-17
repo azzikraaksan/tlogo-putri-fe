@@ -46,9 +46,7 @@ const PenjadwalanPage = () => {
 
         const json = await res.json();
         setBookingData(json);
-        console.log("Booking detail:", json);
       } catch (error) {
-        console.error("Gagal mengambil detail booking:", error);
       }
     };
 
@@ -76,10 +74,8 @@ const PenjadwalanPage = () => {
       if (!response.ok) throw new Error("Gagal mengambil data jeep driver");
 
       const jeepData = await response.json();
-      console.log("Jeep driver data:", jeepData);
       return jeepData;
     } catch (error) {
-      console.error(error);
       return null;
     } finally {
       setLoading(false);
@@ -93,9 +89,7 @@ const PenjadwalanPage = () => {
 
     try {
       await fetchDataAndCreateTicket(item.driver_id);
-      // alert("Tiket berhasil dicetak!");
     } catch (error) {
-      console.error("Gagal mencetak tiket:", error);
       alert("Terjadi kesalahan saat mencetak tiket.");
     }
   };
@@ -108,7 +102,6 @@ const PenjadwalanPage = () => {
     const decodedBookingId = decoded?.[0];
 
     if (!decodedBookingId) {
-      console.error("Gagal decode bookingId");
       return;
     }
 
@@ -155,13 +148,10 @@ const PenjadwalanPage = () => {
 
       if (!ticketRes.ok) {
         const errorText = await ticketRes.text();
-        console.error("Respon Gagal:", errorText);
         throw new Error("Gagal mencetak tiket");
       }
 
       const ticketResult = await ticketRes.json();
-      console.log("Tiket berhasil dicetak:", ticketResult);
-      // router.push("/dashboard/operasional/ticketing");
       setShowSuccessModal(true);
       setTimeout(() => {
         setShowSuccessModal(false);
@@ -169,7 +159,6 @@ const PenjadwalanPage = () => {
       }, 1500);
       return;
     } catch (error) {
-      console.error("Terjadi kesalahan:", error.message);
     }
   };
 
@@ -193,7 +182,6 @@ const PenjadwalanPage = () => {
       const data = await response.json();
       return data.data[0];
     } catch (error) {
-      console.error("Error fetch jeep:", error);
       return null;
     }
   };
@@ -239,7 +227,6 @@ const PenjadwalanPage = () => {
       const rotasiJson = await rotasiRes.json();
       setData(rotasiJson.data || []);
     } catch (error) {
-      console.error("Gagal generate rotation:", error);
       alert("Gagal generate rotation.");
     } finally {
       setLoadingRotation(false);
@@ -267,12 +254,9 @@ const PenjadwalanPage = () => {
         (r) => r.assigned === 0 && (!r.skip_reason || r.skip_reason === "")
       );
 
-      console.log("✅ Driver yang bisa dipilih:", unassignedRotations);
-
       setIsAlreadyRolled(rotationsData.length > 0);
       setRotations(unassignedRotations);
     } catch (err) {
-      console.error("Error cek rolling:", err);
     } finally {
       setLoading(false);
     }

@@ -40,7 +40,6 @@ export default function AddJeepForm({ onKembali }) {
         setExistingLambung(jeeps.map((item) => item.no_lambung));
         setExistingPlat(jeeps.map((item) => item.plat_jeep));
       } catch (error) {
-        console.error("Gagal fetch data jeep:", error);
       }
     };
 
@@ -81,7 +80,6 @@ export default function AddJeepForm({ onKembali }) {
 
       setOwners(filteredOwners);
     } catch (err) {
-      console.error("Gagal memuat data owner:", err);
     }
   };
 
@@ -111,7 +109,6 @@ export default function AddJeepForm({ onKembali }) {
 
       setDrivers(availableDrivers);
     } catch (err) {
-      console.error("Gagal ambil data:", err);
     } finally {
       setLoading(false);
     }
