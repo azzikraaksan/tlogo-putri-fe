@@ -100,6 +100,9 @@ function Page() {
   const exportToPDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
+    const today = new Date();
+    const options = { day: "2-digit", month: "long", year: "numeric" };
+    const formattedDate = today.toLocaleDateString("id-ID", options); // Contoh: "17 Juni 2025"
 
     const logoImg = new Image();
     logoImg.src = "/images/logo.png";
@@ -111,14 +114,17 @@ function Page() {
       doc.text("Jeep Tlogo Putri", pageWidth / 2, 15, { align: "center" });
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
-      doc.text("Alamat: Banyuraden Gamping Sleman Yogyakarta", pageWidth / 2, 20, { align: "center" });
-      doc.text("Telp. 082135664668", pageWidth / 2, 25, { align: "center" });
+      doc.text("Alamat: Wisata Tlogo Putri, Kaliurang, Hargobinangun, Kec. Pakem, Kabupaten Sleman, Daerah Istimewa Yogyakarta", pageWidth / 2, 20, { align: "center" });
+      doc.text("Telp. 081226979553", pageWidth / 2, 25, { align: "center" });
       doc.line(10, 40, pageWidth - 10, 40);
 
       doc.setFont("helvetica", "bold");
       doc.text("LAPORAN GAJI KARYAWAN", pageWidth / 2, 45, { align: "center" });
       doc.setFont("helvetica", "normal");
-      doc.text(`PERIODE BULAN ${selectedMonth || "FEBRUARI"} ${selectedYear || "2025"}`, pageWidth / 2, 50, { align: "center" });
+      const periodeBulan = filteredData[0]?.bulan || "-";
+      const periodeTahun = filteredData[0]?.tahun || "-";
+      doc.text(`PERIODE BULAN ${periodeBulan} ${periodeTahun}`, pageWidth / 2, 50, { align: "center" });
+
 
       const tableBody = filteredData.map((item) => [
         item.nama,
@@ -144,9 +150,9 @@ function Page() {
 
       const y = doc.lastAutoTable.finalY + 20;
       doc.setFontSize(10);
-      doc.text(`Yogyakarta, 02 ${selectedMonth || "Februari"} ${selectedYear || "2025"}`, pageWidth - 10, y, { align: "right" });
-      doc.text("Inuk", pageWidth - 10, y + 30, { align: "right" });
-      doc.text("Ketua", pageWidth - 10, y + 36, { align: "right" });
+      doc.text(`Yogyakarta, ${formattedDate}`, pageWidth - 10, y, { align: "right" });
+      // doc.text("Inuk", pageWidth - 10, y + 30, { align: "right" });
+      doc.text("Ketua Pengurus Tlogo Putri", pageWidth - 10, y + 36, { align: "right" });
 
       doc.save("laporan_gaji.pdf");
     };
@@ -162,7 +168,7 @@ function Page() {
           <h1 className="text-[32px] font-semibold">Laporan Gaji</h1>
         </div>
 
-        <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-4 curs">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-2">
               <label className="text-sm font-medium text-gray-700">Bulan</label>
@@ -198,10 +204,10 @@ function Page() {
           <div className="flex flex-col gap-2">
             <SearchInput value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
             <div className="flex gap-2">
-              <button onClick={() => { setExportType("excel"); setShowExportModal(true); }} className="flex items-center gap-1 bg-green-500 text-white p-2 rounded hover:bg-green-600">
+              <button onClick={() => { setExportType("excel"); setShowExportModal(true); }} className="flex items-center gap-1 bg-green-500 text-white p-2 rounded hover:bg-green-600 cursor-pointer">
                 <FileSpreadsheet size={16} /> Export Excel
               </button>
-              <button onClick={() => { setExportType("pdf"); setShowExportModal(true); }} className="flex items-center gap-1 bg-red-500 text-white p-2 rounded hover:bg-red-600">
+              <button onClick={() => { setExportType("pdf"); setShowExportModal(true); }} className="flex items-center gap-1 bg-red-500 text-white p-2 rounded hover:bg-red-600 cursor-pointer">
                 <FileText size={16} /> Export PDF
               </button>
             </div>
@@ -209,7 +215,7 @@ function Page() {
         </div>
 
         {/* Bagian tabel utama */}
-        <table className="w-full bg-white shadow rounded overflow-hidden mt-4">
+        <table className="w-full bg-white shadow rounded-xl overflow-hidden mt-4 radius">
           <thead className="bg-[#3D6CB9] text-white">
             <tr>
               <th className="p-2 text-left w-12">No</th>
@@ -308,12 +314,12 @@ function Page() {
                 </tbody>
               </table>
               <div className="mt-4 flex justify-end gap-2">
-                <button onClick={() => setShowExportModal(false)} className="px-4 py-2 bg-gray-300 rounded">Batal</button>
+                <button onClick={() => setShowExportModal(false)} className="px-4 py-2 bg-gray-300 rounded cursor-pointer">Batal</button>
                 <button onClick={() => {
                   if (exportType === "excel") exportToExcel();
                   else if (exportType === "pdf") exportToPDF();
                   setShowExportModal(false);
-                }} className="px-4 py-2 bg-[#3D6CB9] text-white rounded">Ekspor</button>
+                }} className="px-4 py-2 bg-[#3D6CB9] text-white rounded cursor-pointer">Ekspor</button>
               </div>
             </div>
           </div>
